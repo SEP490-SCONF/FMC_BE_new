@@ -4,6 +4,7 @@ using ConferenceFWebAPI.DTOs;
 using ConferenceFWebAPI.DTOs.PaperRevisions;
 using ConferenceFWebAPI.DTOs.ReviewerAssignments;
 using ConferenceFWebAPI.DTOs.Reviews;
+using ConferenceFWebAPI.DTOs.UserProfile;
 
 namespace ConferenceFWebAPI
 {
@@ -24,6 +25,8 @@ namespace ConferenceFWebAPI
             CreateMap<ReviewerAssignment, ReviewerAssignmentDTO>();
             CreateMap<AddReviewerAssignmentDTO, ReviewerAssignment>();
             CreateMap<UpdateReviewerAssignmentDTO, ReviewerAssignment>();
+            CreateMap<User, UserProfile>();
+
         }
     }
 }

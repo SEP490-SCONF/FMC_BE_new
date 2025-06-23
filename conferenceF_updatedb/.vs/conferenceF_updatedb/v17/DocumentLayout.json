@@ -3,6 +3,42 @@
   "WorkspaceRootPath": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{F32469B4-A011-4BB0-A366-182415001A48}|DataAccess\\DataAccess.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\dataaccess\\userdao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F32469B4-A011-4BB0-A366-182415001A48}|DataAccess\\DataAccess.csproj|solutionrelative:dataaccess\\userdao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\conferencefwebapi\\controllers\\userprofiles\\userprofilecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|solutionrelative:conferencefwebapi\\controllers\\userprofiles\\userprofilecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D25049E0-B198-4161-B849-F791B33999F4}|Repository\\Repository.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\repository\\ibaserepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D25049E0-B198-4161-B849-F791B33999F4}|Repository\\Repository.csproj|solutionrelative:repository\\ibaserepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D25049E0-B198-4161-B849-F791B33999F4}|Repository\\Repository.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\repository\\iuserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D25049E0-B198-4161-B849-F791B33999F4}|Repository\\Repository.csproj|solutionrelative:repository\\iuserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D25049E0-B198-4161-B849-F791B33999F4}|Repository\\Repository.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\repository\\repository\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D25049E0-B198-4161-B849-F791B33999F4}|Repository\\Repository.csproj|solutionrelative:repository\\repository\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\conferencefwebapi\\mappingprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|solutionrelative:conferencefwebapi\\mappingprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\conferencefwebapi\\dtos\\mappingprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|solutionrelative:conferencefwebapi\\dtos\\mappingprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\conferencefwebapi\\dtos\\userprofile\\userprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|solutionrelative:conferencefwebapi\\dtos\\userprofile\\userprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\conferencefwebapi\\dtos\\userprofile\\updateuserprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|solutionrelative:conferencefwebapi\\dtos\\userprofile\\updateuserprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{D25049E0-B198-4161-B849-F791B33999F4}|Repository\\Repository.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\repository\\repository\\reviewrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{D25049E0-B198-4161-B849-F791B33999F4}|Repository\\Repository.csproj|solutionrelative:repository\\repository\\reviewrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -81,10 +117,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\conferencefwebapi\\controllers\\paperrevisions\\paperrevisioncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|solutionrelative:conferencefwebapi\\controllers\\paperrevisions\\paperrevisioncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\conferencefwebapi\\mappingprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|solutionrelative:conferencefwebapi\\mappingprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{444CDF97-0317-4895-9F60-AE38582EEF6F}|ConferenceFWebAPI\\ConferenceFWebAPI.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\conferencefwebapi\\dtos\\reviews\\updatereviewdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -187,10 +219,6 @@
       "RelativeMoniker": "D:0:0:{D25049E0-B198-4161-B849-F791B33999F4}|Repository\\Repository.csproj|solutionrelative:repository\\ianswerlikerepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{F32469B4-A011-4BB0-A366-182415001A48}|DataAccess\\DataAccess.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\dataaccess\\userdao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{F32469B4-A011-4BB0-A366-182415001A48}|DataAccess\\DataAccess.csproj|solutionrelative:dataaccess\\userdao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{F32469B4-A011-4BB0-A366-182415001A48}|DataAccess\\DataAccess.csproj|d:\\fmc_be-update_db-\\conferencef_updatedb\\dataaccess\\scheduledao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{F32469B4-A011-4BB0-A366-182415001A48}|DataAccess\\DataAccess.csproj|solutionrelative:dataaccess\\scheduledao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -257,8 +285,8 @@
       "VerticalTabListWidth": 256,
       "DocumentGroups": [
         {
-          "DockedWidth": 943,
-          "SelectedChildIndex": 173,
+          "DockedWidth": 1332,
+          "SelectedChildIndex": 177,
           "Children": [
             {
               "$type": "Bookmark",
@@ -954,7 +982,111 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "IBaseRepository.cs",
+              "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\IBaseRepository.cs",
+              "RelativeDocumentMoniker": "Repository\\IBaseRepository.cs",
+              "ToolTip": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\IBaseRepository.cs",
+              "RelativeToolTip": "Repository\\IBaseRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAgAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-23T17:43:31.575Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "UserRepository.cs",
+              "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository\\UserRepository.cs",
+              "RelativeDocumentMoniker": "Repository\\Repository\\UserRepository.cs",
+              "ToolTip": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository\\UserRepository.cs",
+              "RelativeToolTip": "Repository\\Repository\\UserRepository.cs",
+              "ViewState": "AgIAABcAAAAAAAAAAAAgwCsAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-23T17:41:38.562Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "IUserRepository.cs",
+              "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\IUserRepository.cs",
+              "RelativeDocumentMoniker": "Repository\\IUserRepository.cs",
+              "ToolTip": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\IUserRepository.cs",
+              "RelativeToolTip": "Repository\\IUserRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-23T17:40:13.4Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "UserProfileController.cs",
+              "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\Controllers\\UserProfiles\\UserProfileController.cs",
+              "RelativeDocumentMoniker": "ConferenceFWebAPI\\Controllers\\UserProfiles\\UserProfileController.cs",
+              "ToolTip": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\Controllers\\UserProfiles\\UserProfileController.cs",
+              "RelativeToolTip": "ConferenceFWebAPI\\Controllers\\UserProfiles\\UserProfileController.cs",
+              "ViewState": "AgIAABIAAAAAAAAAAAAwwD4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-23T17:36:32.467Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "UserDAO.cs",
+              "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\UserDAO.cs",
+              "RelativeDocumentMoniker": "DataAccess\\UserDAO.cs",
+              "ToolTip": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\UserDAO.cs",
+              "RelativeToolTip": "DataAccess\\UserDAO.cs",
+              "ViewState": "AgIAAC8AAAAAAAAAAAAowFEAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-22T12:20:55.803Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "MappingProfile.cs",
+              "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\MappingProfile.cs",
+              "RelativeDocumentMoniker": "ConferenceFWebAPI\\DTOs\\MappingProfile.cs",
+              "ToolTip": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\MappingProfile.cs",
+              "RelativeToolTip": "ConferenceFWebAPI\\DTOs\\MappingProfile.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-23T17:35:48.985Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "UserProfile.cs",
+              "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\UserProfile\\UserProfile.cs",
+              "RelativeDocumentMoniker": "ConferenceFWebAPI\\DTOs\\UserProfile\\UserProfile.cs",
+              "ToolTip": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\UserProfile\\UserProfile.cs",
+              "RelativeToolTip": "ConferenceFWebAPI\\DTOs\\UserProfile\\UserProfile.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-23T17:35:27.427Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "UpdateUserProfile.cs",
+              "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\UserProfile\\UpdateUserProfile.cs",
+              "RelativeDocumentMoniker": "ConferenceFWebAPI\\DTOs\\UserProfile\\UpdateUserProfile.cs",
+              "ToolTip": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\UserProfile\\UpdateUserProfile.cs",
+              "RelativeToolTip": "ConferenceFWebAPI\\DTOs\\UserProfile\\UpdateUserProfile.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-23T17:35:08.778Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
               "Title": "ReviewRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository\\ReviewRepository.cs",
               "RelativeDocumentMoniker": "Repository\\Repository\\ReviewRepository.cs",
@@ -967,7 +1099,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 10,
               "Title": "IReviewRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\IReviewRepository.cs",
               "RelativeDocumentMoniker": "Repository\\IReviewRepository.cs",
@@ -975,12 +1107,11 @@
               "RelativeToolTip": "Repository\\IReviewRepository.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T17:27:34.135Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T17:27:34.135Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 11,
               "Title": "ReviewDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\ReviewDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\ReviewDAO.cs",
@@ -988,12 +1119,11 @@
               "RelativeToolTip": "DataAccess\\ReviewDAO.cs",
               "ViewState": "AgIAAGAAAAAAAAAAAAAwwIwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-22T12:20:29.299Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-22T12:20:29.299Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 15,
               "Title": "UserConferenceRoleDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\UserConferenceRoleDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\UserConferenceRoleDAO.cs",
@@ -1001,12 +1131,11 @@
               "RelativeToolTip": "DataAccess\\UserConferenceRoleDAO.cs",
               "ViewState": "AgIAAGAAAAAAAAAAAAAAAHkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-22T12:20:51.101Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-22T12:20:51.101Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 18,
               "Title": "ConferenceFTestContext.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\BussinessObject\\Entity\\ConferenceFTestContext.cs",
               "RelativeDocumentMoniker": "BussinessObject\\Entity\\ConferenceFTestContext.cs",
@@ -1014,12 +1143,11 @@
               "RelativeToolTip": "BussinessObject\\Entity\\ConferenceFTestContext.cs",
               "ViewState": "AgIAADIAAAAAAAAAAAA4wEQAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-22T11:51:41.346Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-22T11:51:41.346Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 19,
               "Title": "TopicDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\TopicDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\TopicDAO.cs",
@@ -1027,12 +1155,11 @@
               "RelativeToolTip": "DataAccess\\TopicDAO.cs",
               "ViewState": "AgIAACwAAAAAAAAAAAAAAD4AAAALAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-22T12:20:46.938Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-22T12:20:46.938Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 20,
               "Title": "ReviewerAssignmentDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\ReviewerAssignmentDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\ReviewerAssignmentDAO.cs",
@@ -1040,12 +1167,11 @@
               "RelativeToolTip": "DataAccess\\ReviewerAssignmentDAO.cs",
               "ViewState": "AgIAAFEAAAAAAAAAAADwv18AAAA/AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-22T12:20:33.114Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-22T12:20:33.114Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 22,
               "Title": "ReviewerAssignmentRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository\\ReviewerAssignmentRepository.cs",
               "RelativeDocumentMoniker": "Repository\\Repository\\ReviewerAssignmentRepository.cs",
@@ -1053,12 +1179,11 @@
               "RelativeToolTip": "Repository\\Repository\\ReviewerAssignmentRepository.cs",
               "ViewState": "AgIAAAgAAAAAAAAAAAAYwC8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:48:52.325Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:48:52.325Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
+              "DocumentIndex": 37,
               "Title": "TopicRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository\\TopicRepository.cs",
               "RelativeDocumentMoniker": "Repository\\Repository\\TopicRepository.cs",
@@ -1066,12 +1191,11 @@
               "RelativeToolTip": "Repository\\Repository\\TopicRepository.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAzAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-22T12:33:23.223Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-22T12:33:23.223Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 36,
               "Title": "ITopicRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\ITopicRepository.cs",
               "RelativeDocumentMoniker": "Repository\\ITopicRepository.cs",
@@ -1083,7 +1207,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 34,
               "Title": "PaperRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository\\PaperRepository.cs",
               "RelativeDocumentMoniker": "Repository\\Repository\\PaperRepository.cs",
@@ -1095,7 +1219,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 35,
               "Title": "PaperDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\PaperDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\PaperDAO.cs",
@@ -1107,7 +1231,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 40,
               "Title": "IConferenceRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\IConferenceRepository.cs",
               "RelativeDocumentMoniker": "Repository\\IConferenceRepository.cs",
@@ -1119,7 +1243,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 41,
               "Title": "ConferenceDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\ConferenceDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\ConferenceDAO.cs",
@@ -1131,7 +1255,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 38,
               "Title": "ConferencesController.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\Controllers\\ConferencesController.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\Controllers\\ConferencesController.cs",
@@ -1143,7 +1267,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 42,
               "Title": "WeatherForecastController.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\Controllers\\WeatherForecastController.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\Controllers\\WeatherForecastController.cs",
@@ -1155,7 +1279,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 39,
               "Title": "ConferenceRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository\\ConferenceRepository.cs",
               "RelativeDocumentMoniker": "Repository\\Repository\\ConferenceRepository.cs",
@@ -1167,7 +1291,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
+              "DocumentIndex": 43,
               "Title": "TopicsController.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\Controllers\\TopicsController.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\Controllers\\TopicsController.cs",
@@ -1179,7 +1303,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 36,
+              "DocumentIndex": 44,
               "Title": "PapersController.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\Controllers\\PapersController.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\Controllers\\PapersController.cs",
@@ -1191,7 +1315,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 37,
+              "DocumentIndex": 45,
               "Title": "AddRoleConferenceController.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\Controllers\\AddRoleConferenceController.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\Controllers\\AddRoleConferenceController.cs",
@@ -1203,7 +1327,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 39,
+              "DocumentIndex": 47,
               "Title": "ConferenceFWebAPI.csproj",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\ConferenceFWebAPI.csproj",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\ConferenceFWebAPI.csproj",
@@ -1215,7 +1339,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 40,
+              "DocumentIndex": 48,
               "Title": "ConferenceFWebAPI.http",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\ConferenceFWebAPI.http",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\ConferenceFWebAPI.http",
@@ -1227,7 +1351,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 38,
+              "DocumentIndex": 46,
               "Title": "Program.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\Program.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\Program.cs",
@@ -1239,7 +1363,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 41,
+              "DocumentIndex": 49,
               "Title": "ForumRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository\\ForumRepository.cs",
               "RelativeDocumentMoniker": "Repository\\Repository\\ForumRepository.cs",
@@ -1251,7 +1375,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 42,
+              "DocumentIndex": 50,
               "Title": "CallForPaperRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository\\CallForPaperRepository.cs",
               "RelativeDocumentMoniker": "Repository\\Repository\\CallForPaperRepository.cs",
@@ -1263,7 +1387,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 43,
+              "DocumentIndex": 51,
               "Title": "AnswerQuestionRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository\\AnswerQuestionRepository.cs",
               "RelativeDocumentMoniker": "Repository\\Repository\\AnswerQuestionRepository.cs",
@@ -1275,7 +1399,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 44,
+              "DocumentIndex": 52,
               "Title": "AnswerLikeRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository\\AnswerLikeRepository.cs",
               "RelativeDocumentMoniker": "Repository\\Repository\\AnswerLikeRepository.cs",
@@ -1287,7 +1411,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 45,
+              "DocumentIndex": 53,
               "Title": "IAnswerLikeRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\IAnswerLikeRepository.cs",
               "RelativeDocumentMoniker": "Repository\\IAnswerLikeRepository.cs",
@@ -1299,19 +1423,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 46,
-              "Title": "UserDAO.cs",
-              "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\UserDAO.cs",
-              "RelativeDocumentMoniker": "DataAccess\\UserDAO.cs",
-              "ToolTip": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\UserDAO.cs",
-              "RelativeToolTip": "DataAccess\\UserDAO.cs",
-              "ViewState": "AgIAADUAAAAAAAAAAAAAAAoAAAAtAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-22T12:20:55.803Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 47,
+              "DocumentIndex": 54,
               "Title": "ScheduleDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\ScheduleDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\ScheduleDAO.cs",
@@ -1323,7 +1435,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 48,
+              "DocumentIndex": 55,
               "Title": "ReviewHighlightDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\ReviewHighlightDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\ReviewHighlightDAO.cs",
@@ -1335,7 +1447,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 49,
+              "DocumentIndex": 56,
               "Title": "ReviewCommentDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\ReviewCommentDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\ReviewCommentDAO.cs",
@@ -1347,7 +1459,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 50,
+              "DocumentIndex": 57,
               "Title": "RegistrationDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\RegistrationDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\RegistrationDAO.cs",
@@ -1359,7 +1471,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 51,
+              "DocumentIndex": 58,
               "Title": "QuestionLikeDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\QuestionLikeDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\QuestionLikeDAO.cs",
@@ -1371,7 +1483,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 52,
+              "DocumentIndex": 59,
               "Title": "ProceedingDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\ProceedingDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\ProceedingDAO.cs",
@@ -1383,7 +1495,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 53,
+              "DocumentIndex": 60,
               "Title": "PaymentDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\PaymentDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\PaymentDAO.cs",
@@ -1395,7 +1507,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 54,
+              "DocumentIndex": 61,
               "Title": "PaperRevisionDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\PaperRevisionDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\PaperRevisionDAO.cs",
@@ -1407,7 +1519,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 55,
+              "DocumentIndex": 62,
               "Title": "Paper.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\BussinessObject\\Entity\\Paper.cs",
               "RelativeDocumentMoniker": "BussinessObject\\Entity\\Paper.cs",
@@ -1419,7 +1531,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 57,
+              "DocumentIndex": 64,
               "Title": "ForumQuestionDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\ForumQuestionDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\ForumQuestionDAO.cs",
@@ -1431,7 +1543,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 56,
+              "DocumentIndex": 63,
               "Title": "NotificationDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\NotificationDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\NotificationDAO.cs",
@@ -1443,7 +1555,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 58,
+              "DocumentIndex": 65,
               "Title": "ForumDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\ForumDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\ForumDAO.cs",
@@ -1455,7 +1567,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 59,
+              "DocumentIndex": 66,
               "Title": "CallForPaperDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\CallForPaperDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\CallForPaperDAO.cs",
@@ -1467,7 +1579,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 60,
+              "DocumentIndex": 67,
               "Title": "AnswerQuestionDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\AnswerQuestionDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\AnswerQuestionDAO.cs",
@@ -1479,7 +1591,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 61,
+              "DocumentIndex": 68,
               "Title": "AnswerLikeDAO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\AnswerLikeDAO.cs",
               "RelativeDocumentMoniker": "DataAccess\\AnswerLikeDAO.cs",
@@ -1488,12 +1600,16 @@
               "ViewState": "AgIAAEYAAAAAAAAAAAAAAA4AAAAzAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-22T12:05:04.354Z"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{0ad07096-bba9-4900-a651-0598d26f6d24}"
             }
           ]
         },
         {
-          "DockedWidth": 730,
-          "SelectedChildIndex": 8,
+          "DockedWidth": 341,
+          "SelectedChildIndex": 9,
           "Children": [
             {
               "$type": "Bookmark",
@@ -1528,8 +1644,25 @@
               "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
             },
             {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
+              "Title": "MappingProfile.cs",
+              "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\MappingProfile.cs",
+              "RelativeDocumentMoniker": "ConferenceFWebAPI\\MappingProfile.cs",
+              "ToolTip": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\MappingProfile.cs",
+              "RelativeToolTip": "ConferenceFWebAPI\\MappingProfile.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-23T16:35:35.413Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
               "Title": "Review.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\BussinessObject\\Entity\\Review.cs",
               "RelativeDocumentMoniker": "BussinessObject\\Entity\\Review.cs",
@@ -1542,7 +1675,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 14,
               "Title": "ReviewerAssignmentController.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\Controllers\\ReviewerAssignments\\ReviewerAssignmentController.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\Controllers\\ReviewerAssignments\\ReviewerAssignmentController.cs",
@@ -1550,16 +1683,11 @@
               "RelativeToolTip": "ConferenceFWebAPI\\Controllers\\ReviewerAssignments\\ReviewerAssignmentController.cs",
               "ViewState": "AgIAAC8AAAAAAAAAAAAgwEcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:37:27.19Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+              "WhenOpened": "2025-06-23T16:37:27.19Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 17,
               "Title": "UserConferenceRole.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\BussinessObject\\Entity\\UserConferenceRole.cs",
               "RelativeDocumentMoniker": "BussinessObject\\Entity\\UserConferenceRole.cs",
@@ -1567,12 +1695,11 @@
               "RelativeToolTip": "BussinessObject\\Entity\\UserConferenceRole.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:46:04.758Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:46:04.758Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 16,
               "Title": "IUserConferenceRoleRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\IUserConferenceRoleRepository.cs",
               "RelativeDocumentMoniker": "Repository\\IUserConferenceRoleRepository.cs",
@@ -1580,12 +1707,11 @@
               "RelativeToolTip": "Repository\\IUserConferenceRoleRepository.cs",
               "ViewState": "AgIAAAEAAAAAAAAAAAAmwAwAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:44:31.952Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:44:31.952Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 13,
               "Title": "ReviewController.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\Controllers\\Reviews\\ReviewController.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\Controllers\\Reviews\\ReviewController.cs",
@@ -1593,12 +1719,11 @@
               "RelativeToolTip": "ConferenceFWebAPI\\Controllers\\Reviews\\ReviewController.cs",
               "ViewState": "AgIAAB8AAAAAAAAAAAAkwCkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:38:02.606Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:38:02.606Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 21,
               "Title": "UserConferenceRoleRepository.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository\\UserConferenceRoleRepository.cs",
               "RelativeDocumentMoniker": "Repository\\Repository\\UserConferenceRoleRepository.cs",
@@ -1606,12 +1731,11 @@
               "RelativeToolTip": "Repository\\Repository\\UserConferenceRoleRepository.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAuAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:45:10.941Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:45:10.941Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 23,
               "Title": "ReviewerAssignmentDTO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\ReviewerAssignments\\ReviewerAssignmentDTO.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\DTOs\\ReviewerAssignments\\ReviewerAssignmentDTO.cs",
@@ -1619,12 +1743,11 @@
               "RelativeToolTip": "ConferenceFWebAPI\\DTOs\\ReviewerAssignments\\ReviewerAssignmentDTO.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:33:33.572Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:33:33.572Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 24,
               "Title": "AddReviewerAssignmentDTO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\ReviewerAssignments\\AddReviewerAssignmentDTO.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\DTOs\\ReviewerAssignments\\AddReviewerAssignmentDTO.cs",
@@ -1632,12 +1755,11 @@
               "RelativeToolTip": "ConferenceFWebAPI\\DTOs\\ReviewerAssignments\\AddReviewerAssignmentDTO.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:33:26.417Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:33:26.417Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 25,
               "Title": "ConferenceRole.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\BussinessObject\\Entity\\ConferenceRole.cs",
               "RelativeDocumentMoniker": "BussinessObject\\Entity\\ConferenceRole.cs",
@@ -1645,12 +1767,11 @@
               "RelativeToolTip": "BussinessObject\\Entity\\ConferenceRole.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:42:08.59Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:42:08.59Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 26,
               "Title": "AddReviewDTO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\Reviews\\AddReviewDTO.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\DTOs\\Reviews\\AddReviewDTO.cs",
@@ -1658,12 +1779,11 @@
               "RelativeToolTip": "ConferenceFWebAPI\\DTOs\\Reviews\\AddReviewDTO.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:34:29.679Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:34:29.679Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 27,
               "Title": "ReviewDTO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\Reviews\\ReviewDTO.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\DTOs\\Reviews\\ReviewDTO.cs",
@@ -1671,12 +1791,11 @@
               "RelativeToolTip": "ConferenceFWebAPI\\DTOs\\Reviews\\ReviewDTO.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAA9AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:34:37.214Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:34:37.214Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 28,
               "Title": "PaperRevisionController.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\Controllers\\PaperRevisions\\PaperRevisionController.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\Controllers\\PaperRevisions\\PaperRevisionController.cs",
@@ -1684,25 +1803,11 @@
               "RelativeToolTip": "ConferenceFWebAPI\\Controllers\\PaperRevisions\\PaperRevisionController.cs",
               "ViewState": "AgIAACsAAAAAAAAAAAA0wFMAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:36:26.819Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:36:26.819Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
-              "Title": "MappingProfile.cs",
-              "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\MappingProfile.cs",
-              "RelativeDocumentMoniker": "ConferenceFWebAPI\\MappingProfile.cs",
-              "ToolTip": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\MappingProfile.cs",
-              "RelativeToolTip": "ConferenceFWebAPI\\MappingProfile.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB0AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:35:35.413Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 29,
               "Title": "UpdateReviewDTO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\Reviews\\UpdateReviewDTO.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\DTOs\\Reviews\\UpdateReviewDTO.cs",
@@ -1710,12 +1815,11 @@
               "RelativeToolTip": "ConferenceFWebAPI\\DTOs\\Reviews\\UpdateReviewDTO.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:34:44.089Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:34:44.089Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 30,
               "Title": "UpdateReviewerAssignmentDTO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\ReviewerAssignments\\UpdateReviewerAssignmentDTO.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\DTOs\\ReviewerAssignments\\UpdateReviewerAssignmentDTO.cs",
@@ -1723,12 +1827,11 @@
               "RelativeToolTip": "ConferenceFWebAPI\\DTOs\\ReviewerAssignments\\UpdateReviewerAssignmentDTO.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:33:40.691Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:33:40.691Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 33,
               "Title": "AddPaperRevisionDTO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\PaperRevisions\\AddPaperRevisionDTO.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\DTOs\\PaperRevisions\\AddPaperRevisionDTO.cs",
@@ -1736,12 +1839,11 @@
               "RelativeToolTip": "ConferenceFWebAPI\\DTOs\\PaperRevisions\\AddPaperRevisionDTO.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:31:53.122Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:31:53.122Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 31,
               "Title": "UpdatePaperRevisionDTO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\PaperRevisions\\UpdatePaperRevisionDTO.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\DTOs\\PaperRevisions\\UpdatePaperRevisionDTO.cs",
@@ -1749,12 +1851,11 @@
               "RelativeToolTip": "ConferenceFWebAPI\\DTOs\\PaperRevisions\\UpdatePaperRevisionDTO.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:32:08.217Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:32:08.217Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 32,
               "Title": "PaperRevisionDTO.cs",
               "DocumentMoniker": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\DTOs\\PaperRevisions\\PaperRevisionDTO.cs",
               "RelativeDocumentMoniker": "ConferenceFWebAPI\\DTOs\\PaperRevisions\\PaperRevisionDTO.cs",
@@ -1762,8 +1863,7 @@
               "RelativeToolTip": "ConferenceFWebAPI\\DTOs\\PaperRevisions\\PaperRevisionDTO.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T16:32:00.763Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-23T16:32:00.763Z"
             }
           ]
         },

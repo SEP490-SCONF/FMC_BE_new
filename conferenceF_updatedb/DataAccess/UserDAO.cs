@@ -64,22 +64,19 @@ namespace DataAccess
         {
             try
             {
-                var existingUser = await GetUserById(user.UserId);
+                var existingUser = await _context.Users.FindAsync(user.UserId);
                 if (existingUser == null)
                     throw new Exception($"User with ID {user.UserId} not found.");
 
                 _context.Entry(existingUser).CurrentValues.SetValues(user);
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateException dbEx)
-            {
-                throw new Exception("Database error while updating user.", dbEx);
-            }
             catch (Exception ex)
             {
-                throw new Exception($"Error occurred while updating user with ID {user.UserId}.", ex);
+                throw new Exception("Error while updating user", ex);
             }
         }
+
 
         // Delete user by ID
         public async Task DeleteUser(int id)
