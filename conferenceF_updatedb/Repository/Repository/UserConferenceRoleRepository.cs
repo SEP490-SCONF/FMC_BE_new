@@ -29,5 +29,9 @@ namespace Repository.Repository
         public Task UpdateAsync(UserConferenceRole role) => _dao.Update(role);
 
         public Task DeleteAsync(int id) => _dao.Delete(id);
+        public async Task<bool> IsReviewer(int userId)
+        {
+            return await _dao.IsReviewer(userId);
+        }
     }
 }

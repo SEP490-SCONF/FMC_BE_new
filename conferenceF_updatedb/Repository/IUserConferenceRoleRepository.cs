@@ -15,5 +15,7 @@ namespace Repository
         Task AddAsync(UserConferenceRole role);
         Task UpdateAsync(UserConferenceRole role);
         Task DeleteAsync(int id);
+        Task<bool> IsReviewer(int userId);
+
     }
 }
