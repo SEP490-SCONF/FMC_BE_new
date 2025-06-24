@@ -12,7 +12,7 @@ using DataAccess;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.Service;
 using Repository.Repository;
-using ConferenceFWebAPI.MappingProfile;
+using ConferenceFWebAPI.MappingProfiles;
 using System.Text.Json.Serialization;
 using ConferenceFWebAPI.Hubs;
 

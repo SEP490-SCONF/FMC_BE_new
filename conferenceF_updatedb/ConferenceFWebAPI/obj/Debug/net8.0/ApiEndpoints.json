@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 [
   {
     "ContainingType": "FMC_BE.Controllers.ConferencesController",
@@ -240,6 +239,63 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "ConferenceFWebAPI.Controllers.NotificationsController",
+    "Method": "SendNotificationToRole",
+    "RelativePath": "api/Notifications/send-to-role",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "conferenceId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "roleName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "title",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "content",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.NotificationsController",
+    "Method": "SendNotificationToUser",
+    "RelativePath": "api/Notifications/send-to-user",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "title",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "content",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
     "Method": "GetAll",
     "RelativePath": "api/PaperRevision",
@@ -336,8 +392,24 @@
   },
   {
     "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
-    "Method": "SubmitPaper",
-    "RelativePath": "api/Papers",
+    "Method": "DeletePdf",
+    "RelativePath": "api/Papers/delete-pdf/{paperId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "paperId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
+    "Method": "UploadPdf",
+    "RelativePath": "api/Papers/upload-pdf",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -368,12 +440,7 @@
         "IsRequired": false
       },
       {
-        "Name": "AuthorId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "File",
+        "Name": "PdfFile",
         "Type": "Microsoft.AspNetCore.Http.IFormFile",
         "IsRequired": false
       }
@@ -382,24 +449,14 @@
   },
   {
     "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
-    "Method": "GetAll",
-    "RelativePath": "api/Papers",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
-    "Method": "GetById",
-    "RelativePath": "api/Papers/{id}",
+    "Method": "ViewPdf",
+    "RelativePath": "api/Papers/view-pdf/{paperId}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "id",
+        "Name": "paperId",
         "Type": "System.Int32",
         "IsRequired": true
       }
@@ -1038,996 +1095,4 @@
     ],
     "EndpointName": "GetWeatherForecast"
   }
-=======
-[
-  {
-    "ContainingType": "FMC_BE.Controllers.ConferencesController",
-    "Method": "GetAll",
-    "RelativePath": "api/Conferences",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[ConferenceFWebAPI.DTOs.ConferenceDTO, ConferenceFWebAPI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "application/json;odata.metadata=minimal;odata.streaming=true",
-          "application/json;odata.metadata=minimal;odata.streaming=false",
-          "application/json;odata.metadata=minimal",
-          "application/json;odata.metadata=full;odata.streaming=true",
-          "application/json;odata.metadata=full;odata.streaming=false",
-          "application/json;odata.metadata=full",
-          "application/json;odata.metadata=none;odata.streaming=true",
-          "application/json;odata.metadata=none;odata.streaming=false",
-          "application/json;odata.metadata=none",
-          "application/json;odata.streaming=true",
-          "application/json;odata.streaming=false",
-          "application/json",
-          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=minimal;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;IEEE754Compatible=true",
-          "application/json;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;IEEE754Compatible=false",
-          "application/json;IEEE754Compatible=true",
-          "application/xml",
-          "application/json",
-          "text/plain",
-          "application/octet-stream",
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "FMC_BE.Controllers.ConferencesController",
-    "Method": "Create",
-    "RelativePath": "api/Conferences",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "conferenceDto",
-        "Type": "ConferenceFWebAPI.DTOs.ConferenceDTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "FMC_BE.Controllers.ConferencesController",
-    "Method": "GetById",
-    "RelativePath": "api/Conferences/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "ConferenceFWebAPI.DTOs.ConferenceDTO",
-        "MediaTypes": [
-          "application/json;odata.metadata=minimal;odata.streaming=true",
-          "application/json;odata.metadata=minimal;odata.streaming=false",
-          "application/json;odata.metadata=minimal",
-          "application/json;odata.metadata=full;odata.streaming=true",
-          "application/json;odata.metadata=full;odata.streaming=false",
-          "application/json;odata.metadata=full",
-          "application/json;odata.metadata=none;odata.streaming=true",
-          "application/json;odata.metadata=none;odata.streaming=false",
-          "application/json;odata.metadata=none",
-          "application/json;odata.streaming=true",
-          "application/json;odata.streaming=false",
-          "application/json",
-          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=minimal;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;IEEE754Compatible=true",
-          "application/json;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;IEEE754Compatible=false",
-          "application/json;IEEE754Compatible=true",
-          "application/xml",
-          "application/json",
-          "text/plain",
-          "application/octet-stream",
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "FMC_BE.Controllers.ConferencesController",
-    "Method": "Update",
-    "RelativePath": "api/Conferences/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "conference",
-        "Type": "BussinessObject.Entity.Conference",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "FMC_BE.Controllers.ConferencesController",
-    "Method": "GetCount",
-    "RelativePath": "api/Conferences/count",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Int32",
-        "MediaTypes": [
-          "application/json;odata.metadata=minimal;odata.streaming=true",
-          "application/json;odata.metadata=minimal;odata.streaming=false",
-          "application/json;odata.metadata=minimal",
-          "application/json;odata.metadata=full;odata.streaming=true",
-          "application/json;odata.metadata=full;odata.streaming=false",
-          "application/json;odata.metadata=full",
-          "application/json;odata.metadata=none;odata.streaming=true",
-          "application/json;odata.metadata=none;odata.streaming=false",
-          "application/json;odata.metadata=none",
-          "application/json;odata.streaming=true",
-          "application/json;odata.streaming=false",
-          "application/json",
-          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=minimal;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;IEEE754Compatible=true",
-          "application/json;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;IEEE754Compatible=false",
-          "application/json;IEEE754Compatible=true",
-          "application/xml",
-          "application/json",
-          "text/plain",
-          "application/octet-stream",
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.Authen.GoogleLoginController",
-    "Method": "GoogleLogin",
-    "RelativePath": "api/GoogleLogin/Login",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "request",
-        "Type": "ConferenceFWebAPI.DTOs.User.GoogleLoginRequest",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.NotificationsController",
-    "Method": "SendNotificationToRole",
-    "RelativePath": "api/Notifications/send-to-role",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "conferenceId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "roleName",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "title",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "content",
-        "Type": "System.String",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.NotificationsController",
-    "Method": "SendNotificationToUser",
-    "RelativePath": "api/Notifications/send-to-user",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "userId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "title",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "content",
-        "Type": "System.String",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "GetAll",
-    "RelativePath": "api/PaperRevision",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "Add",
-    "RelativePath": "api/PaperRevision",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "dto",
-        "Type": "ConferenceFWebAPI.DTOs.PaperRevisions.AddPaperRevisionDTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "GetById",
-    "RelativePath": "api/PaperRevision/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "Update",
-    "RelativePath": "api/PaperRevision/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "ConferenceFWebAPI.DTOs.PaperRevisions.UpdatePaperRevisionDTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "Delete",
-    "RelativePath": "api/PaperRevision/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "GetByPaperId",
-    "RelativePath": "api/PaperRevision/paper/{paperId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "paperId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
-    "Method": "DeletePdf",
-    "RelativePath": "api/Papers/delete-pdf/{paperId}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "paperId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
-    "Method": "UploadPdf",
-    "RelativePath": "api/Papers/upload-pdf",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "ConferenceId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "Title",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Abstract",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Keywords",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "TopicId",
-        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "PdfFile",
-        "Type": "Microsoft.AspNetCore.Http.IFormFile",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
-    "Method": "ViewPdf",
-    "RelativePath": "api/Papers/view-pdf/{paperId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "paperId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.Reviews.ReviewController",
-    "Method": "GetAll",
-    "RelativePath": "api/Review",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.Reviews.ReviewController",
-    "Method": "Add",
-    "RelativePath": "api/Review",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "dto",
-        "Type": "ConferenceFWebAPI.DTOs.Reviews.AddReviewDTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.Reviews.ReviewController",
-    "Method": "GetById",
-    "RelativePath": "api/Review/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.Reviews.ReviewController",
-    "Method": "Update",
-    "RelativePath": "api/Review/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "ConferenceFWebAPI.DTOs.Reviews.UpdateReviewDTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.Reviews.ReviewController",
-    "Method": "Delete",
-    "RelativePath": "api/Review/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.Reviews.ReviewController",
-    "Method": "GetByPaperId",
-    "RelativePath": "api/Review/paper/{paperId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "paperId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.ReviewerAssignments.ReviewerAssignmentController",
-    "Method": "GetAll",
-    "RelativePath": "api/ReviewerAssignment",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.ReviewerAssignments.ReviewerAssignmentController",
-    "Method": "Add",
-    "RelativePath": "api/ReviewerAssignment",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "dto",
-        "Type": "ConferenceFWebAPI.DTOs.ReviewerAssignments.AddReviewerAssignmentDTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.ReviewerAssignments.ReviewerAssignmentController",
-    "Method": "GetById",
-    "RelativePath": "api/ReviewerAssignment/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.ReviewerAssignments.ReviewerAssignmentController",
-    "Method": "Update",
-    "RelativePath": "api/ReviewerAssignment/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "ConferenceFWebAPI.DTOs.ReviewerAssignments.UpdateReviewerAssignmentDTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.ReviewerAssignments.ReviewerAssignmentController",
-    "Method": "Delete",
-    "RelativePath": "api/ReviewerAssignment/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.ReviewerAssignments.ReviewerAssignmentController",
-    "Method": "GetByPaperId",
-    "RelativePath": "api/ReviewerAssignment/paper/{paperId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "paperId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "FMC_BE.Controllers.TopicsController",
-    "Method": "GetAll",
-    "RelativePath": "api/Topics",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[ConferenceFWebAPI.DTOs.TopicDTO, ConferenceFWebAPI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "application/json;odata.metadata=minimal;odata.streaming=true",
-          "application/json;odata.metadata=minimal;odata.streaming=false",
-          "application/json;odata.metadata=minimal",
-          "application/json;odata.metadata=full;odata.streaming=true",
-          "application/json;odata.metadata=full;odata.streaming=false",
-          "application/json;odata.metadata=full",
-          "application/json;odata.metadata=none;odata.streaming=true",
-          "application/json;odata.metadata=none;odata.streaming=false",
-          "application/json;odata.metadata=none",
-          "application/json;odata.streaming=true",
-          "application/json;odata.streaming=false",
-          "application/json",
-          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=minimal;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;IEEE754Compatible=true",
-          "application/json;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;IEEE754Compatible=false",
-          "application/json;IEEE754Compatible=true",
-          "application/xml",
-          "application/json",
-          "text/plain",
-          "application/octet-stream",
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "FMC_BE.Controllers.TopicsController",
-    "Method": "Create",
-    "RelativePath": "api/Topics",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "topicDto",
-        "Type": "ConferenceFWebAPI.DTOs.TopicDTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "FMC_BE.Controllers.TopicsController",
-    "Method": "GetById",
-    "RelativePath": "api/Topics/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "ConferenceFWebAPI.DTOs.TopicDTO",
-        "MediaTypes": [
-          "application/json;odata.metadata=minimal;odata.streaming=true",
-          "application/json;odata.metadata=minimal;odata.streaming=false",
-          "application/json;odata.metadata=minimal",
-          "application/json;odata.metadata=full;odata.streaming=true",
-          "application/json;odata.metadata=full;odata.streaming=false",
-          "application/json;odata.metadata=full",
-          "application/json;odata.metadata=none;odata.streaming=true",
-          "application/json;odata.metadata=none;odata.streaming=false",
-          "application/json;odata.metadata=none",
-          "application/json;odata.streaming=true",
-          "application/json;odata.streaming=false",
-          "application/json",
-          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=minimal;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;IEEE754Compatible=true",
-          "application/json;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;IEEE754Compatible=false",
-          "application/json;IEEE754Compatible=true",
-          "application/xml",
-          "application/json",
-          "text/plain",
-          "application/octet-stream",
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "FMC_BE.Controllers.TopicsController",
-    "Method": "Update",
-    "RelativePath": "api/Topics/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "topicDto",
-        "Type": "ConferenceFWebAPI.DTOs.TopicDTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "FMC_BE.Controllers.TopicsController",
-    "Method": "Delete",
-    "RelativePath": "api/Topics/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.UserConferenceRolesController",
-    "Method": "GetAll",
-    "RelativePath": "api/UserConferenceRoles",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.UserConferenceRolesController",
-    "Method": "Create",
-    "RelativePath": "api/UserConferenceRoles",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "dto",
-        "Type": "ConferenceFWebAPI.DTOs.UserConferenceRoleCreateDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.UserConferenceRolesController",
-    "Method": "GetById",
-    "RelativePath": "api/UserConferenceRoles/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.UserConferenceRolesController",
-    "Method": "Update",
-    "RelativePath": "api/UserConferenceRoles/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "role",
-        "Type": "BussinessObject.Entity.UserConferenceRole",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.UserConferenceRolesController",
-    "Method": "Delete",
-    "RelativePath": "api/UserConferenceRoles/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.UserConferenceRolesController",
-    "Method": "GetByConferenceId",
-    "RelativePath": "api/UserConferenceRoles/conference/{conferenceId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "conferenceId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.WeatherForecastController",
-    "Method": "Get",
-    "RelativePath": "WeatherForecast",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[ConferenceFWebAPI.WeatherForecast, ConferenceFWebAPI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "application/json;odata.metadata=minimal;odata.streaming=true",
-          "application/json;odata.metadata=minimal;odata.streaming=false",
-          "application/json;odata.metadata=minimal",
-          "application/json;odata.metadata=full;odata.streaming=true",
-          "application/json;odata.metadata=full;odata.streaming=false",
-          "application/json;odata.metadata=full",
-          "application/json;odata.metadata=none;odata.streaming=true",
-          "application/json;odata.metadata=none;odata.streaming=false",
-          "application/json;odata.metadata=none",
-          "application/json;odata.streaming=true",
-          "application/json;odata.streaming=false",
-          "application/json",
-          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=minimal;IEEE754Compatible=false",
-          "application/json;odata.metadata=minimal;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=full;IEEE754Compatible=false",
-          "application/json;odata.metadata=full;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;IEEE754Compatible=false",
-          "application/json;odata.metadata=none;IEEE754Compatible=true",
-          "application/json;odata.streaming=true;IEEE754Compatible=false",
-          "application/json;odata.streaming=true;IEEE754Compatible=true",
-          "application/json;odata.streaming=false;IEEE754Compatible=false",
-          "application/json;odata.streaming=false;IEEE754Compatible=true",
-          "application/json;IEEE754Compatible=false",
-          "application/json;IEEE754Compatible=true",
-          "application/xml",
-          "application/json",
-          "text/plain",
-          "application/octet-stream",
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ],
-    "EndpointName": "GetWeatherForecast"
-  }
->>>>>>> origin/Notification
 ]

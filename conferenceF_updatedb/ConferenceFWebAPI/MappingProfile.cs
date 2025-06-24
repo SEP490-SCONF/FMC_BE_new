@@ -27,6 +27,8 @@ namespace ConferenceFWebAPI
             CreateMap<UpdateReviewerAssignmentDTO, ReviewerAssignment>();
             CreateMap<User, UserProfile>();
 
+
+            
         }
     }
 }
