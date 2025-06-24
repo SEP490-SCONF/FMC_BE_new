@@ -15,3 +15,4 @@ D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\Repository\obj\Debug\net8.0\
 D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\Repository\obj\Debug\net8.0\refint\Repository.dll
 D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\Repository\obj\Debug\net8.0\Repository.pdb
 D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\Repository\obj\Debug\net8.0\ref\Repository.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\Repository\obj\Debug\net8.0\Repository.sourcelink.json

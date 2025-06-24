@@ -6,10 +6,11 @@ namespace Repository
 {
     public interface IPaperRepository
     {
-        Task<List<Paper>> GetAllAsync();
-        Task<Paper?> GetByIdAsync(int id);
-        Task AddAsync(Paper paper, List<int> authorIds);
-        Task UpdateAsync(Paper paper);
-        Task DeleteAsync(int id);
+        Task<Paper> GetPaperByIdAsync(int paperId);
+        Task AddPaperAsync(Paper paper);
+        Task UpdatePaperAsync(Paper paper);
+        Task DeletePaperAsync(int paperId);
+        // Có thể thêm các phương thức khác tùy theo nhu cầu của ứng dụng
+        // Ví dụ: Task<IEnumerable<Paper>> GetAllPapersAsync();
     }
 }

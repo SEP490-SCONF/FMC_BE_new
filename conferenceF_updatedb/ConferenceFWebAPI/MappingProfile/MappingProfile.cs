@@ -2,7 +2,7 @@
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
 
-namespace ConferenceFWebAPI
+namespace ConferenceFWebAPI.MappingProfile
 {
     public class MappingProfile : Profile
     {

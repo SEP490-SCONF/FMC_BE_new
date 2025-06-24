@@ -13,3 +13,4 @@ D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\DataAccess\obj\Debug\net8.0\
 D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\DataAccess\obj\Debug\net8.0\refint\DataAccess.dll
 D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\DataAccess\obj\Debug\net8.0\DataAccess.pdb
 D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\DataAccess\obj\Debug\net8.0\ref\DataAccess.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\DataAccess\obj\Debug\net8.0\DataAccess.sourcelink.json

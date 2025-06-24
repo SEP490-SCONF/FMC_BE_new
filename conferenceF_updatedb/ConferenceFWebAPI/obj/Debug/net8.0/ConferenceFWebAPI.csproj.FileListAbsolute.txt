@@ -285,3 +285,17 @@ D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\obj\Debug\
 D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\obj\Debug\net8.0\ConferenceFWebAPI.pdb
 D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\obj\Debug\net8.0\ConferenceFWebAPI.genruntimeconfig.cache
 D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\obj\Debug\net8.0\ref\ConferenceFWebAPI.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\secrets.json
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\Azure.Storage.Blobs.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\Azure.Storage.Common.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\Microsoft.Azure.KeyVault.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\Microsoft.Azure.KeyVault.WebKey.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\Microsoft.Azure.Services.AppAuthentication.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\Microsoft.Extensions.Configuration.AzureKeyVault.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\Microsoft.IdentityModel.Clients.ActiveDirectory.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\Microsoft.Rest.ClientRuntime.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\Microsoft.Rest.ClientRuntime.Azure.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\System.IO.Hashing.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\obj\Debug\net8.0\ConferenceFWebAPI.MvcApplicationPartsAssemblyInfo.cs
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\obj\Debug\net8.0\ConferenceFWebAPI.sourcelink.json

@@ -240,8 +240,24 @@
   },
   {
     "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
-    "Method": "SubmitPaper",
-    "RelativePath": "api/Papers",
+    "Method": "DeletePdf",
+    "RelativePath": "api/Papers/delete-pdf/{paperId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "paperId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
+    "Method": "UploadPdf",
+    "RelativePath": "api/Papers/upload-pdf",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -272,12 +288,7 @@
         "IsRequired": false
       },
       {
-        "Name": "AuthorId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "File",
+        "Name": "PdfFile",
         "Type": "Microsoft.AspNetCore.Http.IFormFile",
         "IsRequired": false
       }
@@ -286,24 +297,14 @@
   },
   {
     "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
-    "Method": "GetAll",
-    "RelativePath": "api/Papers",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
-    "Method": "GetById",
-    "RelativePath": "api/Papers/{id}",
+    "Method": "ViewPdf",
+    "RelativePath": "api/Papers/view-pdf/{paperId}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "id",
+        "Name": "paperId",
         "Type": "System.Int32",
         "IsRequired": true
       }

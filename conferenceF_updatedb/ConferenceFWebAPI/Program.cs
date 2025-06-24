@@ -12,7 +12,8 @@ using DataAccess;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.Service;
 using Repository.Repository;
-using ConferenceFWebAPI;
+using ConferenceFWebAPI.MappingProfile;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -118,13 +119,21 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("SpecificOrigin", build =>
     {
-        build.WithOrigins("http://localhost:5173") // 👈 Chỉ định rõ origin
+        build.WithOrigins("http://localhost:5173") 
              .AllowAnyMethod()
              .AllowAnyHeader()
-             .AllowCredentials(); // 👈 Bắt buộc khi dùng withCredentials
+             .AllowCredentials();
     });
 });
 
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.WriteIndented = true;
+
+    // Cấu hình định dạng DateTime
+    options.JsonSerializerOptions.Converters.Add(new CustomDateTimeConverter());
+    });
 
 //AddAuthentication
 
@@ -149,8 +158,9 @@ builder.Services.AddAutoMapper(typeof(Program));
 //Storage Google Drive
 builder.Services.AddSingleton<GoogleDriveService>();
 
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddAutoMapper(typeof(PaperProfile).Assembly);
 
+builder.Services.AddScoped<IAzureBlobStorageService, AzureBlobStorageService>();
 
 // Add services to the container.
 builder.Services.AddControllers().AddOData(opt => opt.Select().Filter().OrderBy().Expand().Count().SetMaxTop(100));
@@ -164,6 +174,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage(); // Đảm bảo dòng này được gọi
     app.UseSwagger();
     app.UseSwaggerUI();
 }
