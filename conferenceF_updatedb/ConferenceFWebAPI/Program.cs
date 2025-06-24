@@ -21,7 +21,6 @@ using Microsoft.OData.ModelBuilder;
 var builder = WebApplication.CreateBuilder(args);
 var modelBuilder = new ODataConventionModelBuilder();
 modelBuilder.EntitySet<Paper>("Papers"); // Register your Paper entity as an OData EntitySet
-modelBuilder.EntitySet<PaperRevision>("PaperRevisions"); // Register PaperRevision if you want OData for it too
 modelBuilder.EntitySet<Review>("Reviews");
 
 builder.Services.AddControllers().AddOData(

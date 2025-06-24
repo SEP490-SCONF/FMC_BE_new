@@ -107,37 +107,28 @@ namespace ConferenceFWebAPI.Controllers
             return Redirect(paper.FilePath);
         }
 
- 
-        [HttpDelete("delete-pdf/{paperId}")]
-        public async Task<IActionResult> DeletePdf(int paperId)
+
+        [HttpPut("mark-as-deleted/{paperId}")] 
+        public async Task<IActionResult> MarkPaperAsDeleted(int paperId) // <-- Đổi tên hàm
         {
             var paper = await _paperRepository.GetPaperByIdAsync(paperId);
-            if (paper == null || string.IsNullOrEmpty(paper.FilePath))
+            if (paper == null)
             {
-                return NotFound("Paper or PDF file not found.");
+                return NotFound("Paper not found.");
             }
 
             try
             {
-                // Xóa file khỏi Azure Blob Storage
-                bool isDeleted = await _azureBlobStorageService.DeleteFileAsync(paper.FilePath);
+                paper.Status = "Deleted";
 
-                if (isDeleted)
-                {
-                    // Cập nhật đường dẫn file trong database thành null
-                    paper.FilePath = null;
-                    await _paperRepository.UpdatePaperAsync(paper);
-                    return Ok("PDF file deleted successfully.");
-                }
-                else
-                {
-                    // Có thể file không tồn tại trên storage hoặc có lỗi khi xóa
-                    return StatusCode(500, "Failed to delete PDF file from storage. It might not exist or an error occurred.");
-                }
+                await _paperRepository.UpdatePaperAsync(paper);
+
+
+                return Ok($"Paper with ID {paperId} successfully marked as 'Deleted'.");
             }
             catch (Exception ex)
             {
-                // Ghi log lỗi
+                // Ghi log lỗi chi tiết ở đây
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }

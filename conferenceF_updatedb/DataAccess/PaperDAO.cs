@@ -17,7 +17,7 @@ namespace DataAccess
         }
         public IQueryable<Paper> GetAllPapers()
         {
-            return _context.Papers.AsQueryable();
+            return _context.Papers.Where(p => p.Status != "Deleted").AsQueryable();
         }
         public async Task<Paper> GetByIdAsync(int id)
         {
