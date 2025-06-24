@@ -299,3 +299,6 @@ D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\
 D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\System.IO.Hashing.dll
 D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\obj\Debug\net8.0\ConferenceFWebAPI.MvcApplicationPartsAssemblyInfo.cs
 D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\obj\Debug\net8.0\ConferenceFWebAPI.sourcelink.json
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\Microsoft.Azure.SignalR.Common.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\Microsoft.Azure.SignalR.dll
+D:\C#project\FMC_BE-update_db-\conferenceF_updatedb\ConferenceFWebAPI\bin\Debug\net8.0\Microsoft.Azure.SignalR.Protocols.dll

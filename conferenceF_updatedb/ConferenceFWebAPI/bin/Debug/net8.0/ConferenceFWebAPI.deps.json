@@ -17,6 +17,7 @@
           "MailKit": "4.12.1",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.17",
           "Microsoft.AspNetCore.OData": "8.3.0",
+          "Microsoft.Azure.SignalR": "1.30.3",
           "Microsoft.EntityFrameworkCore.Tools": "8.0.11",
           "Microsoft.Extensions.Configuration.AzureKeyVault": "3.1.24",
           "Microsoft.VisualStudio.Web.CodeGeneration.Design": "8.0.7",
@@ -64,7 +65,7 @@
           "Azure.Core": "1.44.1",
           "Microsoft.Identity.Client": "4.61.3",
           "Microsoft.Identity.Client.Extensions.Msal": "4.61.3",
-          "System.Memory": "4.5.4",
+          "System.Memory": "4.5.5",
           "System.Security.Cryptography.ProtectedData": "7.0.0",
           "System.Text.Json": "8.0.0",
           "System.Threading.Tasks.Extensions": "4.5.4"
@@ -786,6 +787,38 @@
           }
         }
       },
+      "Microsoft.Azure.SignalR/1.30.3": {
+        "dependencies": {
+          "Azure.Identity": "1.11.4",
+          "Microsoft.Azure.SignalR.Protocols": "1.30.3",
+          "Microsoft.Extensions.Http": "2.1.0",
+          "Newtonsoft.Json": "13.0.3"
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Azure.SignalR.Common.dll": {
+            "assemblyVersion": "1.30.3.0",
+            "fileVersion": "1.30.3.0"
+          },
+          "lib/net8.0/Microsoft.Azure.SignalR.dll": {
+            "assemblyVersion": "1.30.3.0",
+            "fileVersion": "1.30.3.0"
+          }
+        }
+      },
+      "Microsoft.Azure.SignalR.Protocols/1.30.3": {
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "8.0.0",
+          "System.Buffers": "4.5.1",
+          "System.Memory": "4.5.5",
+          "System.Runtime.CompilerServices.Unsafe": "6.0.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Azure.SignalR.Protocols.dll": {
+            "assemblyVersion": "1.30.3.0",
+            "fileVersion": "1.30.3.0"
+          }
+        }
+      },
       "Microsoft.Bcl.AsyncInterfaces/8.0.0": {
         "runtime": {
           "lib/netstandard2.1/Microsoft.Bcl.AsyncInterfaces.dll": {
@@ -1498,6 +1531,13 @@
         }
       },
       "Microsoft.Extensions.FileSystemGlobbing/8.0.0": {},
+      "Microsoft.Extensions.Http/2.1.0": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.2",
+          "Microsoft.Extensions.Logging": "8.0.1",
+          "Microsoft.Extensions.Options": "8.0.2"
+        }
+      },
       "Microsoft.Extensions.Logging/8.0.1": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection": "8.0.1",
@@ -2147,15 +2187,7 @@
           "System.Runtime": "4.3.0"
         }
       },
-      "System.Buffers/4.3.0": {
-        "dependencies": {
-          "System.Diagnostics.Debug": "4.3.0",
-          "System.Diagnostics.Tracing": "4.3.0",
-          "System.Resources.ResourceManager": "4.3.0",
-          "System.Runtime": "4.3.0",
-          "System.Threading": "4.3.0"
-        }
-      },
+      "System.Buffers/4.5.1": {},
       "System.ClientModel/1.1.0": {
         "dependencies": {
           "System.Memory.Data": "6.0.0",
@@ -2410,7 +2442,7 @@
       "System.IO.Compression/4.3.0": {
         "dependencies": {
           "Microsoft.NETCore.Platforms": "1.1.0",
-          "System.Buffers": "4.3.0",
+          "System.Buffers": "4.5.1",
           "System.Collections": "4.3.0",
           "System.Diagnostics.Debug": "4.3.0",
           "System.IO": "4.3.0",
@@ -2428,7 +2460,7 @@
       },
       "System.IO.Compression.ZipFile/4.3.0": {
         "dependencies": {
-          "System.Buffers": "4.3.0",
+          "System.Buffers": "4.5.1",
           "System.IO": "4.3.0",
           "System.IO.Compression": "4.3.0",
           "System.IO.FileSystem": "4.3.0",
@@ -2514,7 +2546,7 @@
           }
         }
       },
-      "System.Memory/4.5.4": {},
+      "System.Memory/4.5.5": {},
       "System.Memory.Data/6.0.0": {
         "dependencies": {
           "System.Text.Json": "8.0.0"
@@ -3598,6 +3630,20 @@
       "path": "microsoft.azure.services.appauthentication/1.0.3",
       "hashPath": "microsoft.azure.services.appauthentication.1.0.3.nupkg.sha512"
     },
+    "Microsoft.Azure.SignalR/1.30.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-p2dWnrpVI7uSq9xo1YBi7F1Dtq8TBvi/XA5dFD3MPPQaUtoNTb9G0uprt5gPCW9Cuipid4jb21GqJ0Eu9+6GpQ==",
+      "path": "microsoft.azure.signalr/1.30.3",
+      "hashPath": "microsoft.azure.signalr.1.30.3.nupkg.sha512"
+    },
+    "Microsoft.Azure.SignalR.Protocols/1.30.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-OPkIylG1MF4/uA05IADl8HZR6dLzt9uEGY19ACT0u6ARyvesJMNZzRI/mhAiXHUyxfvlIXewAeyIFMIu5wLa4A==",
+      "path": "microsoft.azure.signalr.protocols/1.30.3",
+      "hashPath": "microsoft.azure.signalr.protocols.1.30.3.nupkg.sha512"
+    },
     "Microsoft.Bcl.AsyncInterfaces/8.0.0": {
       "type": "package",
       "serviceable": true,
@@ -3870,6 +3916,13 @@
       "sha512": "sha512-OK+670i7esqlQrPjdIKRbsyMCe9g5kSLpRRQGSr4Q58AOYEe/hCnfLZprh7viNisSUUQZmMrbbuDaIrP+V1ebQ==",
       "path": "microsoft.extensions.filesystemglobbing/8.0.0",
       "hashPath": "microsoft.extensions.filesystemglobbing.8.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Http/2.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-vkSkGa1UIZVlAd18oDhrtoawN/q7fDemJcVpT9+28mP7bP0I8zKLSLRwqF++GmPs/7e0Aqlo6jpZm3P7YYS0ag==",
+      "path": "microsoft.extensions.http/2.1.0",
+      "hashPath": "microsoft.extensions.http.2.1.0.nupkg.sha512"
     },
     "Microsoft.Extensions.Logging/8.0.1": {
       "type": "package",
@@ -4361,12 +4414,12 @@
       "path": "system.appcontext/4.3.0",
       "hashPath": "system.appcontext.4.3.0.nupkg.sha512"
     },
-    "System.Buffers/4.3.0": {
+    "System.Buffers/4.5.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-ratu44uTIHgeBeI0dE8DWvmXVBSo4u7ozRZZHOMmK/JPpYyo0dAfgSiHlpiObMQ5lEtEyIXA40sKRYg5J6A8uQ==",
-      "path": "system.buffers/4.3.0",
-      "hashPath": "system.buffers.4.3.0.nupkg.sha512"
+      "sha512": "sha512-Rw7ijyl1qqRS0YQD/WycNst8hUUMgrMH4FCn1nNm27M4VxchZ1js3fVjQaANHO5f3sN4isvP4a+Met9Y4YomAg==",
+      "path": "system.buffers/4.5.1",
+      "hashPath": "system.buffers.4.5.1.nupkg.sha512"
     },
     "System.ClientModel/1.1.0": {
       "type": "package",
@@ -4627,12 +4680,12 @@
       "path": "system.management/7.0.2",
       "hashPath": "system.management.7.0.2.nupkg.sha512"
     },
-    "System.Memory/4.5.4": {
+    "System.Memory/4.5.5": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-1MbJTHS1lZ4bS4FmsJjnuGJOu88ZzTT2rLvrhW7Ygic+pC0NWA+3hgAen0HRdsocuQXCkUTdFn9yHJJhsijDXw==",
-      "path": "system.memory/4.5.4",
-      "hashPath": "system.memory.4.5.4.nupkg.sha512"
+      "sha512": "sha512-XIWiDvKPXaTveaB7HVganDlOCRoj03l+jrwNvcge/t8vhGYKvqV+dMv6G4SAX2NoNmN0wZfVPTAlFwZcZvVOUw==",
+      "path": "system.memory/4.5.5",
+      "hashPath": "system.memory.4.5.5.nupkg.sha512"
     },
     "System.Memory.Data/6.0.0": {
       "type": "package",

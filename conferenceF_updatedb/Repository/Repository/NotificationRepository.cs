@@ -7,41 +7,63 @@ namespace Repository
 {
     public class NotificationRepository : INotificationRepository
     {
-        private readonly NotificationDAO _notificationDao;
+        private readonly NotificationDAO _notificationDAO;
 
-        public NotificationRepository(NotificationDAO notificationDao)
+        public NotificationRepository(NotificationDAO notificationDAO)
         {
-            _notificationDao = notificationDao;
+            _notificationDAO = notificationDAO;
         }
 
-        public async Task<IEnumerable<Notification>> GetAll()
+        public async Task<Notification> CreateNotificationForUserAsync(int userId, string title, string content)
         {
-            return await _notificationDao.GetAll();
+            var notification = new Notification
+            {
+                UserId = userId,
+                Title = title,
+                Content = content,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // Thêm trạng thái "chưa đọc" cho người dùng
+            notification.NotificationStatuses.Add(new NotificationStatus
+            {
+                UserId = userId,
+                IsRead = false
+            });
+
+            return await _notificationDAO.AddNotificationAsync(notification);
         }
 
-        public async Task<Notification> GetById(int id)
+        public async Task<(Notification?, List<User>)> CreateNotificationForRoleAsync(int conferenceId, string roleName, string title, string content)
         {
-            return await _notificationDao.GetById(id);
-        }
+            // 1. Tìm tất cả người dùng có vai trò đó
+            var usersInRole = await _notificationDAO.GetUsersInRoleAsync(conferenceId, roleName);
+            if (!usersInRole.Any())
+            {
+                return (null, new List<User>());
+            }
 
-        public async Task Add(Notification entity)
-        {
-            await _notificationDao.Add(entity);
-        }
+            // 2. Tạo thông báo chung
+            var notification = new Notification
+            {
+                RoleTarget = roleName,
+                Title = title,
+                Content = content,
+                CreatedAt = DateTime.UtcNow
+            };
 
-        public async Task Update(Notification entity)
-        {
-            await _notificationDao.Update(entity);
-        }
+            // 3. Thêm trạng thái "chưa đọc" cho từng người dùng
+            foreach (var user in usersInRole)
+            {
+                notification.NotificationStatuses.Add(new NotificationStatus
+                {
+                    UserId = user.UserId,
+                    IsRead = false
+                });
+            }
 
-        public async Task Delete(int id)
-        {
-            await _notificationDao.Delete(id);
-        }
-
-        public async Task<IEnumerable<Notification>> GetByUserId(int userId)
-        {
-            return await _notificationDao.GetByUserId(userId);
+            var createdNotification = await _notificationDAO.AddNotificationAsync(notification);
+            return (createdNotification, usersInRole);
         }
     }
 }

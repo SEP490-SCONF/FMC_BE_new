@@ -239,6 +239,63 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "ConferenceFWebAPI.Controllers.NotificationsController",
+    "Method": "SendNotificationToRole",
+    "RelativePath": "api/Notifications/send-to-role",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "conferenceId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "roleName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "title",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "content",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.NotificationsController",
+    "Method": "SendNotificationToUser",
+    "RelativePath": "api/Notifications/send-to-user",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "title",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "content",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
     "Method": "DeletePdf",
     "RelativePath": "api/Papers/delete-pdf/{paperId}",

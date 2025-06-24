@@ -14,8 +14,14 @@ using ConferenceFWebAPI.Service;
 using Repository.Repository;
 using ConferenceFWebAPI.MappingProfile;
 using System.Text.Json.Serialization;
+using ConferenceFWebAPI.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
+// 1. Lấy chuỗi kết nối SignalR từ appsettings.json
+var signalRConnectionString = builder.Configuration.GetConnectionString("AzureSignalR");
+
+// 2. Thêm dịch vụ SignalR và kết nối với Azure SignalR Service
+builder.Services.AddSignalR().AddAzureSignalR(signalRConnectionString);
 
 builder.Services.AddDbContext<ConferenceFTestContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -155,10 +161,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
 
-//Storage Google Drive
-builder.Services.AddSingleton<GoogleDriveService>();
-
 builder.Services.AddAutoMapper(typeof(PaperProfile).Assembly);
+
+builder.Services.AddScoped<NotificationService>();
 
 builder.Services.AddScoped<IAzureBlobStorageService, AzureBlobStorageService>();
 
@@ -184,5 +189,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+// 3. Map Hub của bạn tới một endpoint
+app.MapHub<NotificationHub>("/notificationhub"); // Client sẽ kết nối tới URL này
 
 app.Run();
