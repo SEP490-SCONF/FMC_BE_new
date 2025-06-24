@@ -413,6 +413,27 @@
   },
   {
     "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
+    "Method": "UpdatePaperPublishStatus",
+    "RelativePath": "api/Papers/{paperId}/publish",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "paperId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "publishDto",
+        "Type": "ConferenceFWebAPI.DTOs.Paper.PaperPublishDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
     "Method": "MarkPaperAsDeleted",
     "RelativePath": "api/Papers/mark-as-deleted/{paperId}",
     "HttpMethod": "PUT",
@@ -458,6 +479,11 @@
       {
         "Name": "TopicId",
         "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "AuthorIds",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "IsRequired": false
       },
       {

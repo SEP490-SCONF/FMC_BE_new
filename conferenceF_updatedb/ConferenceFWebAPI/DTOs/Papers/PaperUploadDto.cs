@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ConferenceFWebAPI.DTOs
+namespace ConferenceFWebAPI.DTOs.Paper
 {
     public class PaperUploadDto
     {
@@ -20,6 +20,9 @@ namespace ConferenceFWebAPI.DTOs
 
         public int? TopicId { get; set; }
 
+        [Required] // Đảm bảo bạn nhận được ít nhất một tác giả
+        public List<int> AuthorIds { get; set; } = new List<int>();
+
         // Trường để nhận file PDF từ client
         [Required(ErrorMessage = "Please select a file.")]
         [DataType(DataType.Upload)]
@@ -27,8 +30,6 @@ namespace ConferenceFWebAPI.DTOs
         [AllowedExtensions(new string[] { ".pdf" })] // Chỉ cho phép file PDF
         public IFormFile PdfFile { get; set; }
 
-        // Các thuộc tính Validation Attribute tùy chỉnh (Nếu chưa có, bạn cần thêm vào dự án của mình)
-        // Đây là ví dụ đơn giản, bạn có thể đặt chúng ở một file riêng hoặc một thư mục chung
         public class MaxFileSizeAttribute : ValidationAttribute
         {
             private readonly int _maxFileSize;

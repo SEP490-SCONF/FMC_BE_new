@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
-using ConferenceFWebAPI.DTOs;
+using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.Service;
 using DataAccess;
 using Microsoft.AspNetCore.Mvc;
@@ -46,6 +46,12 @@ namespace ConferenceFWebAPI.Controllers
                 return BadRequest("Only PDF files are allowed.");
             }
 
+            // Thêm kiểm tra AuthorIds không rỗng
+            if (paperDto.AuthorIds == null || !paperDto.AuthorIds.Any())
+            {
+                return BadRequest("At least one author must be provided.");
+            }
+
             try
             {
                 var paperContainerName = _configuration.GetValue<string>("BlobContainers:Papers");
@@ -63,7 +69,17 @@ namespace ConferenceFWebAPI.Controllers
                 paper.Status = "Submitted";
                 paper.IsPublished = false;
 
-
+                paper.PaperAuthors = new List<PaperAuthor>();
+                int authorOrder = 1; // Khởi tạo thứ tự tác giả
+                foreach (var authorId in paperDto.AuthorIds.Distinct()) 
+                {
+                    paper.PaperAuthors.Add(new PaperAuthor
+                    {
+                        AuthorId = authorId,
+                        AuthorOrder = authorOrder 
+                    });
+                    authorOrder++;
+                }
 
                 await _paperRepository.AddPaperAsync(paper);
 
@@ -75,7 +91,7 @@ namespace ConferenceFWebAPI.Controllers
             }
             catch (Exception ex)
             {
-
+                // Ghi log lỗi chi tiết ở đây
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
@@ -136,6 +152,36 @@ namespace ConferenceFWebAPI.Controllers
             catch (Exception ex)
             {
                 // Ghi log lỗi chi tiết ở đây
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+        [HttpPut("{paperId}/publish")] // <-- Route mới cho việc xuất bản/bỏ xuất bản
+        public async Task<IActionResult> UpdatePaperPublishStatus(int paperId, [FromBody] PaperPublishDto publishDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var paper = await _paperRepository.GetPaperByIdAsync(paperId);
+            if (paper == null)
+            {
+                return NotFound($"Paper with ID {paperId} not found.");
+            }
+
+            try
+            {
+                // Cập nhật trạng thái IsPublished của bài báo
+                paper.IsPublished = publishDto.IsPublished;
+
+                // Gọi Repository để cập nhật vào database
+                await _paperRepository.UpdatePaperAsync(paper);
+
+                return Ok($"Paper with ID {paperId} IsPublished status updated to {publishDto.IsPublished}.");
+            }
+            catch (Exception ex)
+            {
+                // Ghi log lỗi chi tiết ở đây nếu cần
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }

@@ -20,7 +20,7 @@ namespace ConferenceFWebAPI.DTOs.Reviews
 
         public DateTime? ReviewedAt { get; set; }
 
-        public virtual Paper Paper { get; set; } = null!;
+        public virtual BussinessObject.Entity.Paper Paper { get; set; } = null!;
 
         //public virtual User Reviewer { get; set; } = null!;
     }

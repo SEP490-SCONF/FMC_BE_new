@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
-using ConferenceFWebAPI.DTOs;
+using ConferenceFWebAPI.DTOs.Paper;
 
 namespace ConferenceFWebAPI.MappingProfiles
 {
@@ -30,8 +30,11 @@ namespace ConferenceFWebAPI.MappingProfiles
                 .ForMember(dest => dest.Reviews, opt => opt.Ignore())
                 .ForMember(dest => dest.Schedules, opt => opt.Ignore())
                 .ForMember(dest => dest.Topic, opt => opt.Ignore())
-                .ForMember(dest => dest.Proceedings, opt => opt.Ignore());
-                //.ForMember(dest => dest.PdfFile, opt => opt.Ignore()); // Thêm dòng này vì PdfFile là IFormFile, không phải thuộc tính của Paper
+                .ForMember(dest => dest.Proceedings, opt => opt.Ignore())
+                .ForMember(dest => dest.PaperAuthors, opt => opt.Ignore()); // <-- Thêm dòng này để bỏ qua PaperAuthors
+            ;
+
+            //.ForMember(dest => dest.PdfFile, opt => opt.Ignore()); // Thêm dòng này vì PdfFile là IFormFile, không phải thuộc tính của Paper
         }
     }
 }
