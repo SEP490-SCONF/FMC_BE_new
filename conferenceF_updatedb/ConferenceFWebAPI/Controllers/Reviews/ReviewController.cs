@@ -51,7 +51,7 @@ namespace ConferenceFWebAPI.Controllers.Reviews
 
         // POST: api/Review
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] AddReviewDTO dto)
+        public async Task<IActionResult> Add([FromForm] AddReviewDTO dto)
         {
             var review = _mapper.Map<Review>(dto);
             await _reviewRepository.Add(review);

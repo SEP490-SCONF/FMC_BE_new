@@ -424,9 +424,29 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "dto",
-        "Type": "ConferenceFWebAPI.DTOs.Reviews.AddReviewDTO",
-        "IsRequired": true
+        "Name": "PaperId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "ReviewerId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "RevisionId",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "Score",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "Comments",
+        "Type": "System.String",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
