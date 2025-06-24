@@ -105,6 +105,9 @@ _Chutzpah*
 bin/
 obj/
 
+**/bin/
+**/obj/
+
 # Visual Studio
 .vs/
 *.user
