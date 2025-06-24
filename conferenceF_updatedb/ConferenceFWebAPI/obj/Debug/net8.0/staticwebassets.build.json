@@ -1,11 +1,12 @@
 {
   "Version": 1,
-  "Hash": "rzvFFzY8OoBYXHQyak83Ws44u49tRGvf+iQ3PXIbSU0=",
+  "Hash": "VmHjioDuFFw2dNmBTarRNMnvfHl5QqzZlaJZRjrg3OQ=",
   "Source": "ConferenceFWebAPI",
   "BasePath": "_content/ConferenceFWebAPI",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
   "DiscoveryPatterns": [],
-  "Assets": []
+  "Assets": [],
+  "Endpoints": []
 }

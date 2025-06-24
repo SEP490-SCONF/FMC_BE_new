@@ -16,7 +16,14 @@ namespace ConferenceFWebAPI
             CreateMap<ConferenceDTO, Conference>();
             CreateMap<Topic, TopicDTO>();
             CreateMap<TopicDTO, Topic>();
-            CreateMap<PaperRevision, PaperRevisionDTO>();
+            CreateMap<Paper, PaperResponseDto>(); // <-- Thêm dòng này
+            CreateMap<PaperRevisionUploadDto, PaperRevision>()
+                           .ForMember(dest => dest.FilePath, opt => opt.Ignore()) // FilePath sẽ được xử lý riêng bởi Azure Blob Service
+                           .ForMember(dest => dest.Status, opt => opt.Ignore()) // Status sẽ được gán trong controller
+                           .ForMember(dest => dest.SubmittedAt, opt => opt.Ignore()); // SubmittedAt sẽ được gán trong controller
+
+            // Mapping từ PaperRevision Entity sang PaperRevisionResponseDto
+            CreateMap<PaperRevision, PaperRevisionResponseDto>();
             CreateMap<AddPaperRevisionDTO, PaperRevision>();
             CreateMap<UpdatePaperRevisionDTO, PaperRevision>();
             CreateMap<Review, ReviewDTO>();

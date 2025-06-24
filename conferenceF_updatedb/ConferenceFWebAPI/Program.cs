@@ -15,10 +15,24 @@ using Repository.Repository;
 using ConferenceFWebAPI.MappingProfiles;
 using System.Text.Json.Serialization;
 using ConferenceFWebAPI.Hubs;
+using Microsoft.OData.ModelBuilder;
 
 var builder = WebApplication.CreateBuilder(args);
 // 1. Lấy chuỗi kết nối SignalR từ appsettings.json
 var signalRConnectionString = builder.Configuration.GetConnectionString("AzureSignalR");
+var modelBuilder = new ODataConventionModelBuilder();
+modelBuilder.EntitySet<Paper>("Papers"); // Register your Paper entity as an OData EntitySet
+modelBuilder.EntitySet<Review>("Reviews");
+
+builder.Services.AddControllers().AddOData(
+    options => options.Select() // Enable $select
+                      .Expand() // Enable $expand
+                      .Filter() // Enable $filter
+                      .OrderBy() // Enable $orderby
+                      .SetMaxTop(100) // Set max $top value (e.g., limit results to 100)
+    .Count() // Enable $count
+                      .AddRouteComponents("odata", modelBuilder.GetEdmModel()) // Define the OData route
+);
 
 // 2. Thêm dịch vụ SignalR và kết nối với Azure SignalR Service
 builder.Services.AddSignalR().AddAzureSignalR(signalRConnectionString);

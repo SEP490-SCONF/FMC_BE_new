@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ConferenceFWebAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+65ccac79a21c3abbac62c2ef2322c51c61c9c6e1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d4c8ae121094e0e989b56e3668d6b8c2463743fc")]
 [assembly: System.Reflection.AssemblyProductAttribute("ConferenceFWebAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ConferenceFWebAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

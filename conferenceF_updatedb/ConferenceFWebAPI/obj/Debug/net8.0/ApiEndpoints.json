@@ -296,41 +296,15 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "GetAll",
-    "RelativePath": "api/PaperRevision",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "Add",
-    "RelativePath": "api/PaperRevision",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "dto",
-        "Type": "ConferenceFWebAPI.DTOs.PaperRevisions.AddPaperRevisionDTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "GetById",
-    "RelativePath": "api/PaperRevision/{id}",
+    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionsController",
+    "Method": "GetRevisionById",
+    "RelativePath": "api/PaperRevisions/{revisionId}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "id",
+        "Name": "revisionId",
         "Type": "System.Int32",
         "IsRequired": true
       }
@@ -338,36 +312,15 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "Update",
-    "RelativePath": "api/PaperRevision/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "ConferenceFWebAPI.DTOs.PaperRevisions.UpdatePaperRevisionDTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "Delete",
-    "RelativePath": "api/PaperRevision/{id}",
+    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionsController",
+    "Method": "DeleteRevision",
+    "RelativePath": "api/PaperRevisions/delete-revision/{revisionId}",
     "HttpMethod": "DELETE",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "id",
+        "Name": "revisionId",
         "Type": "System.Int32",
         "IsRequired": true
       }
@@ -375,9 +328,9 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "GetByPaperId",
-    "RelativePath": "api/PaperRevision/paper/{paperId}",
+    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionsController",
+    "Method": "GetRevisionsByPaperId",
+    "RelativePath": "api/PaperRevisions/paper/{paperId}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -391,10 +344,78 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionsController",
+    "Method": "UploadRevision",
+    "RelativePath": "api/PaperRevisions/upload-revision",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "PaperId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PdfFile",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      },
+      {
+        "Name": "Comments",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionsController",
+    "Method": "ViewPdf",
+    "RelativePath": "api/PaperRevisions/view-pdf/{revisionId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "revisionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
-    "Method": "DeletePdf",
-    "RelativePath": "api/Papers/delete-pdf/{paperId}",
-    "HttpMethod": "DELETE",
+    "Method": "Get",
+    "RelativePath": "api/Papers",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
+    "Method": "Get",
+    "RelativePath": "api/Papers/{key}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "key",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
+    "Method": "MarkPaperAsDeleted",
+    "RelativePath": "api/Papers/mark-as-deleted/{paperId}",
+    "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
     "Parameters": [
@@ -443,22 +464,6 @@
         "Name": "PdfFile",
         "Type": "Microsoft.AspNetCore.Http.IFormFile",
         "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
-    "Method": "ViewPdf",
-    "RelativePath": "api/Papers/view-pdf/{paperId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "paperId",
-        "Type": "System.Int32",
-        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -1033,6 +1038,184 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Microsoft.AspNetCore.OData.Routing.Controllers.MetadataController",
+    "Method": "GetServiceDocument",
+    "RelativePath": "odata",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "Microsoft.OData.ODataServiceDocument",
+        "MediaTypes": [
+          "application/json;odata.metadata=minimal;odata.streaming=true",
+          "application/json;odata.metadata=minimal;odata.streaming=false",
+          "application/json;odata.metadata=minimal",
+          "application/json;odata.metadata=full;odata.streaming=true",
+          "application/json;odata.metadata=full;odata.streaming=false",
+          "application/json;odata.metadata=full",
+          "application/json;odata.metadata=none;odata.streaming=true",
+          "application/json;odata.metadata=none;odata.streaming=false",
+          "application/json;odata.metadata=none",
+          "application/json;odata.streaming=true",
+          "application/json;odata.streaming=false",
+          "application/json",
+          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=false",
+          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=true",
+          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=false",
+          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=true",
+          "application/json;odata.metadata=minimal;IEEE754Compatible=false",
+          "application/json;odata.metadata=minimal;IEEE754Compatible=true",
+          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=false",
+          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=true",
+          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=false",
+          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=true",
+          "application/json;odata.metadata=full;IEEE754Compatible=false",
+          "application/json;odata.metadata=full;IEEE754Compatible=true",
+          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=false",
+          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=true",
+          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=true",
+          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=false",
+          "application/json;odata.metadata=none;IEEE754Compatible=false",
+          "application/json;odata.metadata=none;IEEE754Compatible=true",
+          "application/json;odata.streaming=true;IEEE754Compatible=false",
+          "application/json;odata.streaming=true;IEEE754Compatible=true",
+          "application/json;odata.streaming=false;IEEE754Compatible=false",
+          "application/json;odata.streaming=false;IEEE754Compatible=true",
+          "application/json;IEEE754Compatible=false",
+          "application/json;IEEE754Compatible=true",
+          "application/xml",
+          "application/json",
+          "text/plain",
+          "application/octet-stream",
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ],
+    "EndpointName": "odata/"
+  },
+  {
+    "ContainingType": "Microsoft.AspNetCore.OData.Routing.Controllers.MetadataController",
+    "Method": "GetMetadata",
+    "RelativePath": "odata/$metadata",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "Microsoft.OData.Edm.IEdmModel",
+        "MediaTypes": [
+          "application/json;odata.metadata=minimal;odata.streaming=true",
+          "application/json;odata.metadata=minimal;odata.streaming=false",
+          "application/json;odata.metadata=minimal",
+          "application/json;odata.metadata=full;odata.streaming=true",
+          "application/json;odata.metadata=full;odata.streaming=false",
+          "application/json;odata.metadata=full",
+          "application/json;odata.metadata=none;odata.streaming=true",
+          "application/json;odata.metadata=none;odata.streaming=false",
+          "application/json;odata.metadata=none",
+          "application/json;odata.streaming=true",
+          "application/json;odata.streaming=false",
+          "application/json",
+          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=false",
+          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=true",
+          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=false",
+          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=true",
+          "application/json;odata.metadata=minimal;IEEE754Compatible=false",
+          "application/json;odata.metadata=minimal;IEEE754Compatible=true",
+          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=false",
+          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=true",
+          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=false",
+          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=true",
+          "application/json;odata.metadata=full;IEEE754Compatible=false",
+          "application/json;odata.metadata=full;IEEE754Compatible=true",
+          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=false",
+          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=true",
+          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=true",
+          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=false",
+          "application/json;odata.metadata=none;IEEE754Compatible=false",
+          "application/json;odata.metadata=none;IEEE754Compatible=true",
+          "application/json;odata.streaming=true;IEEE754Compatible=false",
+          "application/json;odata.streaming=true;IEEE754Compatible=true",
+          "application/json;odata.streaming=false;IEEE754Compatible=false",
+          "application/json;odata.streaming=false;IEEE754Compatible=true",
+          "application/json;IEEE754Compatible=false",
+          "application/json;IEEE754Compatible=true",
+          "application/xml",
+          "application/json",
+          "text/plain",
+          "application/octet-stream",
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ],
+    "EndpointName": "odata/$metadata"
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
+    "Method": "Get",
+    "RelativePath": "odata/Papers",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [],
+    "EndpointName": "odata/Papers"
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
+    "Method": "Get",
+    "RelativePath": "odata/Papers({key})",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "key",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [],
+    "EndpointName": "odata/Papers({key})"
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
+    "Method": "Get",
+    "RelativePath": "odata/Papers/{key}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "key",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [],
+    "EndpointName": "odata/Papers/{key}"
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.PapersController",
+    "Method": "Get",
+    "RelativePath": "odata/Papers/$count",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [],
+    "EndpointName": "odata/Papers/$count"
   },
   {
     "ContainingType": "ConferenceFWebAPI.Controllers.WeatherForecastController",

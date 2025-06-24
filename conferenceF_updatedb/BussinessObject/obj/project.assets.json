@@ -4645,19 +4645,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\NAM\\.nuget\\packages\\": {}
+    "C:\\Users\\ngoba\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\FMC_BE_new\\conferenceF_updatedb\\BussinessObject\\BussinessObject.csproj",
+      "projectUniqueName": "D:\\C#project\\FMC_BE_new\\conferenceF_updatedb\\BussinessObject\\BussinessObject.csproj",
       "projectName": "BussinessObject",
-      "projectPath": "D:\\FMC_BE_new\\conferenceF_updatedb\\BussinessObject\\BussinessObject.csproj",
-      "packagesPath": "C:\\Users\\NAM\\.nuget\\packages\\",
-      "outputPath": "D:\\FMC_BE_new\\conferenceF_updatedb\\BussinessObject\\obj\\",
+      "projectPath": "D:\\C#project\\FMC_BE_new\\conferenceF_updatedb\\BussinessObject\\BussinessObject.csproj",
+      "packagesPath": "C:\\Users\\ngoba\\.nuget\\packages\\",
+      "outputPath": "D:\\C#project\\FMC_BE_new\\conferenceF_updatedb\\BussinessObject\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\NAM\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\ngoba\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -4682,8 +4682,9 @@
       "restoreAuditProperties": {
         "enableAudit": "true",
         "auditLevel": "low",
-        "auditMode": "direct"
-      }
+        "auditMode": "all"
+      },
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
       "net8.0": {
@@ -4730,8 +4731,30 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.400/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100-preview.7.24407.12/PortableRuntimeIdentifierGraph.json"
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'System.Text.Json' 8.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-8g4q-xg66-9fp4",
+      "libraryId": "System.Text.Json",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    },
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'System.Text.Json' 8.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-hh2w-p6rv-4g7w",
+      "libraryId": "System.Text.Json",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    }
+  ]
 }
