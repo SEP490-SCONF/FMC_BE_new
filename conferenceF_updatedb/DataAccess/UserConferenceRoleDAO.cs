@@ -110,6 +110,12 @@ namespace DataAccess
                 throw new Exception($"Error deleting user conference role with ID {id}.", ex);
             }
         }
+
+        public async Task<bool> IsReviewer(int userId)
+        {
+            return await _context.UserConferenceRoles
+                .AnyAsync(ucr => ucr.UserId == userId && ucr.ConferenceRoleId == 1);
+        }
     }
 
 }
