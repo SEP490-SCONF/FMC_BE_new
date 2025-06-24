@@ -1,5 +1,6 @@
 ﻿using BussinessObject.Entity;
 using DataAccess;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -7,20 +8,38 @@ namespace Repository
 {
     public class PaperRepository : IPaperRepository
     {
-        private readonly PaperDAO _dao;
+        private readonly PaperDAO _paperDAO; // Phụ thuộc trực tiếp vào PaperDAO
 
-        public PaperRepository(PaperDAO dao)
+        public PaperRepository(PaperDAO paperDAO) // Inject PaperDAO
         {
-            _dao = dao;
+            _paperDAO = paperDAO;
         }
 
-        public Task<List<Paper>> GetAllAsync() => _dao.GetAllAsync();
-        public Task<Paper?> GetByIdAsync(int id) => _dao.GetByIdAsync(id);
-        public Task AddAsync(Paper paper, List<int> authorIds)
+        public async Task<Paper> GetPaperByIdAsync(int paperId)
         {
-            return _dao.AddAsync(paper, authorIds);
+            return await _paperDAO.GetByIdAsync(paperId);
         }
-        public Task UpdateAsync(Paper paper) => _dao.UpdateSimpleAsync(paper);
-        public Task DeleteAsync(int id) => _dao.DeleteAsync(id);
+
+        public async Task AddPaperAsync(Paper paper)
+        {
+            await _paperDAO.AddAsync(paper);
+            await _paperDAO.SaveChangesAsync(); // Lưu thay đổi sau khi thêm
+        }
+
+        public async Task UpdatePaperAsync(Paper paper)
+        {
+            _paperDAO.Update(paper);
+            await _paperDAO.SaveChangesAsync(); // Lưu thay đổi sau khi cập nhật
+        }
+
+        public async Task DeletePaperAsync(int paperId)
+        {
+            var paper = await _paperDAO.GetByIdAsync(paperId);
+            if (paper != null)
+            {
+                _paperDAO.Delete(paper);
+                await _paperDAO.SaveChangesAsync(); // Lưu thay đổi sau khi xóa
+            }
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace BussinessObject.Entity;
 
@@ -14,6 +15,8 @@ public partial class NotificationStatus
     public bool? IsRead { get; set; }
 
     public DateTime? ReadAt { get; set; }
+
+    [JsonIgnore]
 
     public virtual Notification Noti { get; set; } = null!;
 

@@ -8,62 +8,123 @@ using Repository;
 
 namespace ConferenceFWebAPI.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class PapersController : ControllerBase
     {
-        private readonly IPaperRepository _paperRepo;
-        private readonly IMapper _mapper;
-        private readonly GoogleDriveService _googleDriveService;
-
-        public PapersController(IPaperRepository paperRepo, IMapper mapper, GoogleDriveService googleDriveService)
+        private readonly IAzureBlobStorageService _azureBlobStorageService;
+        private readonly IPaperRepository _paperRepository;
+        private readonly IConfiguration _configuration;
+        private readonly IMapper _mapper; 
+        public PapersController(IAzureBlobStorageService azureBlobStorageService,
+                                IPaperRepository paperRepository,
+                                IConfiguration configuration,
+                                IMapper mapper)
         {
-            _paperRepo = paperRepo;
+            _azureBlobStorageService = azureBlobStorageService;
+            _paperRepository = paperRepository;
+            _configuration = configuration;
             _mapper = mapper;
-            _googleDriveService = googleDriveService;
         }
 
-        /// <summary>
-        /// Submit paper with file upload
-        /// </summary>
-        [HttpPost]
-        public async Task<IActionResult> SubmitPaper([FromForm] PaperCreateDto dto)
+        
+        [HttpPost("upload-pdf")]
+        public async Task<IActionResult> UploadPdf([FromForm] PaperUploadDto paperDto)
         {
-            if (dto.File == null || dto.File.Length == 0)
-                return BadRequest("PDF file is required.");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            string fileUrl = await _googleDriveService.UploadFileAsync(dto.File);
+            if (paperDto.PdfFile == null || paperDto.PdfFile.Length == 0)
+            {
+                return BadRequest("No file uploaded.");
+            }
+            if (Path.GetExtension(paperDto.PdfFile.FileName)?.ToLower() != ".pdf")
+            {
+                return BadRequest("Only PDF files are allowed.");
+            }
 
-            var paper = _mapper.Map<Paper>(dto);
-            paper.FilePath = fileUrl;
-            paper.Status = "Submitted";
-            paper.SubmitDate = DateTime.UtcNow;
-            paper.IsPublished = false;
+            try
+            {
+                var paperContainerName = _configuration.GetValue<string>("BlobContainers:Papers");
+                if (string.IsNullOrEmpty(paperContainerName))
+                {
+                    return StatusCode(500, "Blob storage container name is not configured.");
+                }
 
-            // 👇 Chuyển thành danh sách 1 tác giả
-            await _paperRepo.AddAsync(paper, new List<int> { dto.AuthorId });
+                string fileUrl = await _azureBlobStorageService.UploadFileAsync(paperDto.PdfFile, paperContainerName);
 
-            return Ok(new { message = "Paper submitted successfully.", fileUrl });
+                var paper = _mapper.Map<Paper>(paperDto);
+
+                paper.FilePath = fileUrl; 
+                paper.SubmitDate = DateTime.UtcNow; 
+                paper.Status = "Submitted"; 
+                paper.IsPublished = false; 
+
+
+
+                await _paperRepository.AddPaperAsync(paper);
+
+                return Ok(new { Message = "File uploaded and paper data saved successfully.", FileUrl = fileUrl, PaperId = paper.PaperId });
+            }
+            catch (ArgumentException ex) 
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+             
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [HttpGet("view-pdf/{paperId}")]
+        public async Task<IActionResult> ViewPdf(int paperId)
         {
-            var papers = await _paperRepo.GetAllAsync();
-            var result = _mapper.Map<List<PaperDto>>(papers);
-            return Ok(result);
+            var paper = await _paperRepository.GetPaperByIdAsync(paperId);
+            if (paper == null || string.IsNullOrEmpty(paper.FilePath))
+            {
+                return NotFound("Paper or PDF file not found.");
+            }
+
+            return Redirect(paper.FilePath);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+ 
+        [HttpDelete("delete-pdf/{paperId}")]
+        public async Task<IActionResult> DeletePdf(int paperId)
         {
-            var paper = await _paperRepo.GetByIdAsync(id);
-            if (paper == null)
-                return NotFound();
+            var paper = await _paperRepository.GetPaperByIdAsync(paperId);
+            if (paper == null || string.IsNullOrEmpty(paper.FilePath))
+            {
+                return NotFound("Paper or PDF file not found.");
+            }
 
-            var result = _mapper.Map<PaperDto>(paper);
-            return Ok(result);
+            try
+            {
+                // Xóa file khỏi Azure Blob Storage
+                bool isDeleted = await _azureBlobStorageService.DeleteFileAsync(paper.FilePath);
+
+                if (isDeleted)
+                {
+                    // Cập nhật đường dẫn file trong database thành null
+                    paper.FilePath = null;
+                    await _paperRepository.UpdatePaperAsync(paper);
+                    return Ok("PDF file deleted successfully.");
+                }
+                else
+                {
+                    // Có thể file không tồn tại trên storage hoặc có lỗi khi xóa
+                    return StatusCode(500, "Failed to delete PDF file from storage. It might not exist or an error occurred.");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Ghi log lỗi
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }

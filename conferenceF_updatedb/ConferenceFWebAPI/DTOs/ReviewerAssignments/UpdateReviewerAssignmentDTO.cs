@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿namespace ConferenceFWebAPI.DTOs.ReviewerAssignments
 {
     public class UpdateReviewerAssignmentDTO
@@ -6,3 +7,13 @@
         public int? PaperId { get; set; }
     }
 }
+=======
+﻿namespace ConferenceFWebAPI.DTOs.ReviewerAssignments
+{
+    public class UpdateReviewerAssignmentDTO
+    {
+        public int? ReviewerId { get; set; }
+        public int? PaperId { get; set; }
+    }
+}
+>>>>>>> origin/Notification
