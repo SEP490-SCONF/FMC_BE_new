@@ -4,6 +4,7 @@ using ConferenceFWebAPI.DTOs;
 using ConferenceFWebAPI.Service;
 using DataAccess;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using Repository;
 
 namespace ConferenceFWebAPI.Controllers
@@ -15,7 +16,7 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IAzureBlobStorageService _azureBlobStorageService;
         private readonly IPaperRepository _paperRepository;
         private readonly IConfiguration _configuration;
-        private readonly IMapper _mapper; 
+        private readonly IMapper _mapper;
         public PapersController(IAzureBlobStorageService azureBlobStorageService,
                                 IPaperRepository paperRepository,
                                 IConfiguration configuration,
@@ -27,7 +28,7 @@ namespace ConferenceFWebAPI.Controllers
             _mapper = mapper;
         }
 
-        
+
         [HttpPost("upload-pdf")]
         public async Task<IActionResult> UploadPdf([FromForm] PaperUploadDto paperDto)
         {
@@ -57,10 +58,10 @@ namespace ConferenceFWebAPI.Controllers
 
                 var paper = _mapper.Map<Paper>(paperDto);
 
-                paper.FilePath = fileUrl; 
-                paper.SubmitDate = DateTime.UtcNow; 
-                paper.Status = "Submitted"; 
-                paper.IsPublished = false; 
+                paper.FilePath = fileUrl;
+                paper.SubmitDate = DateTime.UtcNow;
+                paper.Status = "Submitted";
+                paper.IsPublished = false;
 
 
 
@@ -68,61 +69,73 @@ namespace ConferenceFWebAPI.Controllers
 
                 return Ok(new { Message = "File uploaded and paper data saved successfully.", FileUrl = fileUrl, PaperId = paper.PaperId });
             }
-            catch (ArgumentException ex) 
+            catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-             
+
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
 
-
-        [HttpGet("view-pdf/{paperId}")]
-        public async Task<IActionResult> ViewPdf(int paperId)
+        [HttpGet]
+        [EnableQuery] // Vẫn crucial cho OData query options
+        public IActionResult Get()
         {
-            var paper = await _paperRepository.GetPaperByIdAsync(paperId);
-            if (paper == null || string.IsNullOrEmpty(paper.FilePath))
+            var papersQuery = _paperRepository.GetAllPapers();
+
+            if (papersQuery == null)
             {
-                return NotFound("Paper or PDF file not found.");
+                return NotFound("No papers found.");
             }
 
-            return Redirect(paper.FilePath);
+            var paperDtos = _mapper.ProjectTo<PaperResponseDto>(papersQuery);
+
+            if (!paperDtos.Any())
+            {
+                return NotFound("No active papers found.");
+            }
+
+            return Ok(paperDtos); 
         }
 
+        [HttpGet("{key}")]
+        [EnableQuery] 
+        public async Task<IActionResult> Get([FromRoute] int key)
+        {
+            var paper = await _paperRepository.GetPaperByIdAsync(key);
+            if (paper == null)
+            {
+                return NotFound($"Paper with ID {key} not found.");
+            }
  
-        [HttpDelete("delete-pdf/{paperId}")]
-        public async Task<IActionResult> DeletePdf(int paperId)
+            var paperDto = _mapper.Map<PaperResponseDto>(paper);
+            return Ok(paperDto);
+        }
+
+        [HttpPut("mark-as-deleted/{paperId}")]
+        public async Task<IActionResult> MarkPaperAsDeleted(int paperId) 
         {
             var paper = await _paperRepository.GetPaperByIdAsync(paperId);
-            if (paper == null || string.IsNullOrEmpty(paper.FilePath))
+            if (paper == null)
             {
-                return NotFound("Paper or PDF file not found.");
+                return NotFound("Paper not found.");
             }
 
             try
             {
-                // Xóa file khỏi Azure Blob Storage
-                bool isDeleted = await _azureBlobStorageService.DeleteFileAsync(paper.FilePath);
+                paper.Status = "Deleted";
 
-                if (isDeleted)
-                {
-                    // Cập nhật đường dẫn file trong database thành null
-                    paper.FilePath = null;
-                    await _paperRepository.UpdatePaperAsync(paper);
-                    return Ok("PDF file deleted successfully.");
-                }
-                else
-                {
-                    // Có thể file không tồn tại trên storage hoặc có lỗi khi xóa
-                    return StatusCode(500, "Failed to delete PDF file from storage. It might not exist or an error occurred.");
-                }
+                await _paperRepository.UpdatePaperAsync(paper);
+
+
+                return Ok($"Paper with ID {paperId} successfully marked as 'Deleted'.");
             }
             catch (Exception ex)
             {
-                // Ghi log lỗi
+                // Ghi log lỗi chi tiết ở đây
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }

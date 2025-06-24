@@ -17,96 +17,43 @@ namespace DataAccess
             _context = context;
         }
 
-        public async Task<IEnumerable<PaperRevision>> GetAll()
+
+        public async Task<PaperRevision?> GetPaperRevisionByIdAsync(int revisionId)
         {
-            try
-            {
-                return await _context.PaperRevisions.AsNoTracking().ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error retrieving paper revisions.", ex);
-            }
+            return await _context.PaperRevisions
+                                 .Include(pr => pr.Paper)
+                                 .FirstOrDefaultAsync(pr => pr.RevisionId == revisionId);
         }
 
-        public async Task<PaperRevision> GetById(int id)
+        public async Task<PaperRevision> AddPaperRevisionAsync(PaperRevision paperRevision)
         {
-            try
-            {
-                return await _context.PaperRevisions
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(p => p.RevisionId == id);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error retrieving paper revision with ID {id}.", ex);
-            }
+            await _context.PaperRevisions.AddAsync(paperRevision);
+            await _context.SaveChangesAsync();
+            return paperRevision;
         }
 
-        public async Task<IEnumerable<PaperRevision>> GetByPaperId(int paperId)
+        public async Task UpdatePaperRevisionAsync(PaperRevision paperRevision)
         {
-            try
-            {
-                return await _context.PaperRevisions
-                    .Where(p => p.PaperId == paperId)
-                    .AsNoTracking()
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error retrieving revisions for paper ID {paperId}.", ex);
-            }
+            _context.Entry(paperRevision).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
         }
 
-        public async Task Add(PaperRevision revision)
+        public async Task DeletePaperRevisionAsync(int revisionId)
         {
-            try
+            var paperRevisionToDelete = await _context.PaperRevisions.FindAsync(revisionId);
+            if (paperRevisionToDelete != null)
             {
-                _context.PaperRevisions.Add(revision);
+                _context.PaperRevisions.Remove(paperRevisionToDelete);
                 await _context.SaveChangesAsync();
             }
-            catch (Exception ex)
-            {
-                throw new Exception("Error adding paper revision.", ex);
-            }
         }
 
-        public async Task Update(PaperRevision revision)
+        public async Task<IEnumerable<PaperRevision>> GetRevisionsByPaperIdAsync(int paperId)
         {
-            try
-            {
-                var existing = await _context.PaperRevisions.FindAsync(revision.RevisionId);
-                if (existing == null)
-                    throw new Exception($"PaperRevision with ID {revision.RevisionId} not found.");
-
-                _context.Entry(existing).CurrentValues.SetValues(revision);
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error updating paper revision with ID {revision.RevisionId}.", ex);
-            }
-        }
-
-        public async Task Delete(int id)
-        {
-            try
-            {
-                var revision = await _context.PaperRevisions.FindAsync(id);
-                if (revision != null)
-                {
-                    _context.PaperRevisions.Remove(revision);
-                    await _context.SaveChangesAsync();
-                }
-                else
-                {
-                    throw new Exception($"Paper revision with ID {id} not found.");
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error deleting paper revision with ID {id}.", ex);
-            }
+            return await _context.PaperRevisions
+                                 .Where(pr => pr.PaperId == paperId)
+                                 .OrderByDescending(pr => pr.SubmittedAt)
+                                 .ToListAsync();
         }
     }
 

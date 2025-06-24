@@ -7,41 +7,36 @@ namespace Repository
 {
     public class PaperRevisionRepository : IPaperRevisionRepository
     {
-        private readonly PaperRevisionDAO _revisionDao;
+        private readonly PaperRevisionDAO _paperRevisionDAO; // <--- Inject lớp cụ thể PaperRevisionDAO
 
-        public PaperRevisionRepository(PaperRevisionDAO revisionDao)
+        public PaperRevisionRepository(PaperRevisionDAO paperRevisionDAO) // <--- Constructor nhận lớp cụ thể
         {
-            _revisionDao = revisionDao;
+            _paperRevisionDAO = paperRevisionDAO;
         }
 
-        public async Task<IEnumerable<PaperRevision>> GetAll()
+        public async Task<PaperRevision?> GetPaperRevisionByIdAsync(int revisionId)
         {
-            return await _revisionDao.GetAll();
+            return await _paperRevisionDAO.GetPaperRevisionByIdAsync(revisionId);
         }
 
-        public async Task<PaperRevision> GetById(int id)
+        public async Task<PaperRevision> AddPaperRevisionAsync(PaperRevision paperRevision)
         {
-            return await _revisionDao.GetById(id);
+            return await _paperRevisionDAO.AddPaperRevisionAsync(paperRevision);
         }
 
-        public async Task Add(PaperRevision entity)
+        public async Task UpdatePaperRevisionAsync(PaperRevision paperRevision)
         {
-            await _revisionDao.Add(entity);
+            await _paperRevisionDAO.UpdatePaperRevisionAsync(paperRevision);
         }
 
-        public async Task Update(PaperRevision entity)
+        public async Task DeletePaperRevisionAsync(int revisionId)
         {
-            await _revisionDao.Update(entity);
+            await _paperRevisionDAO.DeletePaperRevisionAsync(revisionId);
         }
 
-        public async Task Delete(int id)
+        public async Task<IEnumerable<PaperRevision>> GetRevisionsByPaperIdAsync(int paperId)
         {
-            await _revisionDao.Delete(id);
-        }
-
-        public async Task<IEnumerable<PaperRevision>> GetByPaperId(int paperId)
-        {
-            return await _revisionDao.GetByPaperId(paperId);
+            return await _paperRevisionDAO.GetRevisionsByPaperIdAsync(paperId);
         }
     }
 }

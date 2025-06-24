@@ -6,6 +6,7 @@ namespace Repository
 {
     public interface IPaperRepository
     {
+        IQueryable<Paper> GetAllPapers();
         Task<Paper> GetPaperByIdAsync(int paperId);
         Task AddPaperAsync(Paper paper);
         Task UpdatePaperAsync(Paper paper);
