@@ -124,26 +124,26 @@ namespace DataAccess
                 throw new Exception("Error occurred while counting conferences.", ex);
             }
         }
-        //public async Task UpdateConferenceStatus(int conferenceId, string newStatus)
-        //{
-        //    try
-        //    {
-        //        var conference = await _context.Conferences.FirstOrDefaultAsync(c => c.ConferenceId == conferenceId);
-        //        if (conference == null)
-        //            throw new Exception($"Conference with ID {conferenceId} not found.");
+        public async Task UpdateConferenceStatus(int conferenceId, string newStatus)
+        {
+            try
+            {
+                var conference = await _context.Conferences.FirstOrDefaultAsync(c => c.ConferenceId == conferenceId);
+                if (conference == null)
+                    throw new Exception($"Conference with ID {conferenceId} not found.");
 
-        //        conference.Status = newStatus;
-        //        _context.Conferences.Update(conference);
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateException dbEx)
-        //    {
-        //        throw new Exception("Database error while updating the conference status.", dbEx);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new Exception($"Error occurred while updating status for conference with ID {conferenceId}.", ex);
-        //    }
-        //}
+                conference.Status = true;
+                _context.Conferences.Update(conference);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException dbEx)
+            {
+                throw new Exception("Database error while updating the conference status.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error occurred while updating status for conference with ID {conferenceId}.", ex);
+            }
+        }
     }
 }

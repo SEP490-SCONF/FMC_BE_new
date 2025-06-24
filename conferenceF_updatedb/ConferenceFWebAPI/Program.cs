@@ -47,6 +47,7 @@ builder.Services.Configure<EmailSettings>(
 builder.Services.AddScoped<IEmailService, EmailService>();
 // DAO registrations
 builder.Services.AddScoped<UserDAO>();
+builder.Services.AddScoped<RoleDAO>();
 builder.Services.AddScoped<AnswerLikeDAO>();
 builder.Services.AddScoped<AnswerQuestionDAO>();
 builder.Services.AddScoped<CallForPaperDAO>();
@@ -71,7 +72,8 @@ builder.Services.AddScoped<UserConferenceRoleDAO>();
 // Add Scoped services for each repository
 // User
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-
+// Role
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 // Conference
 builder.Services.AddScoped<IConferenceRepository, ConferenceRepository>();
 

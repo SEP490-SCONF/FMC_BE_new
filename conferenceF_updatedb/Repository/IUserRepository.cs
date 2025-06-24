@@ -10,5 +10,6 @@ namespace Repository
         Task<int> GetUserCount();
         Task<IEnumerable<User>> GetOrganizers();
 
+
     }
 }

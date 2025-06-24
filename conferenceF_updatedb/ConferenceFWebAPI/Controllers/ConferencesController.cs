@@ -58,16 +58,16 @@ namespace FMC_BE.Controllers
             var conference = _mapper.Map<Conference>(conferenceDto);
             await _conferenceRepository.Add(conference);
 
-            //// Gửi email cho Organizer
-            //var organizers = await _userRepository.GetOrganizers();
-            //var emailBody = ConferenceCreatedTemplate.GetHtml(conference);
+            // Gửi email cho Organizer
+            var organizers = await _userRepository.GetOrganizers();
+            var emailBody = ConferenceCreatedTemplate.GetHtml(conference);
 
-            //foreach (var organizer in organizers)
-            //{
-            //    await _emailService.SendEmailAsync(organizer.Email,
-            //        $"[Thông báo] Hội thảo mới: {conference.Title}",
-            //        emailBody);
-            //}
+            foreach (var organizer in organizers)
+            {
+                await _emailService.SendEmailAsync(organizer.Email,
+                    $"[Thông báo] Hội thảo mới: {conference.Title}",
+                    emailBody);
+            }
 
             return CreatedAtAction(nameof(GetById), new { id = conference.ConferenceId }, conferenceDto);
         }
@@ -92,27 +92,27 @@ namespace FMC_BE.Controllers
                 return NotFound(ex.Message);
             }
         }
-       
 
-        //[HttpPatch("{id}/status")]
-        //public async Task<ActionResult> Delete(int id)
-        //{
-        //    try
-        //    {
-        //        var existingConference = await _conferenceRepository.GetById(id);
-        //        if (existingConference == null)
-        //        {
-        //            return NotFound($"Conference with ID {id} not found.");
-        //        }
-        //        await _conferenceRepository.UpdateConferenceStatus(id, "Finished");
 
-        //        return NoContent();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, $"An error occurred while updating status: {ex.Message}");
-        //    }
-        //}
+        [HttpPost("{id}/status")]
+        public async Task<ActionResult> UpdateStatus(int id)
+        {
+            try
+            {
+                var existingConference = await _conferenceRepository.GetById(id);
+                if (existingConference == null)
+                {
+                    return NotFound($"Conference with ID {id} not found.");
+                }
+                await _conferenceRepository.UpdateConferenceStatus(id, "Finished");
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while updating status: {ex.Message}");
+            }
+        }
 
         // GET: api/Conference/count
         [HttpGet("count")]
