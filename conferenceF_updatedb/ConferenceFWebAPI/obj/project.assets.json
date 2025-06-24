@@ -8841,11 +8841,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\ConferenceFWebAPI.csproj",
+      "projectUniqueName": "D:\\FMC_BE_new\\conferenceF_updatedb\\ConferenceFWebAPI\\ConferenceFWebAPI.csproj",
       "projectName": "ConferenceFWebAPI",
-      "projectPath": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\ConferenceFWebAPI.csproj",
+      "projectPath": "D:\\FMC_BE_new\\conferenceF_updatedb\\ConferenceFWebAPI\\ConferenceFWebAPI.csproj",
       "packagesPath": "C:\\Users\\NAM\\.nuget\\packages\\",
-      "outputPath": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\obj\\",
+      "outputPath": "D:\\FMC_BE_new\\conferenceF_updatedb\\ConferenceFWebAPI\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\NAM\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -8863,14 +8863,14 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\BussinessObject\\BussinessObject.csproj": {
-              "projectPath": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\BussinessObject\\BussinessObject.csproj"
+            "D:\\FMC_BE_new\\conferenceF_updatedb\\BussinessObject\\BussinessObject.csproj": {
+              "projectPath": "D:\\FMC_BE_new\\conferenceF_updatedb\\BussinessObject\\BussinessObject.csproj"
             },
-            "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\DataAccess.csproj": {
-              "projectPath": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\DataAccess.csproj"
+            "D:\\FMC_BE_new\\conferenceF_updatedb\\DataAccess\\DataAccess.csproj": {
+              "projectPath": "D:\\FMC_BE_new\\conferenceF_updatedb\\DataAccess\\DataAccess.csproj"
             },
-            "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository.csproj": {
-              "projectPath": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\Repository\\Repository.csproj"
+            "D:\\FMC_BE_new\\conferenceF_updatedb\\Repository\\Repository.csproj": {
+              "projectPath": "D:\\FMC_BE_new\\conferenceF_updatedb\\Repository\\Repository.csproj"
             }
           }
         }

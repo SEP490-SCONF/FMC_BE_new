@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "iTGuu8YkTK4=",
+  "dgSpecHash": "9P4tMbaMmL8=",
   "success": true,
-  "projectFilePath": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\DataAccess\\DataAccess.csproj",
+  "projectFilePath": "D:\\FMC_BE_new\\conferenceF_updatedb\\DataAccess\\DataAccess.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\NAM\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\NAM\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",

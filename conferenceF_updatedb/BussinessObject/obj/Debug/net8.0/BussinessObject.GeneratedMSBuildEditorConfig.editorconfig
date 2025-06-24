@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = BussinessObject
-build_property.ProjectDir = D:\FMC_BE-update_db-\conferenceF_updatedb\BussinessObject\
+build_property.ProjectDir = D:\FMC_BE_new\conferenceF_updatedb\BussinessObject\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

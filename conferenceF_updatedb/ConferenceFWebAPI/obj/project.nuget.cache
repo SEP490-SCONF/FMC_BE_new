@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "4v2Fni6jM4Y=",
+  "dgSpecHash": "Z0YxyBPeTLo=",
   "success": true,
-  "projectFilePath": "D:\\FMC_BE-update_db-\\conferenceF_updatedb\\ConferenceFWebAPI\\ConferenceFWebAPI.csproj",
+  "projectFilePath": "D:\\FMC_BE_new\\conferenceF_updatedb\\ConferenceFWebAPI\\ConferenceFWebAPI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\NAM\\.nuget\\packages\\automapper\\14.0.0\\automapper.14.0.0.nupkg.sha512",
     "C:\\Users\\NAM\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
