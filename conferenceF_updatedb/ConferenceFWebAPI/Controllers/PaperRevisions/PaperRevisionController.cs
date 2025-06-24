@@ -1,85 +1,174 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.PaperRevisions;
+using ConferenceFWebAPI.Service;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Repository;
 
 namespace ConferenceFWebAPI.Controllers.PaperRevisions
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class PaperRevisionController : ControllerBase
+    [Route("api/[controller]")]
+    public class PaperRevisionsController : ControllerBase
     {
-        private readonly IPaperRevisionRepository _revisionRepository;
+        private readonly IAzureBlobStorageService _azureBlobStorageService;
+        private readonly IPaperRevisionRepository _paperRevisionRepository;
+        private readonly IPaperRepository _paperRepository; // Cần để kiểm tra PaperId tồn tại
+        private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
 
-        public PaperRevisionController(IPaperRevisionRepository revisionRepository, IMapper mapper)
+        public PaperRevisionsController(IAzureBlobStorageService azureBlobStorageService,
+                                        IPaperRevisionRepository paperRevisionRepository,
+                                        IPaperRepository paperRepository, // Inject PaperRepository
+                                        IConfiguration configuration,
+                                        IMapper mapper)
         {
-            _revisionRepository = revisionRepository;
+            _azureBlobStorageService = azureBlobStorageService;
+            _paperRevisionRepository = paperRevisionRepository;
+            _paperRepository = paperRepository;
+            _configuration = configuration;
             _mapper = mapper;
         }
 
-        // GET: api/PaperRevision
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        // POST: api/PaperRevisions/upload-revision
+        [HttpPost("upload-revision")]
+        public async Task<IActionResult> UploadRevision([FromForm] PaperRevisionUploadDto revisionDto)
         {
-            var revisions = await _revisionRepository.GetAll();
-            var result = _mapper.Map<IEnumerable<PaperRevisionDTO>>(revisions);
-            return Ok(result);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (revisionDto.PdfFile == null || revisionDto.PdfFile.Length == 0)
+            {
+                return BadRequest("No file uploaded.");
+            }
+            if (Path.GetExtension(revisionDto.PdfFile.FileName)?.ToLower() != ".pdf")
+            {
+                return BadRequest("Only PDF files are allowed for revisions.");
+            }
+
+            // Kiểm tra xem PaperId có tồn tại không
+            var existingPaper = await _paperRepository.GetPaperByIdAsync(revisionDto.PaperId);
+            if (existingPaper == null)
+            {
+                return NotFound($"Paper with ID {revisionDto.PaperId} not found.");
+            }
+
+            try
+            {
+                var revisionContainerName = _configuration.GetValue<string>("BlobContainers:PaperRevisions");
+                if (string.IsNullOrEmpty(revisionContainerName))
+                {
+                    return StatusCode(500, "Blob storage container name for paper revisions is not configured.");
+                }
+
+                // Upload file lên Azure Blob Storage
+                string fileUrl = await _azureBlobStorageService.UploadFileAsync(revisionDto.PdfFile, revisionContainerName);
+
+                // Map DTO sang Entity và thiết lập các trường
+                var paperRevision = _mapper.Map<PaperRevision>(revisionDto);
+                paperRevision.FilePath = fileUrl;
+                paperRevision.Status = "PendingReview"; // Hoặc trạng thái mặc định khác, ví dụ: "PendingReview"
+                paperRevision.SubmittedAt = DateTime.UtcNow;
+
+                // Lưu thông tin bản sửa đổi vào cơ sở dữ liệu
+                await _paperRevisionRepository.AddPaperRevisionAsync(paperRevision);
+
+                return Ok(new
+                {
+                    Message = "Paper revision uploaded and data saved successfully.",
+                    FileUrl = fileUrl,
+                    RevisionId = paperRevision.RevisionId
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                // Nên ghi log lỗi chi tiết ở đây
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
-        // GET: api/PaperRevision/{id}
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        // GET: api/PaperRevisions/{revisionId}
+        [HttpGet("{revisionId}")]
+        public async Task<IActionResult> GetRevisionById(int revisionId)
         {
-            var revision = await _revisionRepository.GetById(id);
+            var revision = await _paperRevisionRepository.GetPaperRevisionByIdAsync(revisionId);
             if (revision == null)
-                return NotFound($"Revision with ID {id} not found.");
-            return Ok(_mapper.Map<PaperRevisionDTO>(revision));
+            {
+                return NotFound("Paper revision not found.");
+            }
+            var revisionDto = _mapper.Map<PaperRevisionResponseDto>(revision);
+            return Ok(revisionDto);
         }
 
-        // GET: api/PaperRevision/paper/{paperId}
+        // GET: api/PaperRevisions/paper/{paperId}
         [HttpGet("paper/{paperId}")]
-        public async Task<IActionResult> GetByPaperId(int paperId)
+        public async Task<IActionResult> GetRevisionsByPaperId(int paperId)
         {
-            var revisions = await _revisionRepository.GetByPaperId(paperId);
-            var result = _mapper.Map<IEnumerable<PaperRevisionDTO>>(revisions);
-            return Ok(result);
+            var revisions = await _paperRevisionRepository.GetRevisionsByPaperIdAsync(paperId);
+            if (revisions == null || !((List<PaperRevision>)revisions).Any())
+            {
+                return NotFound($"No revisions found for Paper ID {paperId}.");
+            }
+            var revisionDtos = _mapper.Map<IEnumerable<PaperRevisionResponseDto>>(revisions);
+            return Ok(revisionDtos);
         }
 
-        // POST: api/PaperRevision
-        [HttpPost]
-        public async Task<IActionResult> Add([FromBody] AddPaperRevisionDTO dto)
+
+        // GET: api/PaperRevisions/view-pdf/{revisionId}
+        [HttpGet("view-pdf/{revisionId}")]
+        public async Task<IActionResult> ViewPdf(int revisionId)
         {
-            var revision = _mapper.Map<PaperRevision>(dto);
-            await _revisionRepository.Add(revision);
-            return CreatedAtAction(nameof(GetById), new { id = revision.RevisionId }, _mapper.Map<PaperRevisionDTO>(revision));
+            var revision = await _paperRevisionRepository.GetPaperRevisionByIdAsync(revisionId);
+            if (revision == null || string.IsNullOrEmpty(revision.FilePath))
+            {
+                return NotFound("Paper revision or PDF file not found.");
+            }
+
+            // Chuyển hướng đến URL của file trên Azure Blob Storage
+            return Redirect(revision.FilePath);
         }
 
-        // PUT: api/PaperRevision/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdatePaperRevisionDTO dto)
+        // DELETE: api/PaperRevisions/delete-revision/{revisionId}
+        [HttpDelete("delete-revision/{revisionId}")]
+        public async Task<IActionResult> DeleteRevision(int revisionId)
         {
-            var existing = await _revisionRepository.GetById(id);
-            if (existing == null)
-                return NotFound($"Revision with ID {id} not found.");
+            var revisionToDelete = await _paperRevisionRepository.GetPaperRevisionByIdAsync(revisionId);
+            if (revisionToDelete == null)
+            {
+                return NotFound($"Paper revision with ID {revisionId} not found.");
+            }
 
-            _mapper.Map(dto, existing);
-            await _revisionRepository.Update(existing);
-            return NoContent();
-        }
+            try
+            {
+                // Xóa file khỏi Azure Blob Storage nếu FilePath tồn tại
+                if (!string.IsNullOrEmpty(revisionToDelete.FilePath))
+                {
+                    bool isDeletedFromBlob = await _azureBlobStorageService.DeleteFileAsync(revisionToDelete.FilePath);
+                    if (!isDeletedFromBlob)
+                    {
+                        // Ghi log nếu xóa blob không thành công nhưng vẫn cố gắng xóa bản ghi DB
+                        // return StatusCode(500, "Failed to delete PDF file from Azure Blob Storage.");
+                        // Hoặc bạn có thể chọn tiếp tục xóa bản ghi DB ngay cả khi blob không xóa được
+                    }
+                }
 
-        // DELETE: api/PaperRevision/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var existing = await _revisionRepository.GetById(id);
-            if (existing == null)
-                return NotFound($"Revision with ID {id} not found.");
+                // Xóa bản ghi khỏi database
+                await _paperRevisionRepository.DeletePaperRevisionAsync(revisionId);
 
-            await _revisionRepository.Delete(id);
-            return NoContent();
+                return Ok($"Paper revision with ID {revisionId} and associated PDF deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                // Ghi log lỗi chi tiết ở đây
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Iwnj/Hejeg0=",
+  "dgSpecHash": "4DK72KqP0og=",
   "success": true,
-  "projectFilePath": "D:\\C#project\\FMC_BE-update_db-\\conferenceF_updatedb\\BussinessObject\\BussinessObject.csproj",
+  "projectFilePath": "D:\\C#project\\FMC_BE_new\\conferenceF_updatedb\\BussinessObject\\BussinessObject.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ngoba\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\ngoba\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",

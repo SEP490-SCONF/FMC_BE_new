@@ -4,6 +4,7 @@ using ConferenceFWebAPI.DTOs;
 using ConferenceFWebAPI.Service;
 using DataAccess;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using Repository;
 
 namespace ConferenceFWebAPI.Controllers
@@ -79,8 +80,22 @@ namespace ConferenceFWebAPI.Controllers
             }
         }
 
+        [HttpGet]
+        [EnableQuery] // <-- Crucial for OData query options
+        public IActionResult Get() // Changed name from GetAllPapers to Get to follow OData convention
+        {
+
+            var papers = _paperRepository.GetAllPapers(); // Giả định có phương thức này hoặc tương tự
+
+            if (papers == null)
+            {
+                return NotFound("No papers found.");
+            }
+            return Ok(papers); // OData sẽ tự động xử lý các truy vấn trên IQueryable này
+        }
 
         [HttpGet("view-pdf/{paperId}")]
+        [EnableQuery]
         public async Task<IActionResult> ViewPdf(int paperId)
         {
             var paper = await _paperRepository.GetPaperByIdAsync(paperId);

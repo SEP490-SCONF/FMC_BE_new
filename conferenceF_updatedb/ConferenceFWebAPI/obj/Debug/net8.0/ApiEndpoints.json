@@ -296,41 +296,15 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "GetAll",
-    "RelativePath": "api/PaperRevision",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "Add",
-    "RelativePath": "api/PaperRevision",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "dto",
-        "Type": "ConferenceFWebAPI.DTOs.PaperRevisions.AddPaperRevisionDTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "GetById",
-    "RelativePath": "api/PaperRevision/{id}",
+    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionsController",
+    "Method": "GetRevisionById",
+    "RelativePath": "api/PaperRevisions/{revisionId}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "id",
+        "Name": "revisionId",
         "Type": "System.Int32",
         "IsRequired": true
       }
@@ -338,36 +312,15 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "Update",
-    "RelativePath": "api/PaperRevision/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "ConferenceFWebAPI.DTOs.PaperRevisions.UpdatePaperRevisionDTO",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "Delete",
-    "RelativePath": "api/PaperRevision/{id}",
+    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionsController",
+    "Method": "DeleteRevision",
+    "RelativePath": "api/PaperRevisions/delete-revision/{revisionId}",
     "HttpMethod": "DELETE",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "id",
+        "Name": "revisionId",
         "Type": "System.Int32",
         "IsRequired": true
       }
@@ -375,15 +328,57 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionController",
-    "Method": "GetByPaperId",
-    "RelativePath": "api/PaperRevision/paper/{paperId}",
+    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionsController",
+    "Method": "GetRevisionsByPaperId",
+    "RelativePath": "api/PaperRevisions/paper/{paperId}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
         "Name": "paperId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionsController",
+    "Method": "UploadRevision",
+    "RelativePath": "api/PaperRevisions/upload-revision",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "PaperId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PdfFile",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      },
+      {
+        "Name": "Comments",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ConferenceFWebAPI.Controllers.PaperRevisions.PaperRevisionsController",
+    "Method": "ViewPdf",
+    "RelativePath": "api/PaperRevisions/view-pdf/{revisionId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "revisionId",
         "Type": "System.Int32",
         "IsRequired": true
       }
