@@ -62,20 +62,22 @@ namespace FMC_BE.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(int id, [FromBody] AddOrUpdateTopicDTO topicDto)
         {
-            if (id != topicDto.TopicId)
-            {
-                return BadRequest("Topic ID mismatch.");
-            }
             try
             {
-                if(topicDto.TopicId != null)
+                if(id != null)
                 {
-                    var topic = await _topicRepository.GetById((int)topicDto.TopicId);
-               
-                _mapper.Map<Topic>(topicDto);
-                await _topicRepository.Update(topic);
+                    var topic = await _topicRepository.GetById(id);
+                    if (topic == null)
+                        return BadRequest("Topic not exits");
+                    _mapper.Map(topicDto, topic);
+                    await _topicRepository.Update(topic);
+                    return Ok("Success");
+
                 }
-                return NoContent();
+                else
+                {
+                    return BadRequest("Id is null");
+                }
             }
             catch (Exception ex)
             {
