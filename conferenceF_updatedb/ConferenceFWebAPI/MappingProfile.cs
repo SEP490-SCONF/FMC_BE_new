@@ -3,6 +3,7 @@ using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
 using ConferenceFWebAPI.DTOs.PaperRevisions;
 using ConferenceFWebAPI.DTOs.ReviewerAssignments;
+using ConferenceFWebAPI.DTOs.ReviewHightlights;
 using ConferenceFWebAPI.DTOs.Reviews;
 using ConferenceFWebAPI.DTOs.UserProfile;
 
@@ -33,9 +34,13 @@ namespace ConferenceFWebAPI
             CreateMap<AddReviewerAssignmentDTO, ReviewerAssignment>();
             CreateMap<UpdateReviewerAssignmentDTO, ReviewerAssignment>();
             CreateMap<User, UserProfile>();
+            CreateMap<ReviewHighlight, ReviewHightlightDTO>();
+            CreateMap<AddReviewHightlightDTO, ReviewHighlight>();
+            CreateMap<UpdateReviewHightlightDTO, ReviewHighlight>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
 
-            
+
         }
     }
 }
