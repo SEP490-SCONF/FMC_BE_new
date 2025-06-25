@@ -67,7 +67,9 @@ namespace FMC_BE.Controllers
 
             try
             {
-                var topic = _mapper.Map<Topic>(topicDto);
+                
+                var topic = await _topicRepository.GetById(topicDto.TopicId);
+                _mapper.Map<Topic>(topicDto);
                 await _topicRepository.Update(topic);
                 return NoContent();
             }

@@ -32,7 +32,7 @@ namespace Repository
         {
             await _conferenceDao.UpdateConference(entity);
         }
-        public async Task UpdateConferenceStatus(int conferenceId, string newStatus)
+        public async Task UpdateConferenceStatus(int conferenceId, bool newStatus)
         {
             await _conferenceDao.UpdateConferenceStatus(conferenceId, newStatus);
         }

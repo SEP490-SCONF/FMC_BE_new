@@ -56,6 +56,8 @@ namespace FMC_BE.Controllers
                 return BadRequest("Conference data is null.");
 
             var conference = _mapper.Map<Conference>(conferenceDto);
+            conference.CreatedAt = DateTime.Now;
+           
             await _conferenceRepository.Add(conference);
 
             // Gửi email cho Organizer
@@ -95,7 +97,7 @@ namespace FMC_BE.Controllers
 
 
         [HttpPost("{id}/status")]
-        public async Task<ActionResult> UpdateStatus(int id)
+        public async Task<ActionResult> UpdateStatus(int id, bool status = true)
         {
             try
             {
@@ -104,7 +106,7 @@ namespace FMC_BE.Controllers
                 {
                     return NotFound($"Conference with ID {id} not found.");
                 }
-                await _conferenceRepository.UpdateConferenceStatus(id, "Finished");
+                await _conferenceRepository.UpdateConferenceStatus(id, status);
 
                 return NoContent();
             }

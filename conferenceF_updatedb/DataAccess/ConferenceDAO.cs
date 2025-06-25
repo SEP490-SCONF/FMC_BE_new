@@ -124,7 +124,7 @@ namespace DataAccess
                 throw new Exception("Error occurred while counting conferences.", ex);
             }
         }
-        public async Task UpdateConferenceStatus(int conferenceId, string newStatus)
+        public async Task UpdateConferenceStatus(int conferenceId, bool newStatus)
         {
             try
             {
@@ -132,7 +132,7 @@ namespace DataAccess
                 if (conference == null)
                     throw new Exception($"Conference with ID {conferenceId} not found.");
 
-                conference.Status = true;
+                conference.Status = newStatus;
                 _context.Conferences.Update(conference);
                 await _context.SaveChangesAsync();
             }
