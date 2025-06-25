@@ -11,12 +11,14 @@ namespace FMC_BE.Controllers
     public class TopicsController : ControllerBase
     {
         private readonly ITopicRepository _topicRepository;
+        private readonly IConferenceRepository _conferenceRepository;
         private readonly IMapper _mapper;
 
-        public TopicsController(ITopicRepository topicRepository, IMapper mapper)
+        public TopicsController(ITopicRepository topicRepository, IMapper mapper, IConferenceRepository conferenceRepository)
         {
             _topicRepository = topicRepository;
             _mapper = mapper;
+            _conferenceRepository = conferenceRepository;
         }
 
         // GET: api/Topics
@@ -47,8 +49,17 @@ namespace FMC_BE.Controllers
         {
             if (topicDto == null)
             {
-                return BadRequest("Topic data is null.");
+                return BadRequest("Topic request is null.");
             }
+            if (topicDto.ConferenceId != null)
+            {
+                var con = _conferenceRepository.GetById(topicDto.ConferenceId);
+                if (con == null)
+                {
+                    return BadRequest("Conference not exits");
+                }
+            }
+            
 
             var topic = _mapper.Map<Topic>(topicDto);
             await _topicRepository.Add(topic);
@@ -64,7 +75,14 @@ namespace FMC_BE.Controllers
             {
                 return BadRequest("Topic ID mismatch.");
             }
-
+            if (topicDto.ConferenceId != null)
+            {
+                var con = _conferenceRepository.GetById(topicDto.ConferenceId);
+                if (con == null)
+                {
+                    return BadRequest("Conference not exits");
+                }
+            }
             try
             {
                 
