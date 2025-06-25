@@ -5,6 +5,8 @@ using ConferenceFWebAPI.DTOs;
 using AutoMapper;
 using AutoMapper.Internal.Mappers;
 using ConferenceFWebAPI.Service;
+using Google.Apis.Drive.v3.Data;
+using DataAccess;
 
 namespace FMC_BE.Controllers
 {
@@ -54,8 +56,10 @@ namespace FMC_BE.Controllers
         {
             if (conferenceDto == null)
                 return BadRequest("Conference data is null.");
-
-            var conference = _mapper.Map<Conference>(conferenceDto);
+            var user = _userRepository.GetById(conferenceDto.CreatedBy);
+            if (user == null)
+                return BadRequest("CreatedBy not found");
+                var conference = _mapper.Map<Conference>(conferenceDto);
             conference.CreatedAt = DateTime.Now;
            
             await _conferenceRepository.Add(conference);
@@ -77,17 +81,21 @@ namespace FMC_BE.Controllers
 
         // PUT: api/Conference/5
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(int id, [FromBody] Conference conference)
+        public async Task<ActionResult> Update(int id, [FromBody] ConferenceDTO conferenceDTO)
         {
-            if (id != conference.ConferenceId)
+            if (id == 0 )
             {
-                return BadRequest("Conference ID mismatch.");
+                return BadRequest("ID is requied");
             }
 
             try
             {
-                await _conferenceRepository.Update(_mapper.Map<Conference>(conference));
-                return NoContent();
+                if (conferenceDTO.CreatedBy == 0) return BadRequest("CreateBy is requied");
+                var user = _userRepository.GetById(conferenceDTO.CreatedBy);
+                if (user == null)
+                    return BadRequest("CreatedBy not found");
+                await _conferenceRepository.Update(_mapper.Map<Conference>(conferenceDTO));
+                return Ok("Success");
             }
             catch (Exception ex)
             {
@@ -108,7 +116,7 @@ namespace FMC_BE.Controllers
                 }
                 await _conferenceRepository.UpdateConferenceStatus(id, status);
 
-                return NoContent();
+                return Ok("Success");
             }
             catch (Exception ex)
             {

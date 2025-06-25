@@ -13,10 +13,9 @@ namespace ConferenceFWebAPI
     {
         public MappingProfile()
         {
-            CreateMap<Conference, ConferenceDTO>();
-            CreateMap<ConferenceDTO, Conference>();
-            CreateMap<Topic, TopicDTO>();
-            CreateMap<TopicDTO, Topic>();
+            CreateMap<Conference, ConferenceDTO>().ReverseMap();
+            CreateMap<Topic, AddOrUpdateTopicDTO>().ReverseMap();
+            CreateMap<Topic, TopicDTO>().ReverseMap();
             CreateMap<Paper, PaperResponseDto>(); // <-- Thêm dòng này
             CreateMap<PaperRevisionUploadDto, PaperRevision>()
                            .ForMember(dest => dest.FilePath, opt => opt.Ignore()) // FilePath sẽ được xử lý riêng bởi Azure Blob Service
