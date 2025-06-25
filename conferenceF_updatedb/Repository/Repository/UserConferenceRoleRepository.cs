@@ -40,6 +40,5 @@ namespace Repository.Repository
             return await _dao.GetByCondition(predicate);
         }
 
-
     }
 }

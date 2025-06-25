@@ -11,7 +11,7 @@ namespace Repository
 {
     public interface IUserConferenceRoleRepository : IRepositoryBase<UserConferenceRole>
     {
-        Task<IEnumerable<UserConferenceRole>> GetByConferenceIdAsync(int conferenceId);
+        Task<IEnumerable<UserConferenceRole>> GetByConferenceId(int conferenceId);
         Task<bool> IsReviewer(int userId);
         Task<IEnumerable<UserConferenceRole>> GetByCondition(Expression<Func<UserConferenceRole, bool>> predicate);
     }

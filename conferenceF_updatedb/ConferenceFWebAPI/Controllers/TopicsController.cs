@@ -45,21 +45,12 @@ namespace FMC_BE.Controllers
 
         // POST: api/Topics
         [HttpPost]
-        public async Task<ActionResult> Create([FromBody] TopicDTO topicDto)
+        public async Task<ActionResult> Create([FromBody] AddOrUpdateTopicDTO topicDto)
         {
-            if (topicDto == null)
+            if (topicDto.TopicName == null)
             {
-                return BadRequest("Topic request is null.");
+                return BadRequest("Topic Name is requied.");
             }
-            if (topicDto.ConferenceId != null)
-            {
-                var con = _conferenceRepository.GetById(topicDto.ConferenceId);
-                if (con == null)
-                {
-                    return BadRequest("Conference not exits");
-                }
-            }
-            
 
             var topic = _mapper.Map<Topic>(topicDto);
             await _topicRepository.Add(topic);
@@ -69,26 +60,21 @@ namespace FMC_BE.Controllers
 
         // PUT: api/Topics/5
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(int id, [FromBody] TopicDTO topicDto)
+        public async Task<ActionResult> Update(int id, [FromBody] AddOrUpdateTopicDTO topicDto)
         {
             if (id != topicDto.TopicId)
             {
                 return BadRequest("Topic ID mismatch.");
             }
-            if (topicDto.ConferenceId != null)
-            {
-                var con = _conferenceRepository.GetById(topicDto.ConferenceId);
-                if (con == null)
-                {
-                    return BadRequest("Conference not exits");
-                }
-            }
             try
             {
-                
-                var topic = await _topicRepository.GetById(topicDto.TopicId);
+                if(topicDto.TopicId != null)
+                {
+                    var topic = await _topicRepository.GetById((int)topicDto.TopicId);
+               
                 _mapper.Map<Topic>(topicDto);
                 await _topicRepository.Update(topic);
+                }
                 return NoContent();
             }
             catch (Exception ex)

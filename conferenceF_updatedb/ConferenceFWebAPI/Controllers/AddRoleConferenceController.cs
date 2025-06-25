@@ -49,7 +49,7 @@ namespace ConferenceFWebAPI.Controllers
         [HttpGet("conference/{conferenceId}")]
         public async Task<IActionResult> GetByConferenceId(int conferenceId)
         {
-            var result = await _repo.GetByConferenceIdAsync(conferenceId);
+            var result = await _repo.GetByConferenceId(conferenceId);
             return Ok(result);
         }
 
