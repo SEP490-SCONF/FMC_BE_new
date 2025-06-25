@@ -56,7 +56,7 @@ namespace FMC_BE.Controllers
         {
             if (conferenceDto == null)
                 return BadRequest("Conference data is null.");
-            var user = _userRepository.GetById(conferenceDto.CreatedBy);
+            var user = await _userRepository.GetById(conferenceDto.CreatedBy);
             if (user == null)
                 return BadRequest("CreatedBy not found");
                 var conference = _mapper.Map<Conference>(conferenceDto);
@@ -91,10 +91,14 @@ namespace FMC_BE.Controllers
             try
             {
                 if (conferenceDTO.CreatedBy == 0) return BadRequest("CreateBy is requied");
-                var user = _userRepository.GetById(conferenceDTO.CreatedBy);
+                var user = await _userRepository.GetById(conferenceDTO.CreatedBy);
                 if (user == null)
                     return BadRequest("CreatedBy not found");
-                await _conferenceRepository.Update(_mapper.Map<Conference>(conferenceDTO));
+                var con = await _conferenceRepository.GetById(id);
+                if (user == null)
+                    return BadRequest("Conference not found");
+                _mapper.Map(conferenceDTO,con );
+                await _conferenceRepository.Update(con);
                 return Ok("Success");
             }
             catch (Exception ex)
@@ -105,7 +109,7 @@ namespace FMC_BE.Controllers
 
 
         [HttpPost("{id}/status")]
-        public async Task<ActionResult> UpdateStatus(int id, bool status = true)
+        public async Task<ActionResult> UpdateStatus(int id)
         {
             try
             {
@@ -114,7 +118,7 @@ namespace FMC_BE.Controllers
                 {
                     return NotFound($"Conference with ID {id} not found.");
                 }
-                await _conferenceRepository.UpdateConferenceStatus(id, status);
+                await _conferenceRepository.UpdateConferenceStatus(id, true);
 
                 return Ok("Success");
             }

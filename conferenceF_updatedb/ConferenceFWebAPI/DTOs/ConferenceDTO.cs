@@ -2,14 +2,22 @@
 {
     public class ConferenceDTO
     {
-        public string Title { get; set; } = null!;
+        public required string Title { get; set; }
+
         public string? Description { get; set; }
+
         public DateTime StartDate { get; set; }
+
         public DateTime EndDate { get; set; }
+
         public string? Location { get; set; }
-        public bool Status { get; set; } = true;
-        public string? BannerUrl { get; set; }
-        public bool? CallForPaper { get; set; }
+
+        public bool? Status { get; set; } = true;
+
         public int CreatedBy { get; set; }
+
+        public string? BannerUrl { get; set; }
+
+        public string? CallForPaper { get; set; }
     }
 }
