@@ -866,12 +866,12 @@ namespace BussinessObject.Migrations
                         new
                         {
                             RoleId = 1,
-                            RoleName = "admin"
+                            RoleName = "Admin"
                         },
                         new
                         {
                             RoleId = 2,
-                            RoleName = "member"
+                            RoleName = "Member"
                         });
                 });
 
