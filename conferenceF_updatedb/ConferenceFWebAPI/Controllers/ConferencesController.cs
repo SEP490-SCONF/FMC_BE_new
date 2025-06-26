@@ -71,17 +71,6 @@ namespace FMC_BE.Controllers
            
             await _conferenceRepository.Add(conference);
 
-            // Gửi email cho Organizer
-            //var organizers = await _userRepository.GetOrganizers();
-            //var emailBody = ConferenceCreatedTemplate.GetHtml(conference);
-
-            //foreach (var organizer in organizers)
-            //{
-            //    await _emailService.SendEmailAsync(organizer.Email,
-            //        $"[Thông báo] Hội thảo mới: {conference.Title}",
-            //        emailBody);
-            //}
-
             return CreatedAtAction(nameof(GetById), new { id = conference.ConferenceId }, conferenceDto);
         }
 
