@@ -1,4 +1,6 @@
-﻿namespace ConferenceFWebAPI.DTOs.ReviewHightlights
+﻿using ConferenceFWebAPI.DTOs.ReviewComments;
+
+namespace ConferenceFWebAPI.DTOs.ReviewHightlights
 {
     public class ReviewHightlightDTO
     {
@@ -15,5 +17,8 @@
         public string? TextHighlighted { get; set; }
 
         public DateTime? CreatedAt { get; set; }
+
+
+
     }
 }

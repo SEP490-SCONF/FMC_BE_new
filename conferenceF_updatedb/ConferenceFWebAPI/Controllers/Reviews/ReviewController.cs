@@ -54,15 +54,20 @@ namespace ConferenceFWebAPI.Controllers.Reviews
         public async Task<IActionResult> Add([FromForm] AddReviewDTO dto)
         {
             var review = _mapper.Map<Review>(dto);
+
+            review.Status = "Draft";               
+            review.ReviewedAt = DateTime.Now;    
+
             await _reviewRepository.Add(review);
 
             var result = _mapper.Map<ReviewDTO>(review);
             return CreatedAtAction(nameof(GetById), new { id = review.ReviewId }, result);
         }
 
+
         // PUT: api/Review/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateReviewDTO dto)
+        public async Task<IActionResult> Update(int id, [FromForm] UpdateReviewDTO dto)
         {
             var review = await _reviewRepository.GetById(id);
             if (review == null)

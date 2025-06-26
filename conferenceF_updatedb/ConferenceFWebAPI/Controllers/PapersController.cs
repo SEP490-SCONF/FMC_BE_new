@@ -17,15 +17,20 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IPaperRepository _paperRepository;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
+        private readonly IPaperRevisionRepository _paperRevisionRepository;
+
         public PapersController(IAzureBlobStorageService azureBlobStorageService,
                                 IPaperRepository paperRepository,
                                 IConfiguration configuration,
-                                IMapper mapper)
+                                IMapper mapper,
+                                IPaperRevisionRepository paperRevisionRepository)
         {
             _azureBlobStorageService = azureBlobStorageService;
             _paperRepository = paperRepository;
             _configuration = configuration;
             _mapper = mapper;
+            _paperRevisionRepository = paperRevisionRepository;
+
         }
 
 
@@ -65,9 +70,29 @@ namespace ConferenceFWebAPI.Controllers
 
 
 
+                //await _paperRepository.AddPaperAsync(paper);
+
+                //return Ok(new { Message = "File uploaded and paper data saved successfully.", FileUrl = fileUrl, PaperId = paper.PaperId });
                 await _paperRepository.AddPaperAsync(paper);
 
-                return Ok(new { Message = "File uploaded and paper data saved successfully.", FileUrl = fileUrl, PaperId = paper.PaperId });
+                // Sau khi thêm Paper, tạo Revision đầu tiên
+                var initialRevision = new PaperRevision
+                {
+                    PaperId = paper.PaperId,
+                    FilePath = fileUrl,
+                    Status = "Initial",
+                    SubmittedAt = DateTime.Now
+                };
+                await _paperRevisionRepository.AddPaperRevisionAsync(initialRevision);
+
+                return Ok(new
+                {
+                    Message = "File uploaded and paper + initial revision saved successfully.",
+                    FileUrl = fileUrl,
+                    PaperId = paper.PaperId,
+                    RevisionId = initialRevision.RevisionId
+                });
+
             }
             catch (ArgumentException ex)
             {

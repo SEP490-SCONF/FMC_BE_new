@@ -13,11 +13,13 @@ namespace ConferenceFWebAPI.Controllers.ReviewHightlights
     {
         private readonly IReviewHighlightRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IReviewCommentRepository _commentRepository;
 
-        public ReviewHighlightController(IReviewHighlightRepository repository, IMapper mapper)
+        public ReviewHighlightController(IReviewHighlightRepository repository, IMapper mapper, IReviewCommentRepository reviewCommentRepository)
         {
             _repository = repository;
             _mapper = mapper;
+            _commentRepository = reviewCommentRepository;
         }
 
         // GET: api/ReviewHighlight
@@ -48,16 +50,47 @@ namespace ConferenceFWebAPI.Controllers.ReviewHightlights
             return Ok(_mapper.Map<IEnumerable<ReviewHightlightDTO>>(highlights));
         }
 
-        // POST: api/ReviewHighlight
-        [HttpPost]
-        public async Task<ActionResult> Add([FromForm] AddReviewHightlightDTO dto)
+        //// POST: api/ReviewHighlight
+        //[HttpPost]
+        //public async Task<ActionResult> Add([FromForm] AddReviewHightlightDTO dto)
+        //{
+        //    var highlight = _mapper.Map<ReviewHighlight>(dto);
+        //    highlight.CreatedAt = DateTime.Now;
+
+        //    await _repository.Add(highlight);
+        //    return CreatedAtAction(nameof(GetById), new { id = highlight.HighlightId }, highlight);
+        //}
+
+        [HttpPost("WithComment")]
+        public async Task<ActionResult> AddWithComment([FromForm] AddReviewHighlightWithCommentDTO dto)
         {
+            // 1. Tạo ReviewHighlight
             var highlight = _mapper.Map<ReviewHighlight>(dto);
             highlight.CreatedAt = DateTime.Now;
-
             await _repository.Add(highlight);
-            return CreatedAtAction(nameof(GetById), new { id = highlight.HighlightId }, highlight);
+
+            // 2. Tạo ReviewComment liên kết với Highlight vừa tạo
+            var comment = new ReviewComment
+            {
+                ReviewId = dto.ReviewId,
+                UserId = dto.UserId,
+                CommentText = dto.CommentText,
+                Status = dto.Status,
+                CreatedAt = DateTime.Now,
+                HighlightId = highlight.HighlightId // liên kết đến highlight vừa tạo
+            };
+
+            // Sử dụng repository comment
+            await _commentRepository.Add(comment);
+
+            // Trả về kết quả
+            return CreatedAtAction(nameof(GetById), new { id = highlight.HighlightId }, new
+            {
+                Highlight = highlight,
+                Comment = comment
+            });
         }
+
 
         // PUT: api/ReviewHighlight/5
         [HttpPut("{id}")]
