@@ -7,6 +7,7 @@ using AutoMapper.Internal.Mappers;
 using ConferenceFWebAPI.Service;
 using Google.Apis.Drive.v3.Data;
 using DataAccess;
+using ConferenceFWebAPI.DTOs.Paper;
 
 namespace FMC_BE.Controllers
 {
@@ -36,7 +37,9 @@ namespace FMC_BE.Controllers
         public async Task<ActionResult<IEnumerable<ConferenceDTO>>> GetAll()
         {
             var conferences = await _conferenceRepository.GetAll();
-            return Ok(conferences);
+            var conferenceDTOs = _mapper.Map<IEnumerable<ConferenceDTO>>(conferences);
+            return Ok(conferenceDTOs);
+
         }
 
         // GET: api/Conference/5
@@ -48,8 +51,11 @@ namespace FMC_BE.Controllers
             {
                 return NotFound($"Conference with ID {id} not found.");
             }
-            return Ok(conference);
+
+            var conferenceDTO = _mapper.Map<ConferenceDTO>(conference);
+            return Ok(conferenceDTO);
         }
+
 
         [HttpPost]
         public async Task<ActionResult> Create([FromBody] ConferenceDTO conferenceDto)
@@ -60,20 +66,21 @@ namespace FMC_BE.Controllers
             if (user == null)
                 return BadRequest("CreatedBy not found");
                 var conference = _mapper.Map<Conference>(conferenceDto);
-            conference.CreatedAt = DateTime.Now;
-           
+            conference.CreatedAt = DateTime.UtcNow;
+            conference.Status = true;
+
             await _conferenceRepository.Add(conference);
 
             // Gửi email cho Organizer
-            var organizers = await _userRepository.GetOrganizers();
-            var emailBody = ConferenceCreatedTemplate.GetHtml(conference);
+            //var organizers = await _userRepository.GetOrganizers();
+            //var emailBody = ConferenceCreatedTemplate.GetHtml(conference);
 
-            foreach (var organizer in organizers)
-            {
-                await _emailService.SendEmailAsync(organizer.Email,
-                    $"[Thông báo] Hội thảo mới: {conference.Title}",
-                    emailBody);
-            }
+            //foreach (var organizer in organizers)
+            //{
+            //    await _emailService.SendEmailAsync(organizer.Email,
+            //        $"[Thông báo] Hội thảo mới: {conference.Title}",
+            //        emailBody);
+            //}
 
             return CreatedAtAction(nameof(GetById), new { id = conference.ConferenceId }, conferenceDto);
         }

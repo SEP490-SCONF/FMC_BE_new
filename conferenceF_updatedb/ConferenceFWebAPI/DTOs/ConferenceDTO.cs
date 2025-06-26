@@ -12,8 +12,6 @@
 
         public string? Location { get; set; }
 
-        public bool? Status { get; set; } = true;
-
         public int CreatedBy { get; set; }
 
         public string? BannerUrl { get; set; }

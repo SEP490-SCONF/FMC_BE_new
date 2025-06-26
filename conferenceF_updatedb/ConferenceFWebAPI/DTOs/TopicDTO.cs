@@ -2,7 +2,6 @@
 {
     public class AddOrUpdateTopicDTO
     {
-        public bool? Status { get; set; }
         public string TopicName { get; set; } = null!;
 
     }
