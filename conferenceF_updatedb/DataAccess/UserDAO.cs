@@ -32,6 +32,7 @@ namespace DataAccess
             try
             {
                 return await _context.Users
+                                     .Include(u => u.Role) 
                                      .AsNoTracking()
                                      .FirstOrDefaultAsync(u => u.UserId == id);
             }
@@ -40,6 +41,7 @@ namespace DataAccess
                 throw new Exception($"Error occurred while retrieving user with ID {id}.", ex);
             }
         }
+
 
         // Add a new user
         public async Task AddUser(User user)
