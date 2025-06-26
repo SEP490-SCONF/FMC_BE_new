@@ -102,8 +102,8 @@ public partial class ConferenceFTestContext : DbContext
                 .HasConstraintName("FK__AnswerLik__Liked__7E37BEF6");
         });
          modelBuilder.Entity<Role>().HasData(
-        new Role { RoleId = 1, RoleName = "admin" },
-        new Role { RoleId = 2, RoleName = "member" 
+        new Role { RoleId = 1, RoleName = "Admin" },
+        new Role { RoleId = 2, RoleName = "Member" 
         });
         modelBuilder.Entity<AnswerQuestion>(entity =>
         {
