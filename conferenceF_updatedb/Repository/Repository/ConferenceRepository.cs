@@ -32,10 +32,10 @@ namespace Repository
         {
             await _conferenceDao.UpdateConference(entity);
         }
-        //public async Task UpdateConferenceStatus(int conferenceId, string newStatus)
-        //{
-        //    await _conferenceDao.UpdateConferenceStatus(conferenceId, newStatus);
-        //}
+        public async Task UpdateConferenceStatus(int conferenceId, bool newStatus)
+        {
+            await _conferenceDao.UpdateConferenceStatus(conferenceId, newStatus);
+        }
 
         public async Task Delete(int id)
         {
@@ -46,5 +46,6 @@ namespace Repository
         {
             return await _conferenceDao.GetConferenceCount();
         }
+
     }
 }

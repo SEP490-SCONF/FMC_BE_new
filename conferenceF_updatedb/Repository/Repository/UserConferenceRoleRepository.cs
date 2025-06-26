@@ -3,6 +3,7 @@ using DataAccess;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,21 +18,27 @@ namespace Repository.Repository
             _dao = dao;
         }
 
-        public Task<IEnumerable<UserConferenceRole>> GetAllAsync() => _dao.GetAll();
+        public Task<IEnumerable<UserConferenceRole>> GetAll() => _dao.GetAll();
 
-        public Task<UserConferenceRole> GetByIdAsync(int id) => _dao.GetById(id);
+        public Task<UserConferenceRole> GetById(int id) => _dao.GetById(id);
 
-        public Task<IEnumerable<UserConferenceRole>> GetByConferenceIdAsync(int conferenceId)
+        public Task<IEnumerable<UserConferenceRole>> GetByConferenceId(int conferenceId)
             => _dao.GetByConferenceId(conferenceId);
 
-        public Task AddAsync(UserConferenceRole role) => _dao.Add(role);
+        public Task Add(UserConferenceRole role) => _dao.Add(role);
 
-        public Task UpdateAsync(UserConferenceRole role) => _dao.Update(role);
+        public Task Update(UserConferenceRole role) => _dao.Update(role);
 
-        public Task DeleteAsync(int id) => _dao.Delete(id);
+        public Task Delete(int id) => _dao.Delete(id);
         public async Task<bool> IsReviewer(int userId)
         {
             return await _dao.IsReviewer(userId);
         }
+
+        public async Task<IEnumerable<UserConferenceRole>> GetByCondition(Expression<Func<UserConferenceRole, bool>> predicate)
+        {
+            return await _dao.GetByCondition(predicate);
+        }
+
     }
 }

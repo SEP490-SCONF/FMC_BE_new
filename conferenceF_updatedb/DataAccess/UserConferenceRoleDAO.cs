@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -115,6 +116,11 @@ namespace DataAccess
         {
             return await _context.UserConferenceRoles
                 .AnyAsync(ucr => ucr.UserId == userId && ucr.ConferenceRoleId == 1);
+        }
+
+        public async Task<IEnumerable<UserConferenceRole>> GetByCondition(Expression<Func<UserConferenceRole, bool>> predicate)
+        {
+            return await _context.UserConferenceRoles.Where(predicate).ToListAsync();
         }
     }
 
