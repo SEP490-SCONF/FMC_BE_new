@@ -1,5 +1,5 @@
 ﻿using BussinessObject.Entity;
-using DataAccess;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +9,8 @@ using System.Threading.Tasks;
 
 namespace Repository
 {
-    public interface IUserConferenceRoleRepository : IRepositoryBase<UserConferenceRole>
+    public interface IConferenceRoleRepository : IRepositoryBase<ConferenceRole>
     {
-        Task<IEnumerable<UserConferenceRole>> GetByConferenceId(int conferenceId);
-        Task<bool> IsReviewer(int userId);
         Task<IEnumerable<UserConferenceRole>> GetByCondition(Expression<Func<UserConferenceRole, bool>> predicate);
     }
 }
-﻿

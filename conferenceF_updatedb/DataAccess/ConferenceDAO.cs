@@ -65,26 +65,19 @@ namespace DataAccess
         }
 
         // Update existing conference
-        public async Task UpdateConference(Conference conference)
+        public async Task UpdateConference(Conference updatedConference)
         {
-            try
-            {
-                var existing = await GetConferenceById(conference.ConferenceId);
-                if (existing == null)
-                    throw new Exception($"Conference with ID {conference.ConferenceId} not found.");
+            var existingConference = await _context.Conferences.FirstOrDefaultAsync(c => c.ConferenceId == updatedConference.ConferenceId);
 
-                _context.Entry(existing).CurrentValues.SetValues(conference);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException dbEx)
+            if (existingConference == null)
             {
-                throw new Exception("Database error while updating the conference.", dbEx);
+                throw new Exception($"Conference with ID {updatedConference.ConferenceId} not found.");
             }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error occurred while updating conference with ID {conference.ConferenceId}.", ex);
-            }
+
+            _context.Entry(existingConference).CurrentValues.SetValues(updatedConference);
+            await _context.SaveChangesAsync();
         }
+
 
         // Delete conference by ID
         public async Task DeleteConference(int id)
@@ -124,26 +117,26 @@ namespace DataAccess
                 throw new Exception("Error occurred while counting conferences.", ex);
             }
         }
-        //public async Task UpdateConferenceStatus(int conferenceId, string newStatus)
-        //{
-        //    try
-        //    {
-        //        var conference = await _context.Conferences.FirstOrDefaultAsync(c => c.ConferenceId == conferenceId);
-        //        if (conference == null)
-        //            throw new Exception($"Conference with ID {conferenceId} not found.");
+        public async Task UpdateConferenceStatus(int conferenceId, bool newStatus)
+        {
+            try
+            {
+                var conference = await _context.Conferences.FirstOrDefaultAsync(c => c.ConferenceId == conferenceId);
+                if (conference == null)
+                    throw new Exception($"Conference with ID {conferenceId} not found.");
 
-        //        conference.Status = newStatus;
-        //        _context.Conferences.Update(conference);
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateException dbEx)
-        //    {
-        //        throw new Exception("Database error while updating the conference status.", dbEx);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new Exception($"Error occurred while updating status for conference with ID {conferenceId}.", ex);
-        //    }
-        //}
+                conference.Status = newStatus;
+                _context.Conferences.Update(conference);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException dbEx)
+            {
+                throw new Exception("Database error while updating the conference status.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error occurred while updating status for conference with ID {conferenceId}.", ex);
+            }
+        }
     }
 }
