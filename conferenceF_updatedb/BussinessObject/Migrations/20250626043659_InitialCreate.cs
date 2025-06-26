@@ -737,8 +737,8 @@ namespace BussinessObject.Migrations
                 columns: new[] { "RoleId", "RoleName" },
                 values: new object[,]
                 {
-                    { 1, "admin" },
-                    { 2, "member" }
+                    { 1, "Admin" },
+                    { 2, "Member" }
                 });
 
             migrationBuilder.CreateIndex(

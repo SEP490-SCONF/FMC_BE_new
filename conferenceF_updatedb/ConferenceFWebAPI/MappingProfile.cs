@@ -8,6 +8,7 @@ using ConferenceFWebAPI.DTOs.ReviewComments;
 using ConferenceFWebAPI.DTOs.ReviewerAssignments;
 using ConferenceFWebAPI.DTOs.ReviewHightlights;
 using ConferenceFWebAPI.DTOs.Reviews;
+using ConferenceFWebAPI.DTOs.User;
 using ConferenceFWebAPI.DTOs.UserProfile;
 
 namespace ConferenceFWebAPI
@@ -16,6 +17,7 @@ namespace ConferenceFWebAPI
     {
         public MappingProfile()
         {
+            CreateMap<User, UserInfomation>();
             CreateMap<Conference, ConferenceDTO>();
             CreateMap<ConferenceDTO, Conference>();
             CreateMap<Topic, TopicDTO>();

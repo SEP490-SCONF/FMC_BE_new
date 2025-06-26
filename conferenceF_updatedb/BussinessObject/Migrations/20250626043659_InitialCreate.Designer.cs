@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BussinessObject.Migrations
 {
     [DbContext(typeof(ConferenceFTestContext))]
-    [Migration("20250626035206_InitialCreate")]
+    [Migration("20250626043659_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -869,12 +869,12 @@ namespace BussinessObject.Migrations
                         new
                         {
                             RoleId = 1,
-                            RoleName = "admin"
+                            RoleName = "Admin"
                         },
                         new
                         {
                             RoleId = 2,
-                            RoleName = "member"
+                            RoleName = "Member"
                         });
                 });
 
