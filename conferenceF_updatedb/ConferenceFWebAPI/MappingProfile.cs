@@ -36,7 +36,10 @@ namespace ConferenceFWebAPI
             CreateMap<ReviewerAssignment, ReviewerAssignmentDTO>();
             CreateMap<AddReviewerAssignmentDTO, ReviewerAssignment>();
             CreateMap<UpdateReviewerAssignmentDTO, ReviewerAssignment>();
-            CreateMap<User, UserProfile>();
+            CreateMap<User, UserProfile>()
+            .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName))
+            .ForMember(dest => dest.CreatedAt,
+        opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt ?? DateTime.MinValue, DateTimeKind.Unspecified)));;
             CreateMap<ReviewHighlight, ReviewHightlightDTO>();
             CreateMap<UpdateReviewHightlightDTO, ReviewHighlight>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
