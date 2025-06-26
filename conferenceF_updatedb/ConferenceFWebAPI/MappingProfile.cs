@@ -3,7 +3,9 @@ using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
 using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.PaperRevisions;
+using ConferenceFWebAPI.DTOs.ReviewComments;
 using ConferenceFWebAPI.DTOs.ReviewerAssignments;
+using ConferenceFWebAPI.DTOs.ReviewHightlights;
 using ConferenceFWebAPI.DTOs.Reviews;
 using ConferenceFWebAPI.DTOs.UserProfile;
 
@@ -29,14 +31,25 @@ namespace ConferenceFWebAPI
             CreateMap<UpdatePaperRevisionDTO, PaperRevision>();
             CreateMap<Review, ReviewDTO>();
             CreateMap<AddReviewDTO, Review>();
-            CreateMap<UpdateReviewDTO, Review>();
+            CreateMap<UpdateReviewDTO, Review>().
+                ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<ReviewerAssignment, ReviewerAssignmentDTO>();
             CreateMap<AddReviewerAssignmentDTO, ReviewerAssignment>();
             CreateMap<UpdateReviewerAssignmentDTO, ReviewerAssignment>();
             CreateMap<User, UserProfile>();
+            CreateMap<ReviewHighlight, ReviewHightlightDTO>();
+            CreateMap<UpdateReviewHightlightDTO, ReviewHighlight>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<AddReviewHighlightWithCommentDTO, ReviewHighlight>();
+
+            CreateMap<ReviewComment, ReviewCommentDTO>();
+            CreateMap<AddReviewCommentDTO, ReviewComment>();
+            CreateMap<UpdateReviewCommentDTO, ReviewComment>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
 
-            
+
+
         }
     }
 }

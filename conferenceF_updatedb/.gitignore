@@ -101,10 +101,12 @@ StyleCopReport.xml
 # Chutzpah Test files
 _Chutzpah*
 
-
 # Build results
 bin/
 obj/
+
+**/bin/
+**/obj/
 
 # Visual Studio
 .vs/
@@ -121,6 +123,7 @@ obj/
 # Others
 DocumentLayout*.json
 *.v2
+
 
 # Visual C++ cache files
 ipch/
