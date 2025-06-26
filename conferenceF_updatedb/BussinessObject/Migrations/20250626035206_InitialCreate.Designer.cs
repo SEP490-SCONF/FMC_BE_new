@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BussinessObject.Migrations
 {
     [DbContext(typeof(ConferenceFTestContext))]
-    [Migration("20250622115232_InitialCreate")]
+    [Migration("20250626035206_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -864,6 +864,18 @@ namespace BussinessObject.Migrations
                         .IsUnique();
 
                     b.ToTable("Role", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            RoleName = "admin"
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            RoleName = "member"
+                        });
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.Schedule", b =>

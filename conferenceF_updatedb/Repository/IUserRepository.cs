@@ -9,6 +9,6 @@ namespace Repository
         Task<User> GetByEmail(string email);
         Task<int> GetUserCount();
         Task<IEnumerable<User>> GetOrganizers();
-
+        Task<User?> GetByRefreshToken(string refreshToken);
     }
 }

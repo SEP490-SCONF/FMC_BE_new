@@ -101,7 +101,10 @@ public partial class ConferenceFTestContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__AnswerLik__Liked__7E37BEF6");
         });
-
+         modelBuilder.Entity<Role>().HasData(
+        new Role { RoleId = 1, RoleName = "admin" },
+        new Role { RoleId = 2, RoleName = "member" 
+        });
         modelBuilder.Entity<AnswerQuestion>(entity =>
         {
             entity.HasKey(e => e.AnswerId).HasName("PK__AnswerQu__D482500427DFBA36");
@@ -671,6 +674,7 @@ public partial class ConferenceFTestContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__User__RoleId__4D94879B");
         });
+
 
         modelBuilder.Entity<UserConferenceRole>(entity =>
         {

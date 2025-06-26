@@ -38,7 +38,7 @@ namespace ConferenceFWebAPI.Controllers.Authen
                 // Cấu hình xác thực Google
                 var settings = new GoogleJsonWebSignature.ValidationSettings()
                 {
-                    Audience = new List<string>() { "80241279325-7vv3gco6bt8rdchkh1oepa3hn1mp8bnr.apps.googleusercontent.com" } // Thay bằng Client ID của bạn
+                    Audience = new List<string>() { _configuration["Google:ClientId"] } // Thay bằng Client ID của bạn
                 };
 
                 // Xác thực token
@@ -68,12 +68,21 @@ namespace ConferenceFWebAPI.Controllers.Authen
 
                 // 4. Tạo access token (JWT)
                 var accessToken = GenerateToken(user);
-                // 5. Chuẩn bị response
+                // 5. Đặt refresh token vào HttpOnly Secure cookie
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false, // Đảm bảo chỉ gửi qua HTTPS
+                    SameSite = SameSiteMode.Strict, // hoặc Lax nếu cần
+                    Expires = DateTime.UtcNow.AddDays(7)
+                };
+                Response.Cookies.Append("refreshToken", user.RefreshToken, cookieOptions);
+
+                // 6. Trả về access token và expiresAt cho FE
                 var response = new GoogleLoginResponse
                 {
                     AccessToken = accessToken,
-                    ExpiresAt = DateTime.UtcNow.AddHours(1),
-                    RefreshToken = user.RefreshToken
+                    ExpiresAt = DateTime.UtcNow.AddHours(1)
                     
                 };
 
@@ -88,6 +97,45 @@ namespace ConferenceFWebAPI.Controllers.Authen
                 return StatusCode(500, new { success = false, message = "An error occurred: " + ex.Message });
             }
         }
+        [HttpPost]
+        [Route("RefreshToken")]
+        public async Task<IActionResult> RefreshToken()
+        {
+            
+            if (!Request.Cookies.TryGetValue("refreshToken", out var incomingRefreshToken))
+                return Unauthorized("No refresh token");
+
+           
+            var user = await _userRepository.GetByRefreshToken(incomingRefreshToken);
+            if (user == null || user.TokenExpiry < DateTime.UtcNow)
+                return Unauthorized("Invalid or expired refresh token");
+
+            
+            user.RefreshToken = GenerateRefreshToken();
+            user.TokenExpiry = DateTime.UtcNow.AddDays(7);
+            await _userRepository.Update(user);
+
+           
+            var newAccessToken = GenerateToken(user);
+
+            
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+            Response.Cookies.Append("refreshToken", user.RefreshToken, cookieOptions);
+
+           
+            return Ok(new
+            {
+                AccessToken = newAccessToken,
+                ExpiresAt = DateTime.UtcNow.AddHours(1)
+            });
+        }
+
         [NonAction]
         public string GenerateRefreshToken()
         {

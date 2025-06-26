@@ -129,6 +129,13 @@ namespace DataAccess
                 throw new Exception("Error occurred while counting users.", ex);
             }
         }
+        public async Task<User?> GetByRefreshToken(string refreshToken)
+        {
+            // Tìm user theo RefreshToken, có thể thêm AsNoTracking() nếu chỉ đọc
+            return await _context.Users
+                                 .AsNoTracking()
+                                 .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+        }
         public async Task<IEnumerable<User>> GetOrganizers()
         {
             try
