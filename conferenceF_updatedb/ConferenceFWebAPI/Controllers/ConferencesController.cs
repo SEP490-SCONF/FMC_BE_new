@@ -66,9 +66,9 @@ namespace FMC_BE.Controllers
             if (user == null)
                 return BadRequest("CreatedBy not found");
                 var conference = _mapper.Map<Conference>(conferenceDto);
-            conference.CreatedAt = DateTime.UtcNow;
+            conference.CreatedAt = DateTime.UtcNow.AddHours(7);
             conference.Status = true;
-
+           
             await _conferenceRepository.Add(conference);
 
             // Gửi email cho Organizer
@@ -105,6 +105,7 @@ namespace FMC_BE.Controllers
                 if (user == null)
                     return BadRequest("Conference not found");
                 _mapper.Map(conferenceDTO,con );
+                
                 await _conferenceRepository.Update(con);
                 return Ok("Success");
             }
