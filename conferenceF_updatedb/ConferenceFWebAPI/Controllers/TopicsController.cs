@@ -53,6 +53,7 @@ namespace FMC_BE.Controllers
             }
 
             var topic = _mapper.Map<Topic>(topicDto);
+            topic.Status = true;
             await _topicRepository.Add(topic);
 
             return CreatedAtAction(nameof(GetById), new { id = topic.TopicId }, topicDto);
