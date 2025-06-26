@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
+using ConferenceFWebAPI.DTOs.ConferenceTopics;
 using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.PaperRevisions;
 using ConferenceFWebAPI.DTOs.ReviewComments;
@@ -49,6 +50,21 @@ namespace ConferenceFWebAPI
             CreateMap<AddReviewCommentDTO, ReviewComment>();
             CreateMap<UpdateReviewCommentDTO, ReviewComment>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<ConferenceTopicDTO, Dictionary<string, object>>()
+    .ConvertUsing(dto => new Dictionary<string, object>
+    {
+        { "ConferenceId", dto.ConferenceId },
+        { "TopicId", dto.TopicId }
+    });
+
+            CreateMap<Dictionary<string, object>, ConferenceTopicDTO>()
+                .ConvertUsing(dict => new ConferenceTopicDTO
+                {
+                    ConferenceId = (int)dict["ConferenceId"],
+                    TopicId = (int)dict["TopicId"]
+                });
+
 
 
 
