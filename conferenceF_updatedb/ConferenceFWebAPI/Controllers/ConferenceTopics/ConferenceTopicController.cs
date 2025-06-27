@@ -25,9 +25,28 @@ namespace ConferenceFWebAPI.Controllers.ConferenceTopics
         public async Task<ActionResult<IEnumerable<ConferenceTopicDTO>>> GetAll()
         {
             var entities = await _context.Set<Dictionary<string, object>>("ConferenceTopic").ToListAsync();
-            var result = entities.Select(e => _mapper.Map<ConferenceTopicDTO>(e)).ToList();
+
+            var topicIds = entities.Select(e => (int)e["TopicId"]).Distinct();
+            var topics = await _context.Topics
+                .Where(t => topicIds.Contains(t.TopicId))
+                .ToDictionaryAsync(t => t.TopicId, t => t.TopicName);
+
+            var result = entities.Select(e =>
+            {
+                int topicId = (int)e["TopicId"];
+                topics.TryGetValue(topicId, out string? topicName);
+
+                return new ConferenceTopicDTO
+                {
+                    ConferenceId = (int)e["ConferenceId"],
+                    TopicId = topicId,
+                    TopicName = topicName
+                };
+            }).ToList();
+
             return Ok(result);
         }
+
 
         // POST: api/ConferenceTopic
         [HttpPost]
