@@ -13,11 +13,18 @@ namespace ConferenceFWebAPI.Controllers.Reviews
     {
         private readonly IReviewRepository _reviewRepository;
         private readonly IMapper _mapper;
+        private readonly IReviewCommentRepository _commentRepository;
+        private readonly IReviewHighlightRepository _highlightRepository;
+        private readonly IPaperRevisionRepository _paperRevisionRepository;
 
-        public ReviewController(IReviewRepository reviewRepository, IMapper mapper)
+
+        public ReviewController(IReviewRepository reviewRepository, IMapper mapper, IReviewCommentRepository commentRepository, IReviewHighlightRepository highlightRepository, IPaperRevisionRepository paperRevisionRepository)
         {
             _reviewRepository = reviewRepository;
             _mapper = mapper;
+            _commentRepository = commentRepository;
+            _highlightRepository = highlightRepository;
+            _paperRevisionRepository = paperRevisionRepository;
         }
 
         // GET: api/Review
@@ -55,8 +62,8 @@ namespace ConferenceFWebAPI.Controllers.Reviews
         {
             var review = _mapper.Map<Review>(dto);
 
-            review.Status = "Draft";               
-            review.ReviewedAt = DateTime.Now;    
+            review.Status = "Draft";
+            review.ReviewedAt = DateTime.Now;
 
             await _reviewRepository.Add(review);
 
@@ -91,5 +98,96 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             await _reviewRepository.Delete(id);
             return NoContent();
         }
+
+        [HttpPost("WithHighlightAndComment")]
+        public async Task<IActionResult> AddWithHighlightAndComment([FromForm] AddReviewWithHighlightAndCommentDTO dto)
+        {
+            // 1. Lấy PaperRevision để truy PaperId
+            var revision = await _paperRevisionRepository.GetPaperRevisionByIdAsync(dto.RevisionId);
+            if (revision == null)
+            {
+                return BadRequest($"PaperRevision with ID {dto.RevisionId} does not exist.");
+            }
+
+            // 2. Tạo Review
+            var review = _mapper.Map<Review>(dto);
+            review.PaperId = revision.PaperId; // tự động gán từ revision
+            review.Status = "Draft";
+            review.ReviewedAt = DateTime.Now;
+            await _reviewRepository.Add(review);
+
+            // 3. Tạo Highlight
+            var highlight = new ReviewHighlight
+            {
+                ReviewId = review.ReviewId,
+                PageNumber = dto.PageNumber,
+                OffsetStart = dto.OffsetStart,
+                OffsetEnd = dto.OffsetEnd,
+                TextHighlighted = dto.TextHighlighted,
+                CreatedAt = DateTime.Now
+            };
+            await _highlightRepository.Add(highlight);
+
+            // 4. Tạo Comment
+            var comment = new ReviewComment
+            {
+                ReviewId = review.ReviewId,
+                HighlightId = highlight.HighlightId,
+                UserId = dto.UserId,
+                CommentText = dto.CommentText,
+                Status = dto.Status,
+                CreatedAt = DateTime.Now
+            };
+            await _commentRepository.Add(comment);
+
+            return CreatedAtAction(nameof(GetById), new { id = review.ReviewId }, new
+            {
+                Review = review,
+                Highlight = highlight,
+                Comment = comment
+            });
+        }
+
+        [HttpPut("WithHighlightAndComment/{reviewId}")]
+        public async Task<IActionResult> UpdateWithHighlightAndComment(int reviewId, [FromForm] UpdateReviewWithHighlightAndCommentDTO dto)
+        {
+            // 1. Kiểm tra Review có tồn tại không
+            var review = await _reviewRepository.GetById(reviewId);
+            if (review == null)
+                return NotFound($"Review with ID {reviewId} not found.");
+
+            // 2. Lấy lại PaperId từ RevisionId
+            var revision = await _paperRevisionRepository.GetPaperRevisionByIdAsync(dto.RevisionId);
+            if (revision == null)
+                return BadRequest($"Revision with ID {dto.RevisionId} does not exist.");
+
+            // 3. Cập nhật thông tin Review bằng AutoMapper
+            _mapper.Map(dto, review);
+            review.PaperId = revision.PaperId;
+            review.ReviewedAt = DateTime.Now;
+            review.Status = "Draft";
+
+            await _reviewRepository.Update(review);
+
+            // 4. Cập nhật ReviewHighlight bằng AutoMapper
+            var highlight = await _highlightRepository.GetById(dto.HighlightId);
+            if (highlight == null)
+                return NotFound($"Highlight with ID {dto.HighlightId} not found.");
+
+            _mapper.Map(dto, highlight);
+            await _highlightRepository.Update(highlight);
+
+            // 5. Cập nhật ReviewComment bằng AutoMapper
+            var comment = await _commentRepository.GetById(dto.CommentId);
+            if (comment == null)
+                return NotFound($"Comment with ID {dto.CommentId} not found.");
+
+            _mapper.Map(dto, comment);
+            await _commentRepository.Update(comment);
+
+            return NoContent();
+        }
+
+
     }
 }

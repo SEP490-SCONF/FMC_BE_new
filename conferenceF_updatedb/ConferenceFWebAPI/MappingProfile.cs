@@ -34,8 +34,29 @@ namespace ConferenceFWebAPI
             CreateMap<UpdatePaperRevisionDTO, PaperRevision>();
             CreateMap<Review, ReviewDTO>();
             CreateMap<AddReviewDTO, Review>();
+            CreateMap<AddReviewWithHighlightAndCommentDTO, Review>();
+
             CreateMap<UpdateReviewDTO, Review>().
                 ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<UpdateReviewWithHighlightAndCommentDTO, Review>().
+               ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<UpdateReviewWithHighlightAndCommentDTO, ReviewHighlight>()
+            .ForAllMembers(opts =>
+            opts.Condition((src, dest, srcMember) =>
+            srcMember != null && !(srcMember is string str && string.IsNullOrWhiteSpace(str)))
+             );
+
+            CreateMap<UpdateReviewWithHighlightAndCommentDTO, ReviewComment>()
+                .ForAllMembers(opts =>
+                    opts.Condition((src, dest, srcMember) =>
+                        srcMember != null && !(srcMember is string str && string.IsNullOrWhiteSpace(str))
+                    )
+                );
+
+
+
             CreateMap<ReviewerAssignment, ReviewerAssignmentDTO>();
             CreateMap<AddReviewerAssignmentDTO, ReviewerAssignment>();
             CreateMap<UpdateReviewerAssignmentDTO, ReviewerAssignment>();
