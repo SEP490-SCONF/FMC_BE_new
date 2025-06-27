@@ -1,5 +1,5 @@
 ﻿using BussinessObject.Entity;
-using ConferenceFWebAPI.DTOs;
+using ConferenceFWebAPI.DTOs.UserConferenceRoles;
 using ConferenceFWebAPI.Service;
 using Microsoft.AspNetCore.Mvc;
 using Repository;
@@ -110,12 +110,58 @@ namespace ConferenceFWebAPI.Controllers
 
 
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UserConferenceRole role)
+        [HttpPut("change-role")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ChangeUserConferenceRole([FromBody] UserConferenceRoleChangeRoleDto dto)
         {
-            if (id != role.Id) return BadRequest("ID mismatch.");
-            await _repo.Update(role);
-            return NoContent();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                // Kiểm tra sự tồn tại của User, Conference và NewConferenceRole
+                var user = await _userRepository.GetById(dto.UserId);
+                if (user == null)
+                    return BadRequest("User không tồn tại.");
+
+                var conference = await _conferenceRepository.GetById(dto.ConferenceId);
+                if (conference == null)
+                    return BadRequest("Hội thảo không tồn tại.");
+
+                var newRole = await _conferenceRoleRepository.GetById(dto.NewConferenceRoleId);
+                if (newRole == null)
+                    return BadRequest("Vai trò mới không tồn tại.");
+
+                var updatedAssignment = await _repo.UpdateConferenceRoleForUserInConference(dto.UserId, dto.ConferenceId, dto.NewConferenceRoleId);
+
+                if (updatedAssignment == null)
+                {
+                    return NotFound($"Không tìm thấy bản ghi vai trò cho người dùng {dto.UserId} trong hội thảo {dto.ConferenceId} để cập nhật.");
+                }
+
+                string subject = $"Vai trò của bạn đã được cập nhật trong hội thảo '{conference.Title}'";
+                string body = $@"
+                    <h3>Xin chào {user.Name},</h3>
+                    <p>Vai trò của bạn trong hội thảo <strong>{conference.Title}</strong> đã được cập nhật thành <strong>{newRole.RoleName}</strong>.</p>
+                    <p>Thời gian cập nhật: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
+                    <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
+                    <br/>
+                    <p>Trân trọng,<br/>Ban tổ chức</p>";
+
+                // Gửi email
+                await _emailService.SendEmailAsync(user.Email, subject, body);
+
+                return Ok($"Vai trò của người dùng {dto.UserId} trong hội thảo {dto.ConferenceId} đã được thay đổi thành {newRole.RoleName}.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ server khi thay đổi vai trò: {ex.Message}");
+            }
         }
 
         [HttpDelete("{id}")]

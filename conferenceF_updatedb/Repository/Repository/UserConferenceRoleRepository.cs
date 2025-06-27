@@ -39,6 +39,10 @@ namespace Repository.Repository
         {
             return await _dao.GetByCondition(predicate);
         }
-
+        public async Task<UserConferenceRole?> UpdateConferenceRoleForUserInConference(int userId, int conferenceId, int newConferenceRoleId)
+        {
+            // Repository chỉ ủy quyền công việc cho DAO
+            return await _dao.UpdateConferenceRoleForUser(userId, conferenceId, newConferenceRoleId);
+        }
     }
 }
