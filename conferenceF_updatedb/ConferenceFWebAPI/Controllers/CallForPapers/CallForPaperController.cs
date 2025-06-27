@@ -13,8 +13,8 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
     public class CallForPaperController : ControllerBase
     {
         private readonly ICallForPaperRepository _callForPaperRepository;
-        private readonly IAzureBlobStorageService _azureBlobStorageService; // Thay thế IWebHostEnvironment
-        private readonly IConfiguration _configuration; // Thêm để đọc appsettings
+        private readonly IAzureBlobStorageService _azureBlobStorageService;
+        private readonly IConfiguration _configuration;
 
         public CallForPaperController(
             ICallForPaperRepository callForPaperRepository,
