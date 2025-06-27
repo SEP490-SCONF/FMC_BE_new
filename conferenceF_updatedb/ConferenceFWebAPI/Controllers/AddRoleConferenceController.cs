@@ -1,6 +1,8 @@
 ﻿using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.UserConferenceRoles;
+using ConferenceFWebAPI.DTOs.UserProfile;
 using ConferenceFWebAPI.Service;
+using DataAccess;
 using Microsoft.AspNetCore.Mvc;
 using Repository;
 
@@ -15,19 +17,23 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IEmailService _emailService;
         private readonly IConferenceRepository _conferenceRepository;
         private readonly IConferenceRoleRepository _conferenceRoleRepository;
+        private readonly AutoMapper.IMapper _mapper; // Cần inject AutoMapper nếu bạn muốn map User entity sang UserDto
+
 
         public UserConferenceRolesController(
             IUserConferenceRoleRepository repo,
             IUserRepository userRepository,
             IEmailService emailService,
             IConferenceRepository conferenceRepository,
-            IConferenceRoleRepository conferenceRoleRepository)
+            IConferenceRoleRepository conferenceRoleRepository,
+            AutoMapper.IMapper mapper)
         {
             _repo = repo;
             _userRepository = userRepository;
             _emailService = emailService;
             _conferenceRepository = conferenceRepository;
             _conferenceRoleRepository = conferenceRoleRepository;
+            _mapper = mapper;
         }
 
 
@@ -108,7 +114,44 @@ namespace ConferenceFWebAPI.Controllers
             return Ok("Success");
         }
 
+        [HttpGet("conference/{conferenceId}/roles/members")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDto>))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetConferenceMembersByRoles(int conferenceId)
+        {
+            try
+            {
+                // Kiểm tra sự tồn tại của Conference
+                var conference = await _conferenceRepository.GetById(conferenceId);
+                if (conference == null)
+                {
+                    return NotFound($"Hội thảo với ID: {conferenceId} không tồn tại.");
+                }
 
+                // Định nghĩa các vai trò cần tìm (3 hoặc 4)
+                var desiredRoleIds = new List<int> { 3, 4 };
+
+                // Lấy danh sách các User từ Repository
+                var users = await _repo.GetUsersByConferenceIdAndRolesAsync(conferenceId, desiredRoleIds);
+
+                if (users == null || !users.Any())
+                {
+                    return NotFound($"Không tìm thấy người dùng nào với vai trò {string.Join(" hoặc ", desiredRoleIds)} trong hội thảo {conferenceId}.");
+                }
+
+                var userDtos = _mapper.Map<IEnumerable<UserDto>>(users);
+
+
+                return Ok(userDtos);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetConferenceMembersByRoles: {ex.ToString()}");
+                return StatusCode(500, $"Lỗi nội bộ server khi lấy danh sách thành viên: {ex.Message}");
+            }
+        }
 
         [HttpPut("change-role")]
         [ProducesResponseType(StatusCodes.Status200OK)]
