@@ -16,6 +16,12 @@ namespace DataAccess
             _context = context;
         }
 
+        public List<Paper> GetPapersByConferenceId(int conferenceId)
+        {
+            return _context.Papers
+                           .Where(p => p.ConferenceId == conferenceId)
+                           .ToList();
+        }
         public IQueryable<Paper> GetAllPapers()
         {
             return _context.Papers.Where(p => p.Status != "Deleted").AsQueryable();

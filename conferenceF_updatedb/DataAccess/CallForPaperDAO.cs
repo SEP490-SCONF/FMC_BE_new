@@ -4,114 +4,72 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+
 
 namespace DataAccess
-{
-    public class CallForPaperDAO
     {
-        private readonly ConferenceFTestContext _context;
-
-        public CallForPaperDAO(ConferenceFTestContext context)
+        public class CallForPaperDAO
         {
-            _context = context;
+            private readonly ConferenceFTestContext _dbContext;
+
+            public CallForPaperDAO(ConferenceFTestContext dbContext)
+            {
+                _dbContext = dbContext;
+            }
+
+            public async Task<IEnumerable<CallForPaper>> GetAllCallForPapers()
+            {
+                return await _dbContext.CallForPapers.ToListAsync();
+            }
+
+        public async Task<IEnumerable<CallForPaper>> GetCallForPapersByConferenceId(int conferenceId)
+        {
+            return await _dbContext.CallForPapers
+                                   .Where(cf => cf.ConferenceId == conferenceId)
+                                   .ToListAsync();
         }
+        public async Task<CallForPaper?> GetCallForPaperById(int id)
+            {
+                return await _dbContext.CallForPapers.FirstOrDefaultAsync(cf => cf.Cfpid == id);
+            }
 
-        public async Task<IEnumerable<CallForPaper>> GetAll()
-        {
-            try
+            /// <summary>
+            /// Thêm một CallForPaper mới.
+            /// </summary>
+            public async Task AddCallForPaper(CallForPaper callForPaper)
             {
-                return await _context.CallForPapers
-                                     .AsNoTracking()
-                                     .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error while retrieving all call for papers.", ex);
-            }
-        }
-
-        public async Task<CallForPaper> GetById(int id)
-        {
-            try
-            {
-                return await _context.CallForPapers
-                                     .AsNoTracking()
-                                     .FirstOrDefaultAsync(c => c.Cfpid == id);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error while retrieving call for paper with ID {id}.", ex);
-            }
-        }
-
-        public async Task<IEnumerable<CallForPaper>> GetByConferenceId(int conferenceId)
-        {
-            try
-            {
-                return await _context.CallForPapers
-                                     .Where(c => c.ConferenceId == conferenceId)
-                                     .AsNoTracking()
-                                     .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error while retrieving call for papers for conference ID {conferenceId}.", ex);
-            }
-        }
-
-        public async Task Add(CallForPaper entity)
-        {
-            try
-            {
-                _context.CallForPapers.Add(entity);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException dbEx)
-            {
-                throw new Exception("Database error while adding call for paper.", dbEx);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Unexpected error while adding call for paper.", ex);
-            }
-        }
-
-        public async Task Update(CallForPaper entity)
-        {
-            try
-            {
-                var existing = await _context.CallForPapers.FindAsync(entity.Cfpid);
-                if (existing == null)
-                    throw new Exception($"Call for paper with ID {entity.Cfpid} not found.");
-
-                _context.Entry(existing).CurrentValues.SetValues(entity);
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error while updating call for paper with ID {entity.Cfpid}.", ex);
-            }
-        }
-
-        public async Task Delete(int id)
-        {
-            try
-            {
-                var entity = await _context.CallForPapers.FindAsync(id);
-                if (entity != null)
+                if (callForPaper == null)
                 {
-                    _context.CallForPapers.Remove(entity);
-                    await _context.SaveChangesAsync();
+                    throw new ArgumentNullException(nameof(callForPaper));
                 }
-                else
+                callForPaper.CreatedAt = DateTime.UtcNow; // Tự động set thời gian tạo
+                await _dbContext.CallForPapers.AddAsync(callForPaper);
+                await _dbContext.SaveChangesAsync();
+            }
+
+            /// <summary>
+            /// Cập nhật một CallForPaper hiện có.
+            /// </summary>
+            public async Task UpdateCallForPaper(CallForPaper callForPaper)
+            {
+                if (callForPaper == null)
                 {
-                    throw new Exception($"Call for paper with ID {id} not found for deletion.");
+                    throw new ArgumentNullException(nameof(callForPaper));
+                }
+
+                _dbContext.CallForPapers.Update(callForPaper);
+                await _dbContext.SaveChangesAsync();
+            }
+
+            public async Task DeleteCallForPaper(int id)
+            {
+                var callForPaper = await _dbContext.CallForPapers.FirstOrDefaultAsync(cf => cf.Cfpid == id);
+                if (callForPaper != null)
+                {
+                    _dbContext.CallForPapers.Remove(callForPaper);
+                    await _dbContext.SaveChangesAsync();
                 }
             }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error while deleting call for paper with ID {id}.", ex);
-            }
         }
-    }
 }

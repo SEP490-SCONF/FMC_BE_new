@@ -27,7 +27,24 @@ namespace ConferenceFWebAPI.Controllers
             _configuration = configuration;
             _mapper = mapper;
         }
+        [HttpGet("conference/{conferenceId}")] // Ví dụ: api/PaperByConference/conference/1
+        [ProducesResponseType(typeof(List<PaperResponseDto>), StatusCodes.Status200OK)] // Cập nhật kiểu trả về
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetPapersByConference(int conferenceId)
+        {
+            var papers = _paperRepository.GetPapersByConferenceId(conferenceId);
 
+            if (papers == null || !papers.Any())
+            {
+                return NotFound($"No papers found for conference ID: {conferenceId}");
+            }
+
+            // Ánh xạ danh sách các Paper sang danh sách các PaperResponseDto
+            var paperDto = _mapper.Map<List<PaperResponseDto>>(papers);
+
+
+            return Ok(paperDto);
+        }
 
         [HttpPost("upload-pdf")]
         public async Task<IActionResult> UploadPdf([FromForm] PaperUploadDto paperDto)
