@@ -6,6 +6,7 @@ using DataAccess;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Repository;
+using System.Security.Claims;
 
 namespace ConferenceFWebAPI.Controllers
 {
@@ -13,19 +14,40 @@ namespace ConferenceFWebAPI.Controllers
     [Route("api/[controller]")]
     public class PapersController : ControllerBase
     {
-        private readonly IAzureBlobStorageService _azureBlobStorageService;
         private readonly IPaperRepository _paperRepository;
+        private readonly IAzureBlobStorageService _azureBlobStorageService;
         private readonly IConfiguration _configuration;
-        private readonly IMapper _mapper;
-        public PapersController(IAzureBlobStorageService azureBlobStorageService,
-                                IPaperRepository paperRepository,
-                                IConfiguration configuration,
-                                IMapper mapper)
+        private readonly AutoMapper.IMapper _mapper;
+        private readonly IUserConferenceRoleRepository _userConferenceRoleRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IConferenceRepository _conferenceRepository;
+        private readonly IConferenceRoleRepository _conferenceRoleRepository;
+        private readonly IEmailService _emailService;
+        private readonly IWebHostEnvironment _env; // Inject IWebHostEnvironment
+
+
+        public PapersController(
+            IPaperRepository paperRepository,
+            IAzureBlobStorageService azureBlobStorageService,
+            IConfiguration configuration,
+            AutoMapper.IMapper mapper,
+            IUserConferenceRoleRepository userConferenceRoleRepository,
+            IUserRepository userRepository,
+            IConferenceRepository conferenceRepository,
+            IConferenceRoleRepository conferenceRoleRepository,
+            IEmailService emailService,
+            IWebHostEnvironment env)
         {
-            _azureBlobStorageService = azureBlobStorageService;
             _paperRepository = paperRepository;
+            _azureBlobStorageService = azureBlobStorageService;
             _configuration = configuration;
             _mapper = mapper;
+            _userConferenceRoleRepository = userConferenceRoleRepository;
+            _userRepository = userRepository;
+            _conferenceRepository = conferenceRepository;
+            _conferenceRoleRepository = conferenceRoleRepository;
+            _emailService = emailService;
+            _env = env;
         }
         [HttpGet("conference/{conferenceId}")] // Ví dụ: api/PaperByConference/conference/1
         [ProducesResponseType(typeof(List<PaperResponseDto>), StatusCodes.Status200OK)] // Cập nhật kiểu trả về
@@ -58,15 +80,38 @@ namespace ConferenceFWebAPI.Controllers
             {
                 return BadRequest("No file uploaded.");
             }
-            if (Path.GetExtension(paperDto.PdfFile.FileName)?.ToLower() != ".pdf")
-            {
-                return BadRequest("Only PDF files are allowed.");
-            }
 
-            // Thêm kiểm tra AuthorIds không rỗng
             if (paperDto.AuthorIds == null || !paperDto.AuthorIds.Any())
             {
                 return BadRequest("At least one author must be provided.");
+            }
+
+            int uploaderUserId;
+
+            // --- TẠM THỜI CHO MÔI TRƯỜNG PHÁT TRIỂN (DEVELOPMENT MODE ONLY) ---
+            // Lấy UploaderUserId từ người dùng đã xác thực (Authenticated User)
+            if (_env.IsDevelopment())
+            {
+                // Trong môi trường Development, nếu không có user xác thực, lấy ID tác giả đầu tiên
+                // LƯU Ý: ĐÂY LÀ ĐOẠN CODE KHÔNG AN TOÀN CHO PRODUCTION!
+                uploaderUserId = paperDto.AuthorIds.First(); // Giả định AuthorIds không rỗng (đã có kiểm tra ở trên)
+                Console.WriteLine($"[DEVELOPMENT MODE] Inferred UploaderUserId from AuthorIds: {uploaderUserId}");
+            }
+            else // Môi trường Production hoặc Staging, phải có người dùng xác thực
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out uploaderUserId))
+                {
+                    return Unauthorized("User is not authenticated or user ID is not available.");
+                }
+            }
+            // --- HẾT PHẦN TẠM THỜI ---
+
+
+            // VALIDATION: UploaderUserId (người tải lên) phải là một trong các AuthorIds được cung cấp
+            if (!paperDto.AuthorIds.Contains(uploaderUserId))
+            {
+                return BadRequest($"The authenticated user (ID: {uploaderUserId}) must be one of the provided Author IDs.");
             }
 
             try
@@ -87,20 +132,101 @@ namespace ConferenceFWebAPI.Controllers
                 paper.IsPublished = false;
 
                 paper.PaperAuthors = new List<PaperAuthor>();
-                int authorOrder = 1; // Khởi tạo thứ tự tác giả
-                foreach (var authorId in paperDto.AuthorIds.Distinct()) 
+                int authorOrder = 1;
+                foreach (var authorId in paperDto.AuthorIds.Distinct())
                 {
                     paper.PaperAuthors.Add(new PaperAuthor
                     {
                         AuthorId = authorId,
-                        AuthorOrder = authorOrder 
+                        AuthorOrder = authorOrder
                     });
                     authorOrder++;
                 }
 
                 await _paperRepository.AddPaperAsync(paper);
 
-                return Ok(new { Message = "File uploaded and paper data saved successfully.", FileUrl = fileUrl, PaperId = paper.PaperId });
+                // --- NEW LOGIC: CẬP NHẬT VAI TRÒ CHO TẤT CẢ TÁC GIẢ ---
+                int conferenceId = paper.ConferenceId;
+                int newRoleId = 2; // Role = 2 như yêu cầu
+
+                var conference = await _conferenceRepository.GetById(conferenceId);
+                var newRole = await _conferenceRoleRepository.GetById(newRoleId);
+
+                if (conference == null || newRole == null)
+                {
+                    Console.WriteLine($"Warning: Could not update roles for authors in conference {conferenceId}. Missing Conference or Role data. Email skipped.");
+                }
+                else
+                {
+                    foreach (var authorId in paperDto.AuthorIds.Distinct()) // Duyệt qua từng tác giả
+                    {
+                        var authorUser = await _userRepository.GetById(authorId);
+                        if (authorUser == null)
+                        {
+                            Console.WriteLine($"Warning: Author User ID {authorId} not found. Skipping role update and email for this author.");
+                            continue; // Bỏ qua tác giả này và tiếp tục với tác giả khác
+                        }
+
+                        var updatedRoleAssignment = await _userConferenceRoleRepository.UpdateConferenceRoleForUserInConference(
+                            authorId,      // Sử dụng authorId hiện tại trong vòng lặp
+                            conferenceId,
+                            newRoleId
+                        );
+
+                        // Gửi email và log tùy thuộc vào việc vai trò đã được cập nhật hay tạo mới
+                        string emailSubject, emailBody;
+
+                        if (updatedRoleAssignment == null)
+                        {
+                            // Nếu bản ghi UserConferenceRole không tồn tại, tạo mới nó
+                            var newAssignment = new UserConferenceRole
+                            {
+                                UserId = authorId,
+                                ConferenceId = conferenceId,
+                                ConferenceRoleId = newRoleId,
+                                AssignedAt = DateTime.UtcNow
+                            };
+                            await _userConferenceRoleRepository.Add(newAssignment);
+                            Console.WriteLine($"Created new UserConferenceRole for User {authorId} in Conference {conferenceId} with Role {newRole.RoleName}.");
+
+                            emailSubject = $"Vai trò mới của bạn trong hội thảo '{conference.Title}'";
+                            emailBody = $@"
+                                <h3>Xin chào {authorUser.Name},</h3>
+                                <p>Bạn vừa được gán vai trò <strong>{newRole.RoleName}</strong> trong hội thảo <strong>{conference.Title}</strong> vì đã tải lên bài báo.</p>
+                                <p>Thời gian gán: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
+                                <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
+                                <br/>
+                                <p>Trân trọng,<br/>Ban tổ chức</p>";
+
+                        }
+                        else if (updatedRoleAssignment.ConferenceRoleId != newRoleId)
+                        {
+                            // Nếu bản ghi tồn tại và vai trò được cập nhật
+                            Console.WriteLine($"Updated UserConferenceRole for User {authorId} in Conference {conferenceId} to Role {newRole.RoleName}.");
+
+                            emailSubject = $"Vai trò của bạn đã được cập nhật trong hội thảo '{conference.Title}'";
+                            emailBody = $@"
+                                <h3>Xin chào {authorUser.Name},</h3>
+                                <p>Vai trò của bạn trong hội thảo <strong>{conference.Title}</strong> đã được cập nhật thành <strong>{newRole.RoleName}</strong> do bạn đã tải lên bài báo.</p>
+                                <p>Thời gian cập nhật: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
+                                <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
+                                <br/>
+                                <p>Trân trọng,<br/>Ban tổ chức</p>";
+                        }
+                        else
+                        {
+                            // Vai trò đã đúng rồi, không cần làm gì
+                            Console.WriteLine($"User {authorId} already has Role {newRole.RoleName} in Conference {conferenceId}. No update needed.");
+                            continue; // Chuyển sang tác giả tiếp theo mà không gửi email nếu không có thay đổi
+                        }
+
+                        // Gửi email cho tác giả hiện tại
+                        await _emailService.SendEmailAsync(authorUser.Email, emailSubject, emailBody);
+                    }
+                }
+                // --- END NEW LOGIC ---
+
+                return Ok(new { Message = "File uploaded and paper data saved successfully. User roles updated/assigned.", FileUrl = fileUrl, PaperId = paper.PaperId });
             }
             catch (ArgumentException ex)
             {
@@ -108,11 +234,10 @@ namespace ConferenceFWebAPI.Controllers
             }
             catch (Exception ex)
             {
-                // Ghi log lỗi chi tiết ở đây
+                Console.WriteLine($"Error during PDF upload or role update: {ex.ToString()}");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
         [HttpGet]
         [EnableQuery] // Vẫn crucial cho OData query options
         public IActionResult Get()
