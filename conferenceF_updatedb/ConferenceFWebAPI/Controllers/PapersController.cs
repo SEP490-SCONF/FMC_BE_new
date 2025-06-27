@@ -202,5 +202,29 @@ namespace ConferenceFWebAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+        [HttpGet("user/{userId}/conference/{conferenceId}")] // Example: api/papers/user/1/conference/10
+        [ProducesResponseType(typeof(List<PaperResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)] // Added for invalid input
+        public IActionResult GetPapersByUserAndConference(int userId, int conferenceId)
+        {
+            // Basic validation
+            if (userId <= 0 || conferenceId <= 0)
+            {
+                return BadRequest("User ID and Conference ID must be positive integers.");
+            }
+
+            var papers = _paperRepository.GetPapersByUserIdAndConferenceId(userId, conferenceId);
+
+            if (papers == null || !papers.Any())
+            {
+                return NotFound($"No papers found for User ID: {userId} in Conference ID: {conferenceId}.");
+            }
+
+            // Map the list of Paper entities to a list of DTOs
+            var paperDtos = _mapper.Map<List<PaperResponseDto>>(papers);
+
+            return Ok(paperDtos);
+        }
     }
 }

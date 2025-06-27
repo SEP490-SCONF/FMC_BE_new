@@ -46,11 +46,18 @@ namespace DataAccess
         {
             _context.Papers.Remove(entity);
         }
-
+        public List<Paper> GetPapersByUserIdAndConferenceId(int userId, int conferenceId)
+        {
+            return _context.Papers
+                           .Where(p => p.ConferenceId == conferenceId &&
+                                       p.PaperAuthors.Any(pa => pa.AuthorId == userId))
+                           .ToList();
+        }
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
         }
+
     }
 }
 

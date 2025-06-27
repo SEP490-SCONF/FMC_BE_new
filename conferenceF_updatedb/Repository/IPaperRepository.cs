@@ -12,6 +12,7 @@ namespace Repository
         Task UpdatePaperAsync(Paper paper);
         Task DeletePaperAsync(int paperId);
         List<Paper> GetPapersByConferenceId(int conferenceId);
+        List<Paper> GetPapersByUserIdAndConferenceId(int userId, int conferenceId);
 
         // Có thể thêm các phương thức khác tùy theo nhu cầu của ứng dụng
         // Ví dụ: Task<IEnumerable<Paper>> GetAllPapersAsync();

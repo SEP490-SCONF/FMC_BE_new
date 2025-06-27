@@ -17,6 +17,12 @@ namespace DataAccess
             _context = context;
         }
 
+        public List<PaperRevision> GetPaperRevisionsByPaperId(int paperId)
+        {
+            return _context.PaperRevisions
+                           .Where(pr => pr.PaperId == paperId)
+                           .ToList();
+        }
 
         public async Task<PaperRevision?> GetPaperRevisionByIdAsync(int revisionId)
         {
