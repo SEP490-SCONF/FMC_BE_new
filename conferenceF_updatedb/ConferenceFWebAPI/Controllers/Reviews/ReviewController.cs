@@ -187,6 +187,45 @@ namespace ConferenceFWebAPI.Controllers.Reviews
 
             return NoContent();
         }
+        [HttpGet("WithHighlightAndComment/{reviewId}")]
+        public async Task<IActionResult> GetDetailByReviewId(int reviewId)
+        {
+            var review = await _reviewRepository.GetById(reviewId);
+            if (review == null)
+                return NotFound($"Review with ID {reviewId} not found.");
+
+            var highlight = (await _highlightRepository.GetByReviewId(reviewId)).FirstOrDefault();
+            var comment = (await _commentRepository.GetByReviewId(reviewId)).FirstOrDefault();
+
+            var result = new ReviewWithHighlightAndCommentDTO
+            {
+                // Review
+                ReviewId = review.ReviewId,
+                PaperId = review.PaperId,
+                ReviewerId = review.ReviewerId,
+                RevisionId = review.RevisionId,
+                Score = review.Score,
+                Comments = review.Comments,
+                Status = review.Status,
+                ReviewedAt = review.ReviewedAt,
+
+                // Highlight
+                HighlightId = highlight?.HighlightId ?? 0,
+                PageNumber = highlight?.PageNumber,
+                OffsetStart = highlight?.OffsetStart,
+                OffsetEnd = highlight?.OffsetEnd,
+                TextHighlighted = highlight?.TextHighlighted,
+
+                // Comment
+                CommentId = comment?.CommentId ?? 0,
+                UserId = comment?.UserId ?? 0,
+                CommentText = comment?.CommentText,
+                CommentStatus = comment?.Status,
+                CreatedAt = comment?.CreatedAt
+            };
+
+            return Ok(result);
+        }
 
 
     }
