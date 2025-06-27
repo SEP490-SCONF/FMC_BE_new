@@ -88,16 +88,13 @@ namespace ConferenceFWebAPI.Controllers
 
             int uploaderUserId;
 
-            // --- TẠM THỜI CHO MÔI TRƯỜNG PHÁT TRIỂN (DEVELOPMENT MODE ONLY) ---
-            // Lấy UploaderUserId từ người dùng đã xác thực (Authenticated User)
             if (_env.IsDevelopment())
             {
-                // Trong môi trường Development, nếu không có user xác thực, lấy ID tác giả đầu tiên
-                // LƯU Ý: ĐÂY LÀ ĐOẠN CODE KHÔNG AN TOÀN CHO PRODUCTION!
-                uploaderUserId = paperDto.AuthorIds.First(); // Giả định AuthorIds không rỗng (đã có kiểm tra ở trên)
+
+                uploaderUserId = paperDto.AuthorIds.First(); 
                 Console.WriteLine($"[DEVELOPMENT MODE] Inferred UploaderUserId from AuthorIds: {uploaderUserId}");
             }
-            else // Môi trường Production hoặc Staging, phải có người dùng xác thực
+            else 
             {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                 if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out uploaderUserId))
@@ -105,10 +102,7 @@ namespace ConferenceFWebAPI.Controllers
                     return Unauthorized("User is not authenticated or user ID is not available.");
                 }
             }
-            // --- HẾT PHẦN TẠM THỜI ---
 
-
-            // VALIDATION: UploaderUserId (người tải lên) phải là một trong các AuthorIds được cung cấp
             if (!paperDto.AuthorIds.Contains(uploaderUserId))
             {
                 return BadRequest($"The authenticated user (ID: {uploaderUserId}) must be one of the provided Author IDs.");
@@ -145,9 +139,8 @@ namespace ConferenceFWebAPI.Controllers
 
                 await _paperRepository.AddPaperAsync(paper);
 
-                // --- NEW LOGIC: CẬP NHẬT VAI TRÒ CHO TẤT CẢ TÁC GIẢ ---
                 int conferenceId = paper.ConferenceId;
-                int newRoleId = 2; // Role = 2 như yêu cầu
+                int newRoleId = 2; 
 
                 var conference = await _conferenceRepository.GetById(conferenceId);
                 var newRole = await _conferenceRoleRepository.GetById(newRoleId);
