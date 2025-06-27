@@ -7,41 +7,41 @@ namespace Repository
 {
     public class CallForPaperRepository : ICallForPaperRepository
     {
-        private readonly CallForPaperDAO _dao;
+        private readonly CallForPaperDAO _callForPaperDAO;
 
-        public CallForPaperRepository(CallForPaperDAO dao)
+        public CallForPaperRepository(CallForPaperDAO callForPaperDAO)
         {
-            _dao = dao;
+            _callForPaperDAO = callForPaperDAO;
         }
 
-        public async Task<IEnumerable<CallForPaper>> GetAll()
+        public async Task<IEnumerable<CallForPaper>> GetAllCallForPapers()
         {
-            return await _dao.GetAll();
+            return await _callForPaperDAO.GetAllCallForPapers();
         }
 
-        public async Task<CallForPaper> GetById(int id)
+        public async Task<CallForPaper?> GetCallForPaperById(int id)
         {
-            return await _dao.GetById(id);
+            return await _callForPaperDAO.GetCallForPaperById(id);
         }
 
-        public async Task Add(CallForPaper entity)
+        public async Task<IEnumerable<CallForPaper>> GetCallForPapersByConferenceId(int conferenceId) // NEW
         {
-            await _dao.Add(entity);
+            return await _callForPaperDAO.GetCallForPapersByConferenceId(conferenceId);
         }
 
-        public async Task Update(CallForPaper entity)
+        public async Task AddCallForPaper(CallForPaper callForPaper)
         {
-            await _dao.Update(entity);
+            await _callForPaperDAO.AddCallForPaper(callForPaper);
         }
 
-        public async Task Delete(int id)
+        public async Task UpdateCallForPaper(CallForPaper callForPaper)
         {
-            await _dao.Delete(id);
+            await _callForPaperDAO.UpdateCallForPaper(callForPaper);
         }
 
-        public async Task<IEnumerable<CallForPaper>> GetByConferenceId(int conferenceId)
+        public async Task DeleteCallForPaper(int id)
         {
-            return await _dao.GetByConferenceId(conferenceId);
+            await _callForPaperDAO.DeleteCallForPaper(id);
         }
     }
 }

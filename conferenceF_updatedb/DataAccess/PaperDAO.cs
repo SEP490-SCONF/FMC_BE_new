@@ -16,6 +16,12 @@ namespace DataAccess
             _context = context;
         }
 
+        public List<Paper> GetPapersByConferenceId(int conferenceId)
+        {
+            return _context.Papers
+                           .Where(p => p.ConferenceId == conferenceId)
+                           .ToList();
+        }
         public IQueryable<Paper> GetAllPapers()
         {
             return _context.Papers.Where(p => p.Status != "Deleted").AsQueryable();
@@ -40,11 +46,18 @@ namespace DataAccess
         {
             _context.Papers.Remove(entity);
         }
-
+        public List<Paper> GetPapersByUserIdAndConferenceId(int userId, int conferenceId)
+        {
+            return _context.Papers
+                           .Where(p => p.ConferenceId == conferenceId &&
+                                       p.PaperAuthors.Any(pa => pa.AuthorId == userId))
+                           .ToList();
+        }
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
         }
+
     }
 }
 

@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.PaperRevisions;
+using ConferenceFWebAPI.DTOs.UserConferenceRoles;
 using ConferenceFWebAPI.Service;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Repository;
+using Repository.Repository;
 
 namespace ConferenceFWebAPI.Controllers.PaperRevisions
 {
@@ -30,6 +32,7 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
             _configuration = configuration;
             _mapper = mapper;
         }
+
 
         // POST: api/PaperRevisions/upload-revision
         [HttpPost("upload-revision")]
@@ -134,7 +137,7 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
             // Chuyển hướng đến URL của file trên Azure Blob Storage
             return Redirect(revision.FilePath);
         }
-
+        
         // DELETE: api/PaperRevisions/delete-revision/{revisionId}
         [HttpDelete("delete-revision/{revisionId}")]
         public async Task<IActionResult> DeleteRevision(int revisionId)

@@ -22,14 +22,16 @@ namespace DataAccess
             try
             {
                 return await _context.Conferences
+                                     .Where(c => c.Status == true)
                                      .AsNoTracking()
                                      .ToListAsync();
             }
             catch (Exception ex)
             {
-                throw new Exception("Error occurred while retrieving all conferences.", ex);
+                throw new Exception("Error occurred while retrieving all active conferences.", ex);
             }
         }
+
 
         // Get conference by ID
         public async Task<Conference> GetConferenceById(int id)

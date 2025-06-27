@@ -122,6 +122,23 @@ namespace DataAccess
         {
             return await _context.UserConferenceRoles.Where(predicate).ToListAsync();
         }
+        public async Task<UserConferenceRole?> UpdateConferenceRoleForUser(int userId, int conferenceId, int newConferenceRoleId)
+        {
+            var existingAssignment = await _context.UserConferenceRoles
+                                                    .FirstOrDefaultAsync(ucr =>
+                                                        ucr.UserId == userId &&
+                                                        ucr.ConferenceId == conferenceId);
+
+            if (existingAssignment == null)
+            {
+                return null; // Không tìm thấy bản ghi để cập nhật
+            }
+
+            existingAssignment.ConferenceRoleId = newConferenceRoleId;
+
+            await _context.SaveChangesAsync();
+            return existingAssignment;
+        }
     }
 
 }

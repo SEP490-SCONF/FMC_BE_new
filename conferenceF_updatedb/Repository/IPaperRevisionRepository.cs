@@ -11,6 +11,8 @@ namespace Repository
         Task UpdatePaperRevisionAsync(PaperRevision paperRevision);
         Task DeletePaperRevisionAsync(int revisionId);
         Task<IEnumerable<PaperRevision>> GetRevisionsByPaperIdAsync(int paperId);
+        List<PaperRevision> GetPaperRevisionsByPaperId(int paperId);
+
     }
 }
 

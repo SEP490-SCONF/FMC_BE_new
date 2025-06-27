@@ -9,6 +9,10 @@ namespace Repository
     {
         private readonly PaperRevisionDAO _paperRevisionDAO; // <--- Inject lớp cụ thể PaperRevisionDAO
 
+        public List<PaperRevision> GetPaperRevisionsByPaperId(int paperId)
+        {
+            return _paperRevisionDAO.GetPaperRevisionsByPaperId(paperId);
+        }
         public PaperRevisionRepository(PaperRevisionDAO paperRevisionDAO) // <--- Constructor nhận lớp cụ thể
         {
             _paperRevisionDAO = paperRevisionDAO;

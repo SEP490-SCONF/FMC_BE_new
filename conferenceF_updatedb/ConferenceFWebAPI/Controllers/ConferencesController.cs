@@ -7,6 +7,7 @@ using AutoMapper.Internal.Mappers;
 using ConferenceFWebAPI.Service;
 using Google.Apis.Drive.v3.Data;
 using DataAccess;
+using ConferenceFWebAPI.DTOs.Paper;
 
 namespace FMC_BE.Controllers
 {
@@ -15,15 +16,19 @@ namespace FMC_BE.Controllers
     public class ConferencesController : ControllerBase
     {
         private readonly IConferenceRepository _conferenceRepository;
+        private readonly IAzureBlobStorageService _azureBlobStorageService;
         private readonly IMapper _mapper;
         private readonly IUserRepository _userRepository;
         private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
 
-        public ConferencesController(IConferenceRepository conferenceRepository, IMapper mapper,
+        public ConferencesController(IConferenceRepository conferenceRepository, IAzureBlobStorageService azureBlobStorageService,IMapper mapper, IConfiguration configuration,
                                      IUserRepository userRepository, IEmailService emailService)
         {
             _conferenceRepository = conferenceRepository;
+            _azureBlobStorageService = azureBlobStorageService;
             _mapper = mapper;
+            _configuration = configuration;
             _userRepository = userRepository;
             _emailService = emailService;
         }
@@ -36,7 +41,9 @@ namespace FMC_BE.Controllers
         public async Task<ActionResult<IEnumerable<ConferenceDTO>>> GetAll()
         {
             var conferences = await _conferenceRepository.GetAll();
-            return Ok(conferences);
+            var conferenceDTOs = _mapper.Map<IEnumerable<ConferenceDTO>>(conferences);
+            return Ok(conferenceDTOs);
+
         }
 
         // GET: api/Conference/5
@@ -48,34 +55,63 @@ namespace FMC_BE.Controllers
             {
                 return NotFound($"Conference with ID {id} not found.");
             }
-            return Ok(conference);
+
+            var conferenceDTO = _mapper.Map<ConferenceDTO>(conference);
+            return Ok(conferenceDTO);
         }
 
+
         [HttpPost]
-        public async Task<ActionResult> Create([FromBody] ConferenceDTO conferenceDto)
+        public async Task<IActionResult> CreateConference([FromForm] ConferenceDTO conferenceDto)
         {
-            if (conferenceDto == null)
-                return BadRequest("Conference data is null.");
-            var user = await _userRepository.GetById(conferenceDto.CreatedBy);
-            if (user == null)
-                return BadRequest("CreatedBy not found");
-                var conference = _mapper.Map<Conference>(conferenceDto);
-            conference.CreatedAt = DateTime.Now;
-           
-            await _conferenceRepository.Add(conference);
-
-            // Gửi email cho Organizer
-            var organizers = await _userRepository.GetOrganizers();
-            var emailBody = ConferenceCreatedTemplate.GetHtml(conference);
-
-            foreach (var organizer in organizers)
+            if (!ModelState.IsValid)
             {
-                await _emailService.SendEmailAsync(organizer.Email,
-                    $"[Thông báo] Hội thảo mới: {conference.Title}",
-                    emailBody);
+                return BadRequest(ModelState);
             }
 
-            return CreatedAtAction(nameof(GetById), new { id = conference.ConferenceId }, conferenceDto);
+            try
+            {
+                string bannerUrl = null;
+
+                if (conferenceDto.BannerImage != null && conferenceDto.BannerImage.Length > 0)
+                {
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                    var extension = Path.GetExtension(conferenceDto.BannerImage.FileName)?.ToLowerInvariant();
+                    if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+                    {
+                        return BadRequest("Invalid image file format. Only .jpg, .jpeg, .png, .gif are allowed.");
+                    }
+
+                    var bannerContainerName = _configuration.GetValue<string>("BlobContainers:Banners");
+                    if (string.IsNullOrEmpty(bannerContainerName))
+                    {
+                        return StatusCode(500, "Banner storage container name is not configured.");
+                    }
+
+                    bannerUrl = await _azureBlobStorageService.UploadFileAsync(conferenceDto.BannerImage, bannerContainerName);
+                }
+
+                var conference = _mapper.Map<Conference>(conferenceDto);
+
+                conference.BannerUrl = bannerUrl; 
+                conference.CreatedAt = DateTime.UtcNow; 
+                                                       
+                await _conferenceRepository.Add(conference); 
+                return Ok(new
+                {
+                    Message = "Conference created successfully.",
+                    ConferenceId = conference.ConferenceId, 
+                    BannerUrl = conference.BannerUrl
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
 
@@ -98,6 +134,7 @@ namespace FMC_BE.Controllers
                 if (user == null)
                     return BadRequest("Conference not found");
                 _mapper.Map(conferenceDTO,con );
+                
                 await _conferenceRepository.Update(con);
                 return Ok("Success");
             }

@@ -46,5 +46,13 @@ namespace Repository
                 await _paperDAO.SaveChangesAsync(); // Lưu thay đổi sau khi xóa
             }
         }
+        public List<Paper> GetPapersByConferenceId(int conferenceId)
+        {
+            return _paperDAO.GetPapersByConferenceId(conferenceId);
+        }
+        public List<Paper> GetPapersByUserIdAndConferenceId(int userId, int conferenceId)
+        {
+            return _paperDAO.GetPapersByUserIdAndConferenceId(userId, conferenceId);
+        }
     }
 }
