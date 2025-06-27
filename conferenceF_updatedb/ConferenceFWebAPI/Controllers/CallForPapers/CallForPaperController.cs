@@ -1,7 +1,10 @@
 ﻿using ConferenceFWebAPI.DTOs.CallForPapers;
+using ConferenceFWebAPI.Service; // Thêm namespace của Azure Blob Storage Service
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Repository;
+using BussinessObject.Entity; // Thêm namespace cho Entity
+using Microsoft.Extensions.Configuration; // Thêm để đọc config
 
 namespace ConferenceFWebAPI.Controllers.CallForPaper
 {
@@ -10,21 +13,25 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
     public class CallForPaperController : ControllerBase
     {
         private readonly ICallForPaperRepository _callForPaperRepository;
-        private readonly IWebHostEnvironment _webHostEnvironment; // Thêm để truy cập đường dẫn vật lý
+        private readonly IAzureBlobStorageService _azureBlobStorageService; // Thay thế IWebHostEnvironment
+        private readonly IConfiguration _configuration; // Thêm để đọc appsettings
 
-        public CallForPaperController(ICallForPaperRepository callForPaperRepository, IWebHostEnvironment webHostEnvironment)
+        public CallForPaperController(
+            ICallForPaperRepository callForPaperRepository,
+            IAzureBlobStorageService azureBlobStorageService,
+            IConfiguration configuration)
         {
             _callForPaperRepository = callForPaperRepository;
-            _webHostEnvironment = webHostEnvironment;
+            _azureBlobStorageService = azureBlobStorageService;
+            _configuration = configuration;
         }
 
         // GET: api/CallForPaper
         [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CallForPaperDto>))] // Cập nhật kiểu trả về
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CallForPaperDto>))]
         public async Task<ActionResult<IEnumerable<CallForPaperDto>>> GetCallForPapers()
         {
             var callForPapers = await _callForPaperRepository.GetAllCallForPapers();
-            // Map Entity sang DTO để trả về
             var callForPaperDtos = callForPapers.Select(cf => new CallForPaperDto
             {
                 Cfpid = cf.Cfpid,
@@ -39,18 +46,15 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
 
         // GET: api/CallForPaper/5
         [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CallForPaperDto))] // Cập nhật kiểu trả về
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CallForPaperDto))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<CallForPaperDto>> GetCallForPaper(int id)
         {
             var callForPaper = await _callForPaperRepository.GetCallForPaperById(id);
-
             if (callForPaper == null)
             {
                 return NotFound();
             }
-
-            // Map Entity sang DTO để trả về
             var callForPaperDto = new CallForPaperDto
             {
                 Cfpid = callForPaper.Cfpid,
@@ -65,7 +69,7 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
 
         // GET: api/CallForPaper/byconference/1
         [HttpGet("byconference/{conferenceId}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CallForPaperDto>))] // Cập nhật kiểu trả về
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CallForPaperDto>))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<IEnumerable<CallForPaperDto>>> GetCallForPapersByConferenceId(int conferenceId)
         {
@@ -75,8 +79,7 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
             {
                 return NotFound($"Không tìm thấy CallForPaper nào cho ConferenceId: {conferenceId}");
             }
-
-            // Map Entity sang DTO để trả về
+            
             var callForPaperDtos = callForPapers.Select(cf => new CallForPaperDto
             {
                 Cfpid = cf.Cfpid,
@@ -92,10 +95,9 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
 
 
         // POST: api/CallForPaper
-        // Sẽ nhận dữ liệu từ form (multipart/form-data)
         [HttpPost]
-        [Consumes("multipart/form-data")] // Chỉ định kiểu dữ liệu đầu vào
-        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(CallForPaperDto))] // Cập nhật kiểu trả về
+        [Consumes("multipart/form-data")]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(CallForPaperDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<CallForPaperDto>> PostCallForPaper([FromForm] CallForPaperCreateDto createDto)
         {
@@ -104,65 +106,61 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
                 return BadRequest(ModelState);
             }
 
-            string? templatePath = null;
-            if (createDto.TemplateFile != null)
+            try
             {
-                // Xử lý lưu file
-                var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "callforpapers");
-                if (!Directory.Exists(uploadsFolder))
+                string? templateUrl = null;
+                // ** [THAY ĐỔI] UPLOAD FILE LÊN AZURE STORAGE **
+                if (createDto.TemplateFile != null && createDto.TemplateFile.Length > 0)
                 {
-                    Directory.CreateDirectory(uploadsFolder);
+                    // Lấy tên container từ appsettings.json
+                    var containerName = _configuration.GetValue<string>("BlobContainers:CallForPapers");
+                    if (string.IsNullOrEmpty(containerName))
+                    {
+                        return StatusCode(500, "CallForPapers storage container name is not configured.");
+                    }
+
+                    // Gọi service để upload và nhận lại URL
+                    templateUrl = await _azureBlobStorageService.UploadFileAsync(createDto.TemplateFile, containerName);
                 }
 
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + createDto.TemplateFile.FileName;
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                var callForPaper = new BussinessObject.Entity.CallForPaper
                 {
-                    await createDto.TemplateFile.CopyToAsync(fileStream);
-                }
-                templatePath = Path.Combine("uploads", "callforpapers", uniqueFileName); // Lưu đường dẫn tương đối
+                    ConferenceId = createDto.ConferenceId,
+                    Description = createDto.Description,
+                    Deadline = createDto.Deadline,
+                    TemplatePath = templateUrl, // Lưu URL từ Azure
+                    Status = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _callForPaperRepository.AddCallForPaper(callForPaper);
+
+                var callForPaperDto = new CallForPaperDto
+                {
+                    Cfpid = callForPaper.Cfpid,
+                    ConferenceId = callForPaper.ConferenceId,
+                    Description = callForPaper.Description,
+                    Deadline = callForPaper.Deadline,
+                    TemplatePath = callForPaper.TemplatePath,
+                    CreatedAt = callForPaper.CreatedAt
+                };
+
+                return CreatedAtAction(nameof(GetCallForPaper), new { id = callForPaper.Cfpid }, callForPaperDto);
             }
-
-            var callForPaper = new BussinessObject.Entity.CallForPaper
+            catch (Exception ex)
             {
-                ConferenceId = createDto.ConferenceId,
-                Description = createDto.Description,
-                Deadline = createDto.Deadline,
-                TemplatePath = templatePath, // Đường dẫn của file đã lưu
-                Status = true, // Mặc định là TRUE khi tạo mới
-                CreatedAt = DateTime.UtcNow // Đặt thời gian tạo
-            };
-
-            await _callForPaperRepository.AddCallForPaper(callForPaper);
-
-            // Map Entity sang DTO để trả về
-            var callForPaperDto = new CallForPaperDto
-            {
-                Cfpid = callForPaper.Cfpid,
-                ConferenceId = callForPaper.ConferenceId,
-                Description = callForPaper.Description,
-                Deadline = callForPaper.Deadline,
-                TemplatePath = callForPaper.TemplatePath,
-                CreatedAt = callForPaper.CreatedAt
-            };
-
-            return CreatedAtAction(nameof(GetCallForPaper), new { id = callForPaper.Cfpid }, callForPaperDto);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         // PUT: api/CallForPaper/5
-        // Sẽ nhận dữ liệu từ form (multipart/form-data)
         [HttpPut("{id}")]
-        [Consumes("multipart/form-data")] // Chỉ định kiểu dữ liệu đầu vào
+        [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PutCallForPaper(int id, [FromForm] CallForPaperUpdateDto updateDto)
         {
-            if (id != updateDto.Cfpid)
-            {
-                return BadRequest();
-            }
 
             if (!ModelState.IsValid)
             {
@@ -175,50 +173,37 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
                 return NotFound();
             }
 
-            // Cập nhật các thuộc tính từ DTO
-            existingCallForPaper.ConferenceId = updateDto.ConferenceId;
-            existingCallForPaper.Description = updateDto.Description;
-            existingCallForPaper.Deadline = updateDto.Deadline;
-
-            // Xử lý file mới nếu có
-            if (updateDto.TemplateFile != null)
-            {
-                // Xóa file cũ nếu có
-                if (!string.IsNullOrEmpty(existingCallForPaper.TemplatePath))
-                {
-                    var oldFilePath = Path.Combine(_webHostEnvironment.WebRootPath, existingCallForPaper.TemplatePath);
-                    if (System.IO.File.Exists(oldFilePath))
-                    {
-                        System.IO.File.Delete(oldFilePath);
-                    }
-                }
-
-                // Lưu file mới
-                var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "callforpapers");
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
-
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + updateDto.TemplateFile.FileName;
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await updateDto.TemplateFile.CopyToAsync(fileStream);
-                }
-                existingCallForPaper.TemplatePath = Path.Combine("uploads", "callforpapers", uniqueFileName); // Cập nhật đường dẫn
-            }
-
             try
             {
+                // ** [THAY ĐỔI] XỬ LÝ CẬP NHẬT FILE TRÊN AZURE STORAGE **
+                if (updateDto.TemplateFile != null && updateDto.TemplateFile.Length > 0)
+                {
+                    // 1. Xóa file cũ trên Azure nếu có
+                    if (!string.IsNullOrEmpty(existingCallForPaper.TemplatePath))
+                    {
+                        await _azureBlobStorageService.DeleteFileAsync(existingCallForPaper.TemplatePath);
+                    }
+
+                    // 2. Tải file mới lên và cập nhật đường dẫn
+                    var containerName = _configuration.GetValue<string>("BlobContainers:CallForPapers");
+                    var newTemplateUrl = await _azureBlobStorageService.UploadFileAsync(updateDto.TemplateFile, containerName);
+                    existingCallForPaper.TemplatePath = newTemplateUrl;
+                }
+
+                // Cập nhật các thuộc tính khác
+                existingCallForPaper.ConferenceId = updateDto.ConferenceId;
+                existingCallForPaper.Description = updateDto.Description;
+                existingCallForPaper.Deadline = updateDto.Deadline;
+                
                 await _callForPaperRepository.UpdateCallForPaper(existingCallForPaper);
             }
             catch (DbUpdateConcurrencyException)
             {
-                // Bạn có thể thêm logic kiểm tra riêng ở đây nếu cần
-                // Ví dụ: if (!CallForPaperExists(id)) { return NotFound(); } else { throw; }
-                throw;
+                throw; // Re-throw để middleware xử lý hoặc trả về lỗi
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error while updating: {ex.Message}");
             }
 
             return NoContent();
@@ -235,18 +220,23 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
             {
                 return NotFound();
             }
-
-            // Xóa file vật lý nếu có
-            if (!string.IsNullOrEmpty(callForPaper.TemplatePath))
+            
+            try
             {
-                var filePath = Path.Combine(_webHostEnvironment.WebRootPath, callForPaper.TemplatePath);
-                if (System.IO.File.Exists(filePath))
+                // ** [THAY ĐỔI] XÓA FILE TRÊN AZURE STORAGE **
+                if (!string.IsNullOrEmpty(callForPaper.TemplatePath))
                 {
-                    System.IO.File.Delete(filePath);
+                    await _azureBlobStorageService.DeleteFileAsync(callForPaper.TemplatePath);
                 }
+
+                // Xóa record trong database
+                await _callForPaperRepository.DeleteCallForPaper(id);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error while deleting: {ex.Message}");
             }
 
-            await _callForPaperRepository.DeleteCallForPaper(id);
             return NoContent();
         }
     }

@@ -4,8 +4,7 @@ namespace ConferenceFWebAPI.DTOs.CallForPapers
 {
     public class CallForPaperUpdateDto
     {
-        [Required(ErrorMessage = "Cfpid là bắt buộc để cập nhật.")]
-        public int Cfpid { get; set; } 
+
 
         [Required(ErrorMessage = "ConferenceId là bắt buộc.")]
         public int ConferenceId { get; set; }
