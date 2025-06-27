@@ -16,15 +16,19 @@ namespace FMC_BE.Controllers
     public class ConferencesController : ControllerBase
     {
         private readonly IConferenceRepository _conferenceRepository;
+        private readonly IAzureBlobStorageService _azureBlobStorageService;
         private readonly IMapper _mapper;
         private readonly IUserRepository _userRepository;
         private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
 
-        public ConferencesController(IConferenceRepository conferenceRepository, IMapper mapper,
+        public ConferencesController(IConferenceRepository conferenceRepository, IAzureBlobStorageService azureBlobStorageService,IMapper mapper, IConfiguration configuration,
                                      IUserRepository userRepository, IEmailService emailService)
         {
             _conferenceRepository = conferenceRepository;
+            _azureBlobStorageService = azureBlobStorageService;
             _mapper = mapper;
+            _configuration = configuration;
             _userRepository = userRepository;
             _emailService = emailService;
         }
@@ -58,20 +62,56 @@ namespace FMC_BE.Controllers
 
 
         [HttpPost]
-        public async Task<ActionResult> Create([FromBody] ConferenceDTO conferenceDto)
+        public async Task<IActionResult> CreateConference([FromForm] ConferenceDTO conferenceDto)
         {
-            if (conferenceDto == null)
-                return BadRequest("Conference data is null.");
-            var user = await _userRepository.GetById(conferenceDto.CreatedBy);
-            if (user == null)
-                return BadRequest("CreatedBy not found");
-                var conference = _mapper.Map<Conference>(conferenceDto);
-            conference.CreatedAt = DateTime.UtcNow.AddHours(7);
-            conference.Status = true;
-           
-            await _conferenceRepository.Add(conference);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            return CreatedAtAction(nameof(GetById), new { id = conference.ConferenceId }, conferenceDto);
+            try
+            {
+                string bannerUrl = null;
+
+                if (conferenceDto.BannerImage != null && conferenceDto.BannerImage.Length > 0)
+                {
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                    var extension = Path.GetExtension(conferenceDto.BannerImage.FileName)?.ToLowerInvariant();
+                    if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+                    {
+                        return BadRequest("Invalid image file format. Only .jpg, .jpeg, .png, .gif are allowed.");
+                    }
+
+                    var bannerContainerName = _configuration.GetValue<string>("BlobContainers:Banners");
+                    if (string.IsNullOrEmpty(bannerContainerName))
+                    {
+                        return StatusCode(500, "Banner storage container name is not configured.");
+                    }
+
+                    bannerUrl = await _azureBlobStorageService.UploadFileAsync(conferenceDto.BannerImage, bannerContainerName);
+                }
+
+                var conference = _mapper.Map<Conference>(conferenceDto);
+
+                conference.BannerUrl = bannerUrl; 
+                conference.CreatedAt = DateTime.UtcNow; 
+                                                       
+                await _conferenceRepository.Add(conference); 
+                return Ok(new
+                {
+                    Message = "Conference created successfully.",
+                    ConferenceId = conference.ConferenceId, 
+                    BannerUrl = conference.BannerUrl
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
 
