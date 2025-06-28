@@ -5,6 +5,7 @@ namespace ConferenceFWebAPI.DTOs
     public class ConferenceDTO
     {
         [Required]
+        public int ConferenceId { get; set; }
         public string Title { get; set; }
         public string? Description { get; set; }
         public DateTime StartDate { get; set; }
@@ -12,7 +13,7 @@ namespace ConferenceFWebAPI.DTOs
         public string? Location { get; set; }
         public int CreatedBy { get; set; }
         public string? CallForPaper { get; set; }
-
+        public bool? Status { get; set; }
         public IFormFile? BannerImage { get; set; } 
 
     }
