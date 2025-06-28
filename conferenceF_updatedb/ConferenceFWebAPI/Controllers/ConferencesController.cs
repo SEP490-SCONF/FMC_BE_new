@@ -21,9 +21,10 @@ namespace FMC_BE.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly ITopicRepository _topicRepository;
 
         public ConferencesController(IConferenceRepository conferenceRepository, IAzureBlobStorageService azureBlobStorageService,IMapper mapper, IConfiguration configuration,
-                                     IUserRepository userRepository, IEmailService emailService)
+                                     IUserRepository userRepository, IEmailService emailService, ITopicRepository topicRepository)
         {
             _conferenceRepository = conferenceRepository;
             _azureBlobStorageService = azureBlobStorageService;
@@ -31,6 +32,7 @@ namespace FMC_BE.Controllers
             _configuration = configuration;
             _userRepository = userRepository;
             _emailService = emailService;
+            _topicRepository = topicRepository;
         }
 
 
@@ -60,6 +62,24 @@ namespace FMC_BE.Controllers
             return Ok(conferenceDTO);
         }
 
+        [HttpGet("topics/{id}")] // Route mới để phân biệt
+        public async Task<ActionResult<ConferenceDTO>> GetConferenceHasTopicsById(int id)
+        {
+            var conference = await _conferenceRepository.GetById(id);
+            if (conference == null)
+            {
+                return NotFound($"Conference details for ID {id} not found.");
+            }
+
+            var conferenceDTO = _mapper.Map<ConferenceDTO>(conference);
+
+            // Lấy và gán danh sách Topics liên quan đến hội thảo
+            var topics = await _topicRepository.GetTopicsByConferenceIdAsync(conference.ConferenceId);
+            // Đảm bảo mapping từ Topic sang TopicDto đã được cấu hình trong AutoMapper
+            conferenceDTO.Topics = _mapper.Map<List<TopicDTO>>(topics.ToList());
+
+            return Ok(conferenceDTO);
+        }
 
         [HttpPost]
         public async Task<IActionResult> CreateConference([FromForm] ConferenceDTO conferenceDto)
