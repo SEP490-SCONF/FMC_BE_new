@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
+using ConferenceFWebAPI.DTOs.Conferences;
 using ConferenceFWebAPI.DTOs.ConferenceTopics;
 using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.PaperRevisions;
@@ -29,6 +30,10 @@ namespace ConferenceFWebAPI
             CreateMap<User, UserDto>();
             CreateMap<Conference, ConferenceDTO>();
             CreateMap<ConferenceDTO, Conference>();
+            CreateMap<Conference, ConferenceResponseDTO>();
+            CreateMap<ConferenceResponseDTO, Conference>();
+            CreateMap<ConferenceUpdateDTO, Conference>()
+           .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<Topic, TopicDTO>();
             CreateMap<TopicDTO, Topic>();
             CreateMap<Paper, PaperResponseDto>(); // <-- Thêm dòng này
@@ -73,6 +78,8 @@ namespace ConferenceFWebAPI
                 .ForMember(dest => dest.Abstract, opt => opt.MapFrom(src => src.Paper.Abstract))
                 .ForMember(dest => dest.Keywords, opt => opt.MapFrom(src => src.Paper.Keywords))
                 .ForMember(dest => dest.TopicId, opt => opt.MapFrom(src => src.Paper.TopicId))
+                .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Paper.Topic.TopicName)) 
+
                 .ForMember(dest => dest.Revisions,
                  opt => opt.MapFrom(src => src.Paper.PaperRevisions
                                            .Where(r => r.Status == "Under Review")))

@@ -18,6 +18,8 @@ namespace ConferenceFWebAPI.DTOs.ReviewerAssignments
         public string? Abstract { get; set; }
         public string? Keywords { get; set; }
         public int? TopicId { get; set; }
+        public string? TopicName { get; set; } 
+
 
         public List<PaperRevisionDTO> Revisions { get; set; } = new();
 

@@ -1,7 +1,7 @@
 ﻿using DataAccess;
 using System.ComponentModel.DataAnnotations;
 
-namespace ConferenceFWebAPI.DTOs
+namespace ConferenceFWebAPI.DTOs.Conferences
 {
     public class ConferenceDTO
     {
