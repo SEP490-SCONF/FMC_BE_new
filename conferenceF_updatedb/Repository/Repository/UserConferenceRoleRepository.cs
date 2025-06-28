@@ -48,5 +48,10 @@ namespace Repository.Repository
         {
             return await _dao.GetUsersByConferenceIdAndRoles(conferenceId, roleIds);
         }
+        public async Task<List<Conference>> GetConferencesByUserIdAndRoleAsync(int userId, string roleName)
+        {
+            return await _dao.GetConferencesByUserIdAndRoleAsync(userId, roleName);
+        }
+
     }
 }

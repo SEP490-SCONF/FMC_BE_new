@@ -149,6 +149,25 @@ namespace DataAccess
             await _context.SaveChangesAsync();
             return existingAssignment;
         }
+
+        public async Task<List<Conference>> GetConferencesByUserIdAndRoleAsync(int userId, string roleName)
+        {
+            // Tìm ConferenceRoleId cho vai trò "Organizer"
+            var role = await _context.ConferenceRoles
+                                      .FirstOrDefaultAsync(r => r.RoleName == roleName);
+
+            if (role == null)
+                return new List<Conference>(); // Trả về danh sách rỗng nếu không tìm thấy vai trò
+
+            // Truy vấn UserConferenceRoles để tìm hội thảo mà người dùng có vai trò cụ thể
+            return await _context.UserConferenceRoles
+                                 .Where(ucr => ucr.UserId == userId && ucr.ConferenceRoleId == role.ConferenceRoleId)
+                                 .Select(ucr => ucr.Conference)
+                                 .Distinct() // Đảm bảo không có hội thảo trùng lặp
+                                 .ToListAsync();
+        }
+
+
     }
 
 }

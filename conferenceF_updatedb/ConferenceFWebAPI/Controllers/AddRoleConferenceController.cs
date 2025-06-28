@@ -1,10 +1,13 @@
 ﻿using BussinessObject.Entity;
+using ConferenceFWebAPI.DTOs;
 using ConferenceFWebAPI.DTOs.UserConferenceRoles;
 using ConferenceFWebAPI.DTOs.UserProfile;
 using ConferenceFWebAPI.Service;
 using DataAccess;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Repository;
+using Repository.Repository;
 
 namespace ConferenceFWebAPI.Controllers
 {
@@ -213,6 +216,21 @@ namespace ConferenceFWebAPI.Controllers
             await _repo.Delete(id);
             return NoContent();
         }
+        [HttpGet("user/{userId}/conferences/{roleName}")]
+        [ProducesResponseType(typeof(List<ConferenceDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetConferencesByUserAndRole(int userId, string roleName)
+        {
+            var conferences = await _repo.GetConferencesByUserIdAndRoleAsync(userId, roleName);
+
+            if (conferences == null || !conferences.Any())
+                return NotFound($"No conferences found for user {userId} with role {roleName}.");
+
+            var conferenceDtos = _mapper.Map<List<ConferenceDTO>>(conferences);
+            return Ok(conferenceDtos);
+        }
+
+
 
     }
 }

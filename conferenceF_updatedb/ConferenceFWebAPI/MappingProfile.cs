@@ -4,6 +4,7 @@ using ConferenceFWebAPI.DTOs;
 using ConferenceFWebAPI.DTOs.ConferenceTopics;
 using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.PaperRevisions;
+using ConferenceFWebAPI.DTOs.Papers;
 using ConferenceFWebAPI.DTOs.ReviewComments;
 using ConferenceFWebAPI.DTOs.ReviewerAssignments;
 using ConferenceFWebAPI.DTOs.ReviewHightlights;
@@ -17,6 +18,9 @@ namespace ConferenceFWebAPI
     {
         public MappingProfile()
         {
+            CreateMap<Paper, PaperResponseWT>()
+            .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.TopicName)); // <-- Add this line
+
             CreateMap<User, UserInfomation>();
             CreateMap<User, UserDto>();
             CreateMap<Conference, ConferenceDTO>();
@@ -76,7 +80,7 @@ namespace ConferenceFWebAPI
             CreateMap<User, UserProfile>()
             .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName))
             .ForMember(dest => dest.CreatedAt,
-        opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt ?? DateTime.MinValue, DateTimeKind.Unspecified)));;
+        opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt ?? DateTime.MinValue, DateTimeKind.Unspecified))); ;
             CreateMap<ReviewHighlight, ReviewHightlightDTO>();
             CreateMap<UpdateReviewHightlightDTO, ReviewHighlight>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
