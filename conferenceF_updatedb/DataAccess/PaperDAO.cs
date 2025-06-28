@@ -62,6 +62,8 @@ namespace DataAccess
             return _context.Papers
                            .Where(p => p.ConferenceId == conferenceId && p.Status == status)
                             .Include(p => p.Topic)
+                            .Include(p => p.PaperAuthors)  
+                            .ThenInclude(pa => pa.Author)
                            .ToList();
         }
 
