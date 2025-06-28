@@ -15,7 +15,6 @@ namespace ConferenceFWebAPI.DTOs.Conferences
         public string? CallForPaper { get; set; }
 
         public IFormFile? BannerImage { get; set; }
-        public List<TopicDTO>? Topics { get; set; }
 
 
     }
