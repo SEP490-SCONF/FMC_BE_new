@@ -1,10 +1,12 @@
 ﻿using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
+using ConferenceFWebAPI.DTOs.Conferences;
 using ConferenceFWebAPI.DTOs.UserConferenceRoles;
 using ConferenceFWebAPI.DTOs.UserProfile;
 using ConferenceFWebAPI.Service;
 using DataAccess;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using Microsoft.EntityFrameworkCore;
 using Repository;
 using Repository.Repository;
@@ -160,6 +162,7 @@ namespace ConferenceFWebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [EnableQuery]
         public async Task<IActionResult> GetConferenceMembersReviewer(int conferenceId)
         {
             try
