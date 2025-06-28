@@ -46,6 +46,37 @@ namespace ConferenceFWebAPI.Controllers.ConferenceTopics
 
             return Ok(result);
         }
+            [HttpGet("conference/{conferenceId}")]
+            public async Task<ActionResult<IEnumerable<ConferenceTopicDTO>>> GetByConferenceId(int conferenceId)
+            {
+                // Lấy tất cả các dòng liên kết từ bảng trung gian ConferenceTopic theo ConferenceId
+                var entities = await _context.Set<Dictionary<string, object>>("ConferenceTopic")
+                    .Where(e => (int)e["ConferenceId"] == conferenceId)
+                    .ToListAsync();
+
+                if (!entities.Any())
+                    return NotFound("Không có chủ đề nào cho hội thảo này.");
+
+                var topicIds = entities.Select(e => (int)e["TopicId"]).Distinct();
+                var topics = await _context.Topics
+                    .Where(t => topicIds.Contains(t.TopicId))
+                    .ToDictionaryAsync(t => t.TopicId, t => t.TopicName);
+
+                var result = entities.Select(e =>
+                {
+                    int topicId = (int)e["TopicId"];
+                    topics.TryGetValue(topicId, out string? topicName);
+
+                    return new ConferenceTopicDTO
+                    {
+                        ConferenceId = conferenceId,
+                        TopicId = topicId,
+                        TopicName = topicName
+                    };
+                }).ToList();
+
+                return Ok(result);
+            }
 
 
         // POST: api/ConferenceTopic

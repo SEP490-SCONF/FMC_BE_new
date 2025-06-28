@@ -16,6 +16,7 @@ namespace Repository
         Task<IEnumerable<UserConferenceRole>> GetByCondition(Expression<Func<UserConferenceRole, bool>> predicate);
         Task<UserConferenceRole?> UpdateConferenceRoleForUserInConference(int userId, int conferenceId, int newConferenceRoleId);
         Task<IEnumerable<User>> GetUsersByConferenceIdAndRolesAsync(int conferenceId, List<int> roleIds);
+        Task<List<Conference>> GetConferencesByUserIdAndRoleAsync(int userId, string roleName);
 
     }
 }

@@ -57,6 +57,14 @@ namespace DataAccess
         {
             await _context.SaveChangesAsync();
         }
+        public List<Paper> GetPapersByConferenceIdAndStatus(int conferenceId, string status)
+        {
+            return _context.Papers
+                           .Where(p => p.ConferenceId == conferenceId && p.Status == status)
+                            .Include(p => p.Topic)
+                           .ToList();
+        }
+
 
     }
 }
