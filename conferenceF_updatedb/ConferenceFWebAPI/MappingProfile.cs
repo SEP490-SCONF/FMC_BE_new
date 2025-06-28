@@ -57,7 +57,15 @@ namespace ConferenceFWebAPI
 
 
 
-            CreateMap<ReviewerAssignment, ReviewerAssignmentDTO>();
+            CreateMap<ReviewerAssignment, ReviewerAssignmentDTO>()
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Paper.Title))
+                .ForMember(dest => dest.Abstract, opt => opt.MapFrom(src => src.Paper.Abstract))
+                .ForMember(dest => dest.Keywords, opt => opt.MapFrom(src => src.Paper.Keywords))
+                .ForMember(dest => dest.TopicId, opt => opt.MapFrom(src => src.Paper.TopicId))
+                .ForMember(dest => dest.FilePath, opt => opt.MapFrom(src => src.Paper.FilePath))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Paper.Status))
+                .ForMember(dest => dest.SubmitDate, opt => opt.MapFrom(src => src.Paper.SubmitDate));
+
             CreateMap<AddReviewerAssignmentDTO, ReviewerAssignment>();
             CreateMap<UpdateReviewerAssignmentDTO, ReviewerAssignment>();
             CreateMap<User, UserProfile>()

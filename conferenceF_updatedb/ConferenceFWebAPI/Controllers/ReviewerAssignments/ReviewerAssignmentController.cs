@@ -101,6 +101,16 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
             await _repository.Delete(id);
             return NoContent();
         }
+
+        // GET: api/ReviewerAssignment/reviewer/{reviewerId}
+        [HttpGet("reviewer/{reviewerId}")]
+        public async Task<IActionResult> GetByReviewerId(int reviewerId)
+        {
+            var assignments = await _repository.GetByReviewerId(reviewerId);
+            var result = _mapper.Map<IEnumerable<ReviewerAssignmentDTO>>(assignments);
+            return Ok(result);
+        }
+
     }
 }
 
