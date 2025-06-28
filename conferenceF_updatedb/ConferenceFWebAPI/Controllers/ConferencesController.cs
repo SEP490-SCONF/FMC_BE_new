@@ -136,32 +136,72 @@ namespace FMC_BE.Controllers
         }
 
 
-        // PUT: api/Conference/5
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(int id, [FromBody] ConferenceDTO conferenceDTO)
+        public async Task<IActionResult> Update(int id, [FromForm] ConferenceUpdateDTO conferenceDto)
         {
-            if (id == 0 )
+            if (!ModelState.IsValid)
             {
-                return BadRequest("ID is requied");
+                return BadRequest(ModelState);
+            }
+
+            if (id <= 0)
+            {
+                return BadRequest("Invalid Conference ID.");
             }
 
             try
             {
-                if (conferenceDTO.CreatedBy == 0) return BadRequest("CreateBy is requied");
-                var user = await _userRepository.GetById(conferenceDTO.CreatedBy);
-                if (user == null)
-                    return BadRequest("CreatedBy not found");
-                var con = await _conferenceRepository.GetById(id);
-                if (user == null)
-                    return BadRequest("Conference not found");
-                _mapper.Map(conferenceDTO,con );
-                
-                await _conferenceRepository.Update(con);
-                return Ok("Success");
+                var conferenceToUpdate = await _conferenceRepository.GetById(id);
+                if (conferenceToUpdate == null)
+                {
+                    return NotFound($"Conference with ID {id} not found.");
+                }
+
+                string bannerUrl = conferenceToUpdate.BannerUrl; // Giữ lại URL cũ làm mặc định
+
+                if (conferenceDto.BannerImage != null && conferenceDto.BannerImage.Length > 0)
+                {
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                    var extension = Path.GetExtension(conferenceDto.BannerImage.FileName)?.ToLowerInvariant();
+                    if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+                    {
+                        return BadRequest("Invalid image file format. Only .jpg, .jpeg, .png, .gif are allowed.");
+                    }
+
+                    var bannerContainerName = _configuration.GetValue<string>("BlobContainers:Banners");
+                    if (string.IsNullOrEmpty(bannerContainerName))
+                    {
+                        return StatusCode(500, "Banner storage container name is not configured.");
+                    }
+                    bannerUrl = await _azureBlobStorageService.UploadFileAsync(conferenceDto.BannerImage, bannerContainerName);
+                }
+
+                // 5. Ánh xạ các thuộc tính từ DTO vào đối tượng đã lấy từ DB
+                _mapper.Map(conferenceDto, conferenceToUpdate);
+
+                // 6. Cập nhật các thuộc tính không có trong DTO một cách tường minh
+                conferenceToUpdate.BannerUrl = bannerUrl; // Cập nhật URL banner (mới hoặc cũ)
+
+                // 7. Lưu thay đổi vào database
+                await _conferenceRepository.Update(conferenceToUpdate);
+
+                // 8. Trả về một phản hồi chi tiết và hữu ích
+                return Ok(new
+                {
+                    Message = "Conference updated successfully.",
+                    ConferenceId = conferenceToUpdate.ConferenceId,
+                    BannerUrl = conferenceToUpdate.BannerUrl
+                });
             }
-            catch (Exception ex)
+            catch (ArgumentException ex) // Bắt các lỗi cụ thể (nếu có)
             {
-                return NotFound(ex.Message);
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex) // Bắt các lỗi chung của máy chủ
+            {
+                // Ghi log lỗi ở đây (best practice)
+                // _logger.LogError(ex, "An error occurred while updating conference with ID {id}", id);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
 

@@ -7,7 +7,7 @@
         public string? Title { get; set; }
         public string? Abstract { get; set; }
         public string? Keywords { get; set; }
-        
+        public string? Name { get; set; }
         public string TopicName { get; set; }
         public string? FilePath { get; set; }
         public string? Status { get; set; }

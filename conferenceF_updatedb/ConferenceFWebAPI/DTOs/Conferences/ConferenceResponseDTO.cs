@@ -5,7 +5,7 @@ namespace ConferenceFWebAPI.DTOs.Conferences
     public class ConferenceResponseDTO
     {
         [Required]
-        public string ConferenceId { get; set; }
+        public int ConferenceId { get; set; }
         public string Title { get; set; }
         public string? Description { get; set; }
         public DateTime StartDate { get; set; }

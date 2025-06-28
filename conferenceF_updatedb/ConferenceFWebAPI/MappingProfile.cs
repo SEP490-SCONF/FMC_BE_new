@@ -20,7 +20,11 @@ namespace ConferenceFWebAPI
         public MappingProfile()
         {
             CreateMap<Paper, PaperResponseWT>()
-            .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.TopicName)); // <-- Add this line
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.PaperAuthors.FirstOrDefault() != null ? src.PaperAuthors.FirstOrDefault().Author.Name : "Unknown")) // Ánh xạ tên tác giả (nếu không có tác giả, trả về "Unknown")
+            .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.TopicName)); // Ánh xạ tên chủ đề
+
+
+
 
             CreateMap<User, UserInfomation>();
             CreateMap<User, UserDto>();
@@ -28,7 +32,8 @@ namespace ConferenceFWebAPI
             CreateMap<ConferenceDTO, Conference>();
             CreateMap<Conference, ConferenceResponseDTO>();
             CreateMap<ConferenceResponseDTO, Conference>();
-
+            CreateMap<ConferenceUpdateDTO, Conference>()
+           .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<Topic, TopicDTO>();
             CreateMap<TopicDTO, Topic>();
             CreateMap<Paper, PaperResponseDto>(); // <-- Thêm dòng này
