@@ -122,7 +122,7 @@ namespace ConferenceFWebAPI.Controllers
                 {
                     PaperId = paper.PaperId,
                     FilePath = fileUrl,
-                    Status = "Initial",
+                    Status = "Under Review",
                     SubmittedAt = DateTime.UtcNow // Sử dụng DateTime.UtcNow thay vì DateTime.Now
                 };
                 await _paperRevisionRepository.AddPaperRevisionAsync(initialRevision);

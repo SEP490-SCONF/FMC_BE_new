@@ -35,6 +35,8 @@ namespace ConferenceFWebAPI
 
             // Mapping từ PaperRevision Entity sang PaperRevisionResponseDto
             CreateMap<PaperRevision, PaperRevisionResponseDto>();
+            CreateMap<PaperRevision, PaperRevisionDTO>();
+
             CreateMap<AddPaperRevisionDTO, PaperRevision>();
             CreateMap<UpdatePaperRevisionDTO, PaperRevision>();
             CreateMap<Review, ReviewDTO>();
@@ -67,9 +69,13 @@ namespace ConferenceFWebAPI
                 .ForMember(dest => dest.Abstract, opt => opt.MapFrom(src => src.Paper.Abstract))
                 .ForMember(dest => dest.Keywords, opt => opt.MapFrom(src => src.Paper.Keywords))
                 .ForMember(dest => dest.TopicId, opt => opt.MapFrom(src => src.Paper.TopicId))
-                .ForMember(dest => dest.FilePath, opt => opt.MapFrom(src => src.Paper.FilePath))
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Paper.Status))
-                .ForMember(dest => dest.SubmitDate, opt => opt.MapFrom(src => src.Paper.SubmitDate));
+                .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Paper.Topic.TopicName)) 
+
+                .ForMember(dest => dest.Revisions,
+                 opt => opt.MapFrom(src => src.Paper.PaperRevisions
+                                           .Where(r => r.Status == "Under Review")))
+;
+
 
             CreateMap<AddReviewerAssignmentDTO, ReviewerAssignment>();
             CreateMap<UpdateReviewerAssignmentDTO, ReviewerAssignment>();

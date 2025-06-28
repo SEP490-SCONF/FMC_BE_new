@@ -1,4 +1,5 @@
 ﻿using BussinessObject.Entity;
+using ConferenceFWebAPI.DTOs.PaperRevisions;
 
 namespace ConferenceFWebAPI.DTOs.ReviewerAssignments
 {
@@ -17,8 +18,10 @@ namespace ConferenceFWebAPI.DTOs.ReviewerAssignments
         public string? Abstract { get; set; }
         public string? Keywords { get; set; }
         public int? TopicId { get; set; }
-        public string? FilePath { get; set; }
-        public string? Status { get; set; }
-        public DateTime? SubmitDate { get; set; }
+        public string? TopicName { get; set; } 
+
+
+        public List<PaperRevisionDTO> Revisions { get; set; } = new();
+
     }
 }
