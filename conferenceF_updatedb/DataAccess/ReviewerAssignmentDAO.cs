@@ -38,12 +38,14 @@ namespace DataAccess
             try
             {
                 return await _context.ReviewerAssignments
-                    .Where(r => r.AssignmentId == id &&
-                                r.Paper.PaperRevisions.Any(pr => pr.Status == "Under Review"))
-                    .Include(r => r.Paper)
-                        .ThenInclude(p => p.PaperRevisions.Where(pr => pr.Status == "Under Review"))
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
+    .Where(r => r.AssignmentId == id &&
+                r.Paper.PaperRevisions.Any(pr => pr.Status == "Under Review"))
+    .Include(r => r.Paper)
+        .ThenInclude(p => p.PaperRevisions.Where(pr => pr.Status == "Under Review"))
+    .Include(r => r.Paper.Topic) 
+    .AsNoTracking()
+    .FirstOrDefaultAsync();
+
             }
             catch (Exception ex)
             {
@@ -60,6 +62,7 @@ namespace DataAccess
                 return await _context.ReviewerAssignments
                     .Include(r => r.Paper)
                         .ThenInclude(p => p.PaperRevisions.Where(rev => rev.Status == "Under Review"))
+                    .Include(r => r.Paper.Topic) 
                     .Where(r => r.PaperId == paperId &&
                                 r.Paper.PaperRevisions.Any(rev => rev.Status == "Under Review"))
                     .AsNoTracking()
@@ -70,6 +73,7 @@ namespace DataAccess
                 throw new Exception($"Error retrieving reviewer assignments for paper ID {paperId}.", ex);
             }
         }
+
 
 
 
@@ -132,6 +136,7 @@ namespace DataAccess
                 return await _context.ReviewerAssignments
                     .Include(r => r.Paper)
                         .ThenInclude(p => p.PaperRevisions.Where(rev => rev.Status == "Under Review"))
+                    .Include(r => r.Paper.Topic) 
                     .Where(r => r.ReviewerId == reviewerId &&
                                 r.Paper.PaperRevisions.Any(rev => rev.Status == "Under Review"))
                     .AsNoTracking()
@@ -142,11 +147,5 @@ namespace DataAccess
                 throw new Exception($"Error retrieving reviewer assignments for reviewer ID {reviewerId}.", ex);
             }
         }
-
-
-
-
-
-
     }
 }
