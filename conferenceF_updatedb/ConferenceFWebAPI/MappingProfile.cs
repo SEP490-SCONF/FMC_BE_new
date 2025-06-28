@@ -18,6 +18,7 @@ namespace ConferenceFWebAPI
         public MappingProfile()
         {
             CreateMap<User, UserInfomation>();
+            CreateMap<User, UserDto>();
             CreateMap<Conference, ConferenceDTO>();
             CreateMap<ConferenceDTO, Conference>();
             CreateMap<Topic, TopicDTO>();

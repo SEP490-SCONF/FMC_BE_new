@@ -107,6 +107,7 @@ namespace ConferenceFWebAPI.Controllers
                 paper.SubmitDate = DateTime.UtcNow;
                 paper.Status = "Submitted";
                 paper.IsPublished = false;
+
                 paper.PaperAuthors = paperDto.AuthorIds
                     .Distinct()
                     .Select((id, index) => new PaperAuthor
@@ -122,30 +123,38 @@ namespace ConferenceFWebAPI.Controllers
                     PaperId = paper.PaperId,
                     FilePath = fileUrl,
                     Status = "Initial",
-                    SubmittedAt = DateTime.Now
+                    SubmittedAt = DateTime.UtcNow // Sử dụng DateTime.UtcNow thay vì DateTime.Now
                 };
                 await _paperRevisionRepository.AddPaperRevisionAsync(initialRevision);
 
                 int conferenceId = paper.ConferenceId;
-                int newRoleId = 2;
+                int newRoleId = 2; // Role = 2
 
                 var conference = await _conferenceRepository.GetById(conferenceId);
                 var newRole = await _conferenceRoleRepository.GetById(newRoleId);
 
+                // --- Logic cập nhật vai trò và gửi email cho từng tác giả ---
+                // Chỉ thực hiện nếu các thông tin cơ bản (hội thảo, vai trò mới) tồn tại
                 if (conference != null && newRole != null)
                 {
                     foreach (var authorId in paperDto.AuthorIds.Distinct())
                     {
                         var authorUser = await _userRepository.GetById(authorId);
-                        if (authorUser == null) continue;
+                        if (authorUser == null)
+                        {
+                            Console.WriteLine($"Warning: Author User ID {authorId} not found. Skipping role update and email for this author.");
+                            continue; // Bỏ qua tác giả này
+                        }
 
                         var updatedRoleAssignment = await _userConferenceRoleRepository
                             .UpdateConferenceRoleForUserInConference(authorId, conferenceId, newRoleId);
 
-                        string emailSubject, emailBody;
+                        string emailSubject;
+                        string emailBody;
 
                         if (updatedRoleAssignment == null)
                         {
+                            // Tạo mới UserConferenceRole
                             var newAssignment = new UserConferenceRole
                             {
                                 UserId = authorId,
@@ -154,23 +163,47 @@ namespace ConferenceFWebAPI.Controllers
                                 AssignedAt = DateTime.UtcNow
                             };
                             await _userConferenceRoleRepository.Add(newAssignment);
+                            Console.WriteLine($"Created new UserConferenceRole for User {authorId} in Conference {conferenceId} with Role {newRole.RoleName}.");
 
-                            emailSubject = $"Vai trò mới trong hội thảo '{conference.Title}'";
-                            emailBody = $"<h3>Xin chào {authorUser.Name},</h3><p>Bạn vừa được gán vai trò <strong>{newRole.RoleName}</strong> trong hội thảo <strong>{conference.Title}</strong>.</p>";
+                            emailSubject = $"Vai trò mới của bạn trong hội thảo '{conference.Title}'";
+                            emailBody = $@"
+                                <h3>Xin chào {authorUser.Name},</h3>
+                                <p>Bạn vừa được gán vai trò <strong>{newRole.RoleName}</strong> trong hội thảo <strong>{conference.Title}</strong> vì đã tải lên bài báo.</p>
+                                <p>Thời gian gán: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
+                                <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
+                                <br/>
+                                <p>Trân trọng,<br/>Ban tổ chức</p>";
                         }
                         else if (updatedRoleAssignment.ConferenceRoleId != newRoleId)
                         {
-                            emailSubject = $"Cập nhật vai trò trong hội thảo '{conference.Title}'";
-                            emailBody = $"<h3>Xin chào {authorUser.Name},</h3><p>Vai trò của bạn đã được cập nhật thành <strong>{newRole.RoleName}</strong>.</p>";
+                            // Cập nhật vai trò
+                            Console.WriteLine($"Updated UserConferenceRole for User {authorId} in Conference {conferenceId} to Role {newRole.RoleName}.");
+
+                            emailSubject = $"Cập nhật vai trò của bạn trong hội thảo '{conference.Title}'";
+                            emailBody = $@"
+                                <h3>Xin chào {authorUser.Name},</h3>
+                                <p>Vai trò của bạn trong hội thảo <strong>{conference.Title}</strong> đã được cập nhật thành <strong>{newRole.RoleName}</strong> do bạn đã tải lên bài báo.</p>
+                                <p>Thời gian cập nhật: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
+                                <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
+                                <br/>
+                                <p>Trân trọng,<br/>Ban tổ chức</p>";
                         }
                         else
                         {
-                            continue; // Không có thay đổi, không gửi email
+                            // Vai trò đã đúng, không cần gửi email
+                            Console.WriteLine($"User {authorId} already has Role {newRole.RoleName} in Conference {conferenceId}. No email sent.");
+                            continue; // Bỏ qua gửi email nếu không có thay đổi
                         }
 
+                        // Gửi email cho tác giả hiện tại
                         await _emailService.SendEmailAsync(authorUser.Email, emailSubject, emailBody);
                     }
                 }
+                else
+                {
+                    Console.WriteLine($"Warning: Missing Conference ({conferenceId}) or New Role ({newRoleId}) details. Skipping role updates and emails for authors.");
+                }
+
 
                 return Ok(new
                 {
@@ -182,7 +215,7 @@ namespace ConferenceFWebAPI.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Upload error: {ex}");
+                Console.WriteLine($"Upload error: {ex.ToString()}");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }

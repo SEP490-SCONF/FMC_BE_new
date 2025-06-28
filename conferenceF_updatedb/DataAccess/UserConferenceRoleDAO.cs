@@ -18,6 +18,16 @@ namespace DataAccess
             _context = context;
         }
 
+        public async Task<IEnumerable<User>> GetUsersByConferenceIdAndRoles(int conferenceId, List<int> roleIds)
+        {
+            // Truy vấn UserConferenceRole, lọc theo ConferenceId và ConferenceRoleId,
+            // sau đó Include đối tượng User liên quan và chọn ra các User riêng biệt.
+            return await _context.UserConferenceRoles
+                                   .Where(ucr => ucr.ConferenceId == conferenceId && roleIds.Contains(ucr.ConferenceRoleId))
+                                   .Select(ucr => ucr.User) // Chỉ chọn đối tượng User
+                                   .Distinct() // Đảm bảo chỉ lấy các User riêng biệt (nếu một user có nhiều vai trò phù hợp)
+                                   .ToListAsync();
+        }
         public async Task<IEnumerable<UserConferenceRole>> GetAll()
         {
             try
