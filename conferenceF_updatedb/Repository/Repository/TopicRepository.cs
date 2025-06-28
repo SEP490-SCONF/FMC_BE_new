@@ -36,6 +36,10 @@ namespace Repository
         {
             await _topicDao.DeleteTopic(id);
         }
+        public async Task<IEnumerable<Topic>> GetTopicsByConferenceIdAsync(int conferenceId)
+        {
+            return await _topicDao.GetTopicsByConferenceId(conferenceId);
+        }
 
         //public async Task<IEnumerable<Topic>> GetTopicsByConferenceId(int conferenceId)
         //{

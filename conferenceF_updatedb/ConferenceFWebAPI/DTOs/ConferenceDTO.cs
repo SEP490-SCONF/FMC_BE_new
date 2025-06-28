@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using DataAccess;
+using System.ComponentModel.DataAnnotations;
 
 namespace ConferenceFWebAPI.DTOs
 {
@@ -15,6 +16,10 @@ namespace ConferenceFWebAPI.DTOs
         public string? CallForPaper { get; set; }
         public bool? Status { get; set; }
         public IFormFile? BannerImage { get; set; } 
+
+        
+        public List<TopicDTO>? Topics { get; set; }
+
 
     }
 }
