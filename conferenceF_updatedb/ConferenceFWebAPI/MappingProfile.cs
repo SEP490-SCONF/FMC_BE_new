@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
+using ConferenceFWebAPI.DTOs.Conferences;
 using ConferenceFWebAPI.DTOs.ConferenceTopics;
 using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.PaperRevisions;
@@ -21,6 +22,9 @@ namespace ConferenceFWebAPI
             CreateMap<User, UserDto>();
             CreateMap<Conference, ConferenceDTO>();
             CreateMap<ConferenceDTO, Conference>();
+            CreateMap<Conference, ConferenceResponseDTO>();
+            CreateMap<ConferenceResponseDTO, Conference>();
+
             CreateMap<Topic, TopicDTO>();
             CreateMap<TopicDTO, Topic>();
             CreateMap<Paper, PaperResponseDto>(); // <-- Thêm dòng này

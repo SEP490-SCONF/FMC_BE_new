@@ -8,6 +8,7 @@ using ConferenceFWebAPI.Service;
 using Google.Apis.Drive.v3.Data;
 using DataAccess;
 using ConferenceFWebAPI.DTOs.Paper;
+using ConferenceFWebAPI.DTOs.Conferences;
 
 namespace FMC_BE.Controllers
 {
@@ -40,17 +41,17 @@ namespace FMC_BE.Controllers
 
         // GET: api/Conference
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ConferenceDTO>>> GetAll()
+        public async Task<ActionResult<IEnumerable<ConferenceResponseDTO>>> GetAll()
         {
             var conferences = await _conferenceRepository.GetAll();
-            var conferenceDTOs = _mapper.Map<IEnumerable<ConferenceDTO>>(conferences);
+            var conferenceDTOs = _mapper.Map<IEnumerable<ConferenceResponseDTO>>(conferences);
             return Ok(conferenceDTOs);
 
         }
 
         // GET: api/Conference/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ConferenceDTO>> GetById(int id)
+        public async Task<ActionResult<ConferenceResponseDTO>> GetById(int id)
         {
             var conference = await _conferenceRepository.GetById(id);
             if (conference == null)
@@ -58,12 +59,12 @@ namespace FMC_BE.Controllers
                 return NotFound($"Conference with ID {id} not found.");
             }
 
-            var conferenceDTO = _mapper.Map<ConferenceDTO>(conference);
+            var conferenceDTO = _mapper.Map<ConferenceResponseDTO>(conference);
             return Ok(conferenceDTO);
         }
 
         [HttpGet("topics/{id}")] // Route mới để phân biệt
-        public async Task<ActionResult<ConferenceDTO>> GetConferenceHasTopicsById(int id)
+        public async Task<ActionResult<ConferenceResponseDTO>> GetConferenceHasTopicsById(int id)
         {
             var conference = await _conferenceRepository.GetById(id);
             if (conference == null)
@@ -71,7 +72,7 @@ namespace FMC_BE.Controllers
                 return NotFound($"Conference details for ID {id} not found.");
             }
 
-            var conferenceDTO = _mapper.Map<ConferenceDTO>(conference);
+            var conferenceDTO = _mapper.Map<ConferenceResponseDTO>(conference);
 
             // Lấy và gán danh sách Topics liên quan đến hội thảo
             var topics = await _topicRepository.GetTopicsByConferenceIdAsync(conference.ConferenceId);
