@@ -43,5 +43,11 @@ namespace Repository
         {
             return await _dao.GetByPaperId(paperId);
         }
+
+        public async Task<IEnumerable<ReviewerAssignment>> GetByReviewerId(int reviewerId)
+        {
+            return await _dao.GetByReviewerId(reviewerId);
+        }
+
     }
 }

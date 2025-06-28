@@ -21,6 +21,7 @@ namespace DataAccess
             try
             {
                 return await _context.ReviewerAssignments
+                    .Include(r => r.Paper) 
                     .AsNoTracking()
                     .ToListAsync();
             }
@@ -35,6 +36,7 @@ namespace DataAccess
             try
             {
                 return await _context.ReviewerAssignments
+                    .Include(r => r.Paper) 
                     .AsNoTracking()
                     .FirstOrDefaultAsync(r => r.AssignmentId == id);
             }
@@ -49,6 +51,7 @@ namespace DataAccess
             try
             {
                 return await _context.ReviewerAssignments
+                    .Include(r => r.Paper) 
                     .Where(r => r.PaperId == paperId)
                     .AsNoTracking()
                     .ToListAsync();
@@ -110,6 +113,23 @@ namespace DataAccess
             }
         }
 
-        
+        public async Task<IEnumerable<ReviewerAssignment>> GetByReviewerId(int reviewerId)
+        {
+            try
+            {
+                return await _context.ReviewerAssignments
+                    .Include(r => r.Paper) 
+                    .Where(r => r.ReviewerId == reviewerId)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving reviewer assignments for reviewer ID {reviewerId}.", ex);
+            }
+        }
+
+
+
     }
 }
