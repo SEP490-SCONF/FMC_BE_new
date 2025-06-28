@@ -1,5 +1,6 @@
 ﻿using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
+using ConferenceFWebAPI.DTOs.Conferences;
 using ConferenceFWebAPI.DTOs.UserConferenceRoles;
 using ConferenceFWebAPI.DTOs.UserProfile;
 using ConferenceFWebAPI.Service;
