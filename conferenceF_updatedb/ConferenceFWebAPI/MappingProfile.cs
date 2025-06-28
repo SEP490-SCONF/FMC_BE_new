@@ -24,7 +24,8 @@ namespace ConferenceFWebAPI
             CreateMap<ConferenceDTO, Conference>();
             CreateMap<Conference, ConferenceResponseDTO>();
             CreateMap<ConferenceResponseDTO, Conference>();
-
+            CreateMap<ConferenceUpdateDTO, Conference>()
+           .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<Topic, TopicDTO>();
             CreateMap<TopicDTO, Topic>();
             CreateMap<Paper, PaperResponseDto>(); // <-- Thêm dòng này
