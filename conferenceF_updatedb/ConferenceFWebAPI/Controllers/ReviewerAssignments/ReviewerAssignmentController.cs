@@ -13,14 +13,18 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
     {
         private readonly IReviewerAssignmentRepository _repository;
         private readonly IUserConferenceRoleRepository _userConferenceRoleRepository;
+        private readonly IPaperRepository _paperRepository;
+        private readonly IPaperRevisionRepository _revisionRepository;
 
         private readonly IMapper _mapper;
 
-        public ReviewerAssignmentController(IReviewerAssignmentRepository repository, IMapper mapper, IUserConferenceRoleRepository userConferenceRoleRepository)
+        public ReviewerAssignmentController(IReviewerAssignmentRepository repository, IMapper mapper, IUserConferenceRoleRepository userConferenceRoleRepository, IPaperRepository paperRepository, IPaperRevisionRepository paperRevisionRepository)
         {
             _repository = repository;
             _mapper = mapper;
             _userConferenceRoleRepository = userConferenceRoleRepository;
+            _paperRepository = paperRepository;
+            _revisionRepository = paperRevisionRepository;
         }
 
         // GET: api/ReviewerAssignment
@@ -65,9 +69,27 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
             var entity = _mapper.Map<ReviewerAssignment>(dto);
             await _repository.Add(entity);
 
+            var paper = await _paperRepository.GetPaperByIdAsync(dto.PaperId);
+            if (paper != null)
+            {
+                paper.Status = "Under Review";
+                await _paperRepository.UpdatePaperAsync(paper); 
+            }
+
+            var revisions = await _revisionRepository.GetRevisionsByPaperIdAsync(dto.PaperId);
+            foreach (var revision in revisions)
+            {
+                revision.Status = "Under Review";
+                await _revisionRepository.UpdatePaperRevisionAsync(revision);
+            }
+
+           
+
             var result = _mapper.Map<ReviewerAssignmentDTO>(entity);
             return CreatedAtAction(nameof(GetById), new { id = entity.AssignmentId }, result);
         }
+
+
 
 
         // PUT: api/ReviewerAssignment/{id}
