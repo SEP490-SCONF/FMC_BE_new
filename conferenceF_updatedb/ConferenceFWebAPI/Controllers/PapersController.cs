@@ -136,7 +136,7 @@ namespace ConferenceFWebAPI.Controllers
                 {
                     PaperId = paper.PaperId,
                     FilePath = fileUrl,
-                    Status = "Under Review",
+                    Status = "Submitted",
                     SubmittedAt = DateTime.UtcNow // Sử dụng DateTime.UtcNow thay vì DateTime.Now
                 };
                 await _paperRevisionRepository.AddPaperRevisionAsync(initialRevision);
@@ -297,7 +297,7 @@ namespace ConferenceFWebAPI.Controllers
         }
 
         [HttpGet("user/{userId}/conference/{conferenceId}")]
-        [ProducesResponseType(typeof(List<PaperResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetPapersByUserAndConference(int userId, int conferenceId)
@@ -309,7 +309,7 @@ namespace ConferenceFWebAPI.Controllers
             if (papers == null || !papers.Any())
                 return NotFound($"No papers for User ID {userId} in Conference ID {conferenceId}.");
 
-            var paperDtos = _mapper.Map<List<PaperResponseDto>>(papers);
+            var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
             return Ok(paperDtos);
         }
     }

@@ -1,4 +1,6 @@
-﻿namespace ConferenceFWebAPI.DTOs.Papers
+﻿using ConferenceFWebAPI.DTOs.PaperRevisions;
+
+namespace ConferenceFWebAPI.DTOs.Papers
 {
     public class PaperResponseWT
     {
@@ -12,5 +14,11 @@
         public string? FilePath { get; set; }
         public string? Status { get; set; }
         public DateTime? SubmitDate { get; set; }
+
+        // Thêm một thuộc tính để chứa thông tin từ PaperRevision
+        public List<PaperRevisionDTO> PaperRevisions { get; set; } // Dữ liệu của PaperRevision
     }
+
+    // Tạo DTO cho PaperRevision
+   
 }
