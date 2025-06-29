@@ -72,8 +72,8 @@ namespace ConferenceFWebAPI.Controllers.Authen
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = false, // Đảm bảo chỉ gửi qua HTTPS
-                    SameSite = SameSiteMode.Strict, // hoặc Lax nếu cần
+                    Secure = true, // BẮT BUỘC khi SameSite=None và dùng HTTPS
+                    SameSite = SameSiteMode.None, // Cho phép gửi cookie cross-site (FE/BE khác domain)
                     Expires = DateTime.UtcNow.AddDays(7)
                 };
                 Response.Cookies.Append("refreshToken", user.RefreshToken, cookieOptions);
@@ -123,7 +123,7 @@ namespace ConferenceFWebAPI.Controllers.Authen
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddDays(7)
             };
             Response.Cookies.Append("refreshToken", user.RefreshToken, cookieOptions);

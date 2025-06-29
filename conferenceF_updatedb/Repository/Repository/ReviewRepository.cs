@@ -1,5 +1,6 @@
 ﻿using BussinessObject.Entity;
 using DataAccess;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -48,5 +49,18 @@ namespace Repository
         {
             return await _reviewDao.GetReviewCount();
         }
+        public async Task<Review> GetByRevisionId(int revisionId)
+        {
+            return await _reviewDao.GetByRevisionId(revisionId);
+        }
+        public async Task<Review> GetReviewByAssignmentId(int assignmentId)
+        {
+            return await _reviewDao.GetReviewByAssignmentId(assignmentId);
+        }
+        public async Task UpdatePaperAndRevisionStatus(int paperId, string paperStatus, int revisionId)
+        {
+            await _reviewDao.UpdatePaperAndRevisionStatus(paperId, paperStatus, revisionId);
+        }
+
     }
 }
