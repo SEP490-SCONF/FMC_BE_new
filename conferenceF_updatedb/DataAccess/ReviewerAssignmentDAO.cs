@@ -22,8 +22,8 @@ namespace DataAccess
             {
                 return await _context.ReviewerAssignments
                     .Include(r => r.Paper)
-                    .ThenInclude(p => p.PaperRevisions) 
-
+                        .ThenInclude(p => p.PaperRevisions)
+                    .Include(r => r.Paper.Topic) 
                     .AsNoTracking()
                     .ToListAsync();
             }
@@ -33,25 +33,24 @@ namespace DataAccess
             }
         }
 
+
         public async Task<ReviewerAssignment> GetById(int id)
         {
             try
             {
                 return await _context.ReviewerAssignments
-    .Where(r => r.AssignmentId == id &&
-                r.Paper.PaperRevisions.Any(pr => pr.Status == "Under Review"))
-    .Include(r => r.Paper)
-        .ThenInclude(p => p.PaperRevisions.Where(pr => pr.Status == "Under Review"))
-    .Include(r => r.Paper.Topic) 
-    .AsNoTracking()
-    .FirstOrDefaultAsync();
-
+                    .Include(r => r.Paper)
+                        .ThenInclude(p => p.PaperRevisions.Where(pr => pr.Status == "Under Review"))
+                    .Include(r => r.Paper.Topic) 
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(r => r.AssignmentId == id);
             }
             catch (Exception ex)
             {
                 throw new Exception($"Error retrieving reviewer assignment with ID {id}.", ex);
             }
         }
+
 
 
 
