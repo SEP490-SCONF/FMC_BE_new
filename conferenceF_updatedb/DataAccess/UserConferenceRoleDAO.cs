@@ -125,7 +125,7 @@ namespace DataAccess
         public async Task<bool> IsReviewer(int userId)
         {
             return await _context.UserConferenceRoles
-                .AnyAsync(ucr => ucr.UserId == userId && ucr.ConferenceRoleId == 1);
+                .AnyAsync(ucr => ucr.UserId == userId && ucr.ConferenceRoleId == 3);
         }
 
         public async Task<IEnumerable<UserConferenceRole>> GetByCondition(Expression<Func<UserConferenceRole, bool>> predicate)

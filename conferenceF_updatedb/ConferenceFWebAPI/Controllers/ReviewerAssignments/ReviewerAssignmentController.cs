@@ -13,6 +13,7 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
     {
         private readonly IReviewerAssignmentRepository _repository;
         private readonly IUserConferenceRoleRepository _userConferenceRoleRepository;
+        private readonly IPaperRepository _paperRepository;
 
         private readonly IMapper _mapper;
 
@@ -52,8 +53,8 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
             return Ok(result);
         }
 
-        // POST: api/ReviewerAssignment
-        [HttpPost]
+        //POST: api/ReviewerAssignment
+       [HttpPost]
         public async Task<IActionResult> Add([FromBody] AddReviewerAssignmentDTO dto)
         {
             var isReviewer = await _userConferenceRoleRepository.IsReviewer(dto.ReviewerId);
