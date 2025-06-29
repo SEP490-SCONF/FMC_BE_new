@@ -22,7 +22,7 @@ namespace ConferenceFWebAPI
             CreateMap<Paper, PaperResponseWT>()
             .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.TopicName)) // Lấy tên topic
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.PaperAuthors.FirstOrDefault().Author.Name)) // Lấy tên tác giả
-            .ForMember(dest => dest.PaperRevisions, opt => opt.MapFrom(src => src.PaperRevisions)); // Ánh xạ PaperRevisions
+            .ForMember(dest => dest.PaperRevisions, opt => opt.MapFrom(src => src.PaperRevisions)) // Ánh xạ PaperRevisions
 
 
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src =>
