@@ -126,11 +126,12 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             }
 
             // 2. Tạo Review
-            var review = _mapper.Map<Review>(dto);
-            review.PaperId = revision.PaperId; // tự động gán từ revision
-            review.Status = "Draft";
-            review.ReviewedAt = DateTime.Now;
-            await _reviewRepository.Add(review);
+            var review = await _reviewRepository.GetById(dto.ReviewId); // Đảm bảo gọi GetById để lấy review
+            if (review == null)
+            {
+                return NotFound($"Review with ID {dto.ReviewId} not found.");
+            }
+
 
             // 3. Tạo Highlight
             var highlight = new ReviewHighlight
@@ -210,9 +211,11 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             if (review == null)
                 return NotFound($"Review with ID {reviewId} not found.");
 
-            var highlight = (await _highlightRepository.GetByReviewId(reviewId)).FirstOrDefault();
-            var comment = (await _commentRepository.GetByReviewId(reviewId)).FirstOrDefault();
+            // Lấy tất cả highlights và comments cho reviewId
+            var highlights = await _highlightRepository.GetByReviewId(reviewId);
+            var comments = await _commentRepository.GetByReviewId(reviewId);
 
+            // Tạo đối tượng DTO kết hợp review, highlights và comments
             var result = new ReviewWithHighlightAndCommentDTO
             {
                 // Review
@@ -221,27 +224,35 @@ namespace ConferenceFWebAPI.Controllers.Reviews
                 ReviewerId = review.ReviewerId,
                 RevisionId = review.RevisionId,
                 Score = review.Score,
-                Comments = review.Comments,
+                Comment = review.Comments,
                 Status = review.Status,
                 ReviewedAt = review.ReviewedAt,
 
                 // Highlight
-                HighlightId = highlight?.HighlightId ?? 0,
-                PageNumber = highlight?.PageNumber,
-                OffsetStart = highlight?.OffsetStart,
-                OffsetEnd = highlight?.OffsetEnd,
-                TextHighlighted = highlight?.TextHighlighted,
+                Highlights = highlights.Select(highlight => new HighlightDTO
+                {
+                    HighlightId = highlight.HighlightId,
+                    PageNumber = highlight.PageNumber,
+                    OffsetStart = highlight.OffsetStart,
+                    OffsetEnd = highlight.OffsetEnd,
+                    TextHighlighted = highlight.TextHighlighted
+                }).ToList(),
 
                 // Comment
-                CommentId = comment?.CommentId ?? 0,
-                UserId = comment?.UserId ?? 0,
-                CommentText = comment?.CommentText,
-                CommentStatus = comment?.Status,
-                CreatedAt = comment?.CreatedAt
+                Comments = comments.Select(comment => new CommentsDTO
+                {
+                    CommentId = comment.CommentId,
+                    UserId = comment.UserId,
+                    CommentText = comment.CommentText,
+                    CommentStatus = comment.Status,
+                    CreatedAt = comment.CreatedAt,
+                    HighlightId = comment.HighlightId ?? 0
+                }).ToList()
             };
 
             return Ok(result);
         }
+
         // GET: api/Review/assignment/{assignmentId}
         [HttpGet("assignment/{assignmentId}")]
         public async Task<IActionResult> GetReviewByAssignmentId(int assignmentId)

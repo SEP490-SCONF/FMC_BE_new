@@ -2,6 +2,7 @@
 {
     public class AddReviewWithHighlightAndCommentDTO
     {
+        public int ReviewId { get; set; }
         public int ReviewerId { get; set; }
         public int RevisionId { get; set; }
         public int? Score { get; set; }

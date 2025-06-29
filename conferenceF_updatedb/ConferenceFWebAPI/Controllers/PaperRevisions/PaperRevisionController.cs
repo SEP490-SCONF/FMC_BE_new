@@ -17,6 +17,7 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
         private readonly IAzureBlobStorageService _azureBlobStorageService;
         private readonly IPaperRevisionRepository _paperRevisionRepository;
         private readonly IPaperRepository _paperRepository; // Cần để kiểm tra PaperId tồn tại
+        private readonly IReviewRepository _reviewRepository;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
 
@@ -24,13 +25,15 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
                                         IPaperRevisionRepository paperRevisionRepository,
                                         IPaperRepository paperRepository, // Inject PaperRepository
                                         IConfiguration configuration,
-                                        IMapper mapper)
+                                        IMapper mapper,
+                                        IReviewRepository reviewRepository)
         {
             _azureBlobStorageService = azureBlobStorageService;
             _paperRevisionRepository = paperRevisionRepository;
             _paperRepository = paperRepository;
             _configuration = configuration;
             _mapper = mapper;
+            _reviewRepository = reviewRepository;
         }
 
 
@@ -73,11 +76,15 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
                 // Map DTO sang Entity và thiết lập các trường
                 var paperRevision = _mapper.Map<PaperRevision>(revisionDto);
                 paperRevision.FilePath = fileUrl;
-                paperRevision.Status = "PendingReview"; // Hoặc trạng thái mặc định khác, ví dụ: "PendingReview"
+                paperRevision.Status = "Under Review"; // Trạng thái mặc định cho bản sửa đổi
                 paperRevision.SubmittedAt = DateTime.UtcNow;
 
                 // Lưu thông tin bản sửa đổi vào cơ sở dữ liệu
                 await _paperRevisionRepository.AddPaperRevisionAsync(paperRevision);
+
+                // Cập nhật trạng thái của bài báo thành "Under Review"
+                existingPaper.Status = "Under Review"; // Cập nhật trạng thái của Paper
+                await _paperRepository.UpdatePaperAsync(existingPaper); // Cập nhật vào cơ sở dữ liệu
 
                 return Ok(new
                 {
@@ -96,6 +103,7 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
 
         // GET: api/PaperRevisions/{revisionId}
         [HttpGet("{revisionId}")]
@@ -172,6 +180,37 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
                 // Ghi log lỗi chi tiết ở đây
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+     
         }
+        // GET: api/Review/PaperRevisionUrl/{reviewId}
+        [HttpGet("PaperRevisionUrl/{reviewId}")]
+        public async Task<IActionResult> GetPdfUrlByReviewId(int reviewId)
+        {
+            // Lấy Review từ reviewId
+            var review = await _reviewRepository.GetById(reviewId);
+            if (review == null)
+            {
+                return NotFound($"Review with ID {reviewId} not found.");
+            }
+
+            // Lấy PaperRevision từ RevisionId của review
+            var paperRevision = await _paperRevisionRepository.GetPaperRevisionByIdAsync(review.RevisionId);
+            if (paperRevision == null)
+            {
+                return NotFound($"PaperRevision with RevisionId {review.RevisionId} not found.");
+            }
+
+            // Lấy URL PDF từ PaperRevision
+            var pdfUrl = paperRevision.FilePath;  // Giả sử bạn lưu trữ đường dẫn file PDF trong trường PdfUrl
+
+            if (string.IsNullOrEmpty(pdfUrl))
+            {
+                return NotFound("PDF URL is not available for this PaperRevision.");
+            }
+
+            // Trả về PDF URL
+            return Ok(new { PdfUrl = pdfUrl });
+        }
+
     }
 }

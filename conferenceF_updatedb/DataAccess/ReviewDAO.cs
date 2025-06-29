@@ -33,6 +33,8 @@ namespace DataAccess
             try
             {
                 return await _context.Reviews
+                    .Include(r => r.ReviewComments)  // Lấy tất cả highlights của review
+        .Include(r => r.ReviewHighlights)    // Lấy tất cả comments của review
                     .AsNoTracking()
                     .FirstOrDefaultAsync(r => r.ReviewId == id);
             }
