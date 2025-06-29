@@ -35,7 +35,15 @@ namespace ConferenceFWebAPI
 
             CreateMap<AddPaperRevisionDTO, PaperRevision>();
             CreateMap<UpdatePaperRevisionDTO, PaperRevision>();
-            CreateMap<Review, ReviewDTO>();
+            CreateMap<Review, ReviewWithHighlightAndCommentDTO>()
+            .ForMember(dest => dest.RevisionStatus, opt => opt.MapFrom(src => src.Revision.Status))
+            .ForMember(dest => dest.FilePath, opt => opt.MapFrom(src => src.Revision.FilePath))
+
+            .ForMember(dest => dest.Highlights, opt => opt.MapFrom(src => src.ReviewHighlights))
+            .ForMember(dest => dest.CommentsList, opt => opt.MapFrom(src => src.ReviewComments))
+            .ForMember(dest => dest.Paper, opt => opt.MapFrom(src => src.Paper)); 
+
+
             CreateMap<AddReviewDTO, Review>();
             CreateMap<AddReviewWithHighlightAndCommentDTO, Review>();
 

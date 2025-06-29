@@ -12,12 +12,17 @@ namespace DataAccess
             _context = context;
         }
 
-        // Get all reviews (basic)
+        // Get all reviews (with Revision included)
         public async Task<IEnumerable<Review>> GetAllReviews()
         {
             try
             {
                 return await _context.Reviews
+                    .Include(r => r.Revision)
+                    .Include(r => r.Paper) 
+
+                    .Include(r => r.ReviewHighlights)
+                    .Include(r => r.ReviewComments)
                     .AsNoTracking()
                     .ToListAsync();
             }
@@ -27,12 +32,17 @@ namespace DataAccess
             }
         }
 
-        // Get review by ID
+
         public async Task<Review> GetReviewById(int id)
         {
             try
             {
                 return await _context.Reviews
+                    .Include(r => r.Revision)
+                    .Include(r => r.Paper) 
+
+                    .Include(r => r.ReviewHighlights)
+                    .Include(r => r.ReviewComments)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(r => r.ReviewId == id);
             }
@@ -108,12 +118,12 @@ namespace DataAccess
             }
         }
 
-        // Get reviews by paper ID
         public async Task<IEnumerable<Review>> GetReviewsByPaperId(int paperId)
         {
             try
             {
                 return await _context.Reviews
+                    .Include(r => r.Revision) 
                     .Where(r => r.PaperId == paperId)
                     .AsNoTracking()
                     .ToListAsync();
@@ -124,7 +134,6 @@ namespace DataAccess
             }
         }
 
-        // Count reviews
         public async Task<int> GetReviewCount()
         {
             try
