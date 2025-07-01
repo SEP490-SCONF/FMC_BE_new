@@ -17,10 +17,11 @@ namespace ConferenceFWebAPI.DTOs.Reviews
         public string? Comments { get; set; }
 
         public string? Status { get; set; }
-
+        public string PaperStatus { get; set; }
         public DateTime? ReviewedAt { get; set; }
+        public string PaperRevisionStatus { get; set; }
 
-        public virtual BussinessObject.Entity.Paper Paper { get; set; } = null!;
+        //public virtual BussinessObject.Entity.Paper Paper { get; set; } = null!;
 
         //public virtual User Reviewer { get; set; } = null!;
     }

@@ -33,6 +33,8 @@ namespace DataAccess
         }
 
 
+       
+        // Get review by ID
         public async Task<Review> GetReviewById(int id)
         {
             try
@@ -40,9 +42,8 @@ namespace DataAccess
                 return await _context.Reviews
                     .Include(r => r.Revision)
                     .Include(r => r.Paper) 
-
-                    .Include(r => r.ReviewHighlights)
-                    .Include(r => r.ReviewComments)
+                    .Include(r => r.ReviewComments)  // Lấy tất cả highlights của review
+                    .Include(r => r.ReviewHighlights)    // Lấy tất cả comments của review
                     .AsNoTracking()
                     .FirstOrDefaultAsync(r => r.ReviewId == id);
             }
@@ -145,5 +146,52 @@ namespace DataAccess
                 throw new Exception("Error occurred while counting reviews.", ex);
             }
         }
+        public async Task<Review> GetByRevisionId(int revisionId)
+        {
+            return await _context.Reviews
+                .FirstOrDefaultAsync(r => r.RevisionId == revisionId);  // Tìm Review theo RevisionId
+        }
+        public async Task<Review> GetReviewByAssignmentId(int assignmentId)
+        {
+            var assignment = await _context.ReviewerAssignments
+                .Where(r => r.AssignmentId == assignmentId)
+                .Include(r => r.Paper) // Bao gồm thông tin Paper
+                .ThenInclude(p => p.PaperRevisions) // Bao gồm các phiên bản của bài báo
+                .FirstOrDefaultAsync();
+
+            if (assignment == null)
+                return null;
+
+            // Giả sử mỗi PaperRevision có một Review duy nhất
+            var revision = assignment.Paper.PaperRevisions.FirstOrDefault(r => r.Status == "Under Review");
+
+            if (revision == null)
+                return null;
+
+            return await _context.Reviews
+                .FirstOrDefaultAsync(r => r.RevisionId == revision.RevisionId); // Lấy Review dựa trên RevisionId
+        }
+        // Cập nhật trạng thái Paper và PaperRevision
+        public async Task UpdatePaperAndRevisionStatus(int paperId, string paperStatus, int revisionId)
+        {
+            var paper = await _context.Papers
+                .FirstOrDefaultAsync(p => p.PaperId == paperId);
+
+            if (paper != null)
+            {
+                paper.Status = paperStatus;  // Cập nhật trạng thái của Paper
+
+                var revision = await _context.PaperRevisions
+                    .FirstOrDefaultAsync(r => r.PaperId == paperId && r.RevisionId == revisionId);
+
+                if (revision != null)
+                {
+                    revision.Status = paperStatus;  // Cập nhật trạng thái của PaperRevision
+                }
+
+                await _context.SaveChangesAsync();  // Lưu thay đổi vào cơ sở dữ liệu
+            }
+        }
+
     }
 }

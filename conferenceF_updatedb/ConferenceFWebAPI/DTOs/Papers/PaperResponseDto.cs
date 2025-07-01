@@ -11,5 +11,7 @@
         public string? FilePath { get; set; }
         public string? Status { get; set; }
         public DateTime? SubmitDate { get; set; }
+
+
     }
 }

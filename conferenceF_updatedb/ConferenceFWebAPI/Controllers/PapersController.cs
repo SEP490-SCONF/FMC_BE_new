@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.Paper;
+using ConferenceFWebAPI.DTOs.Papers;
 using ConferenceFWebAPI.Service;
 using DataAccess;
 using Microsoft.AspNetCore.Mvc;
@@ -64,6 +65,19 @@ namespace ConferenceFWebAPI.Controllers
             var paperDto = _mapper.Map<List<PaperResponseDto>>(papers);
             return Ok(paperDto);
         }
+        [HttpGet("conference/{conferenceId}/status/submitted")]
+        [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetPapersByConferenceAndStatusSubmitted(int conferenceId)
+        {
+            var papers = _paperRepository.GetPapersByConferenceIdAndStatus(conferenceId, "Submitted");
+            if (papers == null || !papers.Any())
+                return NotFound($"No submitted papers found for conference ID: {conferenceId}");
+
+            var paperDto = _mapper.Map<List<PaperResponseWT>>(papers);
+            return Ok(paperDto);
+        }
+
 
         [HttpPost("upload-pdf")]
         public async Task<IActionResult> UploadPdf([FromForm] PaperUploadDto paperDto)
@@ -122,7 +136,7 @@ namespace ConferenceFWebAPI.Controllers
                 {
                     PaperId = paper.PaperId,
                     FilePath = fileUrl,
-                    Status = "Under Review",
+                    Status = "Submitted",
                     SubmittedAt = DateTime.UtcNow // Sử dụng DateTime.UtcNow thay vì DateTime.Now
                 };
                 await _paperRevisionRepository.AddPaperRevisionAsync(initialRevision);
@@ -283,7 +297,7 @@ namespace ConferenceFWebAPI.Controllers
         }
 
         [HttpGet("user/{userId}/conference/{conferenceId}")]
-        [ProducesResponseType(typeof(List<PaperResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetPapersByUserAndConference(int userId, int conferenceId)
@@ -295,7 +309,7 @@ namespace ConferenceFWebAPI.Controllers
             if (papers == null || !papers.Any())
                 return NotFound($"No papers for User ID {userId} in Conference ID {conferenceId}.");
 
-            var paperDtos = _mapper.Map<List<PaperResponseDto>>(papers);
+            var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
             return Ok(paperDtos);
         }
     }

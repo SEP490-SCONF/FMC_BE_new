@@ -1,10 +1,15 @@
 ﻿using BussinessObject.Entity;
+using ConferenceFWebAPI.DTOs;
+using ConferenceFWebAPI.DTOs.Conferences;
 using ConferenceFWebAPI.DTOs.UserConferenceRoles;
 using ConferenceFWebAPI.DTOs.UserProfile;
 using ConferenceFWebAPI.Service;
 using DataAccess;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.EntityFrameworkCore;
 using Repository;
+using Repository.Repository;
 
 namespace ConferenceFWebAPI.Controllers
 {
@@ -152,6 +157,44 @@ namespace ConferenceFWebAPI.Controllers
                 return StatusCode(500, $"Lỗi nội bộ server khi lấy danh sách thành viên: {ex.Message}");
             }
         }
+        [HttpGet("conference/{conferenceId}/roles-reviewer")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDto>))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [EnableQuery]
+        public async Task<IActionResult> GetConferenceMembersReviewer(int conferenceId)
+        {
+            try
+            {
+                // Kiểm tra sự tồn tại của Conference
+                var conference = await _conferenceRepository.GetById(conferenceId);
+                if (conference == null)
+                {
+                    return NotFound($"Hội thảo với ID: {conferenceId} không tồn tại.");
+                }
+
+                var desiredRoleIds = new List<int> { 3 };
+
+                // Lấy danh sách các User từ Repository
+                var users = await _repo.GetUsersByConferenceIdAndRolesAsync(conferenceId, desiredRoleIds);
+
+                if (users == null || !users.Any())
+                {
+                    return NotFound($"Không tìm thấy người dùng nào với vai trò {string.Join(" hoặc ", desiredRoleIds)} trong hội thảo {conferenceId}.");
+                }
+
+                var userDtos = _mapper.Map<IEnumerable<UserDto>>(users);
+
+
+                return Ok(userDtos);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetConferenceMembersByRoles: {ex.ToString()}");
+                return StatusCode(500, $"Lỗi nội bộ server khi lấy danh sách thành viên: {ex.Message}");
+            }
+        }
 
         [HttpPut("change-role")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -213,6 +256,21 @@ namespace ConferenceFWebAPI.Controllers
             await _repo.Delete(id);
             return NoContent();
         }
+        [HttpGet("user/{userId}/conferences/{roleName}")]
+        [ProducesResponseType(typeof(List<ConferenceDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetConferencesByUserAndRole(int userId, string roleName)
+        {
+            var conferences = await _repo.GetConferencesByUserIdAndRoleAsync(userId, roleName);
+
+            if (conferences == null || !conferences.Any())
+                return NotFound($"No conferences found for user {userId} with role {roleName}.");
+
+            var conferenceDtos = _mapper.Map<List<ConferenceDTO>>(conferences);
+            return Ok(conferenceDtos);
+        }
+
+
 
     }
 }

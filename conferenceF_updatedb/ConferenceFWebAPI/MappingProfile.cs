@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
+using ConferenceFWebAPI.DTOs.Conferences;
 using ConferenceFWebAPI.DTOs.ConferenceTopics;
 using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.PaperRevisions;
+using ConferenceFWebAPI.DTOs.Papers;
 using ConferenceFWebAPI.DTOs.ReviewComments;
 using ConferenceFWebAPI.DTOs.ReviewerAssignments;
 using ConferenceFWebAPI.DTOs.ReviewHightlights;
@@ -17,10 +19,22 @@ namespace ConferenceFWebAPI
     {
         public MappingProfile()
         {
+            CreateMap<Paper, PaperResponseWT>()
+            .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.TopicName)) // Lấy tên topic
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.PaperAuthors.FirstOrDefault().Author.Name)) // Lấy tên tác giả
+            .ForMember(dest => dest.PaperRevisions, opt => opt.MapFrom(src => src.PaperRevisions)); // Ánh xạ PaperRevisions
+
+
+
+
             CreateMap<User, UserInfomation>();
             CreateMap<User, UserDto>();
             CreateMap<Conference, ConferenceDTO>();
             CreateMap<ConferenceDTO, Conference>();
+            CreateMap<Conference, ConferenceResponseDTO>();
+            CreateMap<ConferenceResponseDTO, Conference>();
+            CreateMap<ConferenceUpdateDTO, Conference>()
+           .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<Topic, TopicDTO>();
             CreateMap<TopicDTO, Topic>();
             CreateMap<Paper, PaperResponseDto>(); // <-- Thêm dòng này
@@ -86,7 +100,7 @@ namespace ConferenceFWebAPI
             CreateMap<User, UserProfile>()
             .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName))
             .ForMember(dest => dest.CreatedAt,
-        opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt ?? DateTime.MinValue, DateTimeKind.Unspecified)));;
+        opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt ?? DateTime.MinValue, DateTimeKind.Unspecified))); ;
             CreateMap<ReviewHighlight, ReviewHightlightDTO>();
             CreateMap<UpdateReviewHightlightDTO, ReviewHighlight>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
