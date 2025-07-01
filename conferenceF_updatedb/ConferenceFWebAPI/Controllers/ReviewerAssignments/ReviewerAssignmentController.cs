@@ -54,7 +54,7 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
         }
 
         //POST: api/ReviewerAssignment
-       [HttpPost]
+        [HttpPost]
         public async Task<IActionResult> Add([FromBody] AddReviewerAssignmentDTO dto)
         {
             var isReviewer = await _userConferenceRoleRepository.IsReviewer(dto.ReviewerId);
@@ -66,10 +66,25 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
             var entity = _mapper.Map<ReviewerAssignment>(dto);
             await _repository.Add(entity);
 
+            var paper = await _paperRepository.GetPaperByIdAsync(dto.PaperId);
+            if (paper != null)
+            {
+                paper.Status = "Under Review";
+                await _paperRepository.UpdatePaperAsync(paper);
+            }
+
+            var revisions = await _revisionRepository.GetRevisionsByPaperIdAsync(dto.PaperId);
+            foreach (var revision in revisions)
+            {
+                revision.Status = "Under Review";
+                await _revisionRepository.UpdatePaperRevisionAsync(revision);
+            }
+
+
+
             var result = _mapper.Map<ReviewerAssignmentDTO>(entity);
             return CreatedAtAction(nameof(GetById), new { id = entity.AssignmentId }, result);
         }
-
 
         // PUT: api/ReviewerAssignment/{id}
         [HttpPut("{id}")]
