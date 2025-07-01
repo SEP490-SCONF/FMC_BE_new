@@ -42,6 +42,18 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             return Ok(result);
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var review = await _reviewRepository.GetById(id);
+            if (review == null)
+                return NotFound($"Review with ID {id} not found.");
+
+            var result = _mapper.Map<ReviewWithHighlightAndCommentDTO>(review);
+            return Ok(result);
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> Add([FromForm] AddReviewDTO dto)
         {
@@ -157,47 +169,47 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             return NoContent();
         }
 
-        [HttpGet("WithHighlightAndComment/{reviewId}")]
-        public async Task<IActionResult> GetDetailByReviewId(int reviewId)
-        {
-            var review = await _reviewRepository.GetById(reviewId);
-            if (review == null)
-                return NotFound($"Review with ID {reviewId} not found.");
+        //[HttpGet("WithHighlightAndComment/{reviewId}")]
+        //public async Task<IActionResult> GetDetailByReviewId(int reviewId)
+        //{
+        //    var review = await _reviewRepository.GetById(reviewId);
+        //    if (review == null)
+        //        return NotFound($"Review with ID {reviewId} not found.");
 
-            var highlights = await _highlightRepository.GetByReviewId(reviewId);
-            var comments = await _commentRepository.GetByReviewId(reviewId);
+        //    var highlights = await _highlightRepository.GetByReviewId(reviewId);
+        //    var comments = await _commentRepository.GetByReviewId(reviewId);
 
-            var resultDto = new ReviewWithHighlightAndCommentDTO
-            {
-                ReviewId = review.ReviewId,
-                PaperId = review.PaperId,
-                ReviewerId = review.ReviewerId,
-                RevisionId = review.RevisionId,
-                Score = review.Score,
-                Comment = review.Comments,
-                Status = review.Status,
-                ReviewedAt = review.ReviewedAt,
-                Highlights = highlights.Select(h => new HighlightDTO
-                {
-                    HighlightId = h.HighlightId,
-                    PageNumber = h.PageNumber,
-                    OffsetStart = h.OffsetStart,
-                    OffsetEnd = h.OffsetEnd,
-                    TextHighlighted = h.TextHighlighted
-                }).ToList(),
-                Comments = comments.Select(c => new CommentsDTO
-                {
-                    CommentId = c.CommentId,
-                    UserId = c.UserId,
-                    CommentText = c.CommentText,
-                    CommentStatus = c.Status,
-                    CreatedAt = c.CreatedAt,
-                    HighlightId = c.HighlightId ?? 0
-                }).ToList()
-            };
+        //    var resultDto = new ReviewWithHighlightAndCommentDTO
+        //    {
+        //        ReviewId = review.ReviewId,
+        //        PaperId = review.PaperId,
+        //        ReviewerId = review.ReviewerId,
+        //        RevisionId = review.RevisionId,
+        //        Score = review.Score,
+        //        Comment = review.Comments,
+        //        Status = review.Status,
+        //        ReviewedAt = review.ReviewedAt,
+        //        Highlights = highlights.Select(h => new HighlightDTO
+        //        {
+        //            HighlightId = h.HighlightId,
+        //            PageNumber = h.PageNumber,
+        //            OffsetStart = h.OffsetStart,
+        //            OffsetEnd = h.OffsetEnd,
+        //            TextHighlighted = h.TextHighlighted
+        //        }).ToList(),
+        //        Comments = comments.Select(c => new CommentsDTO
+        //        {
+        //            CommentId = c.CommentId,
+        //            UserId = c.UserId,
+        //            CommentText = c.CommentText,
+        //            CommentStatus = c.Status,
+        //            CreatedAt = c.CreatedAt,
+        //            HighlightId = c.HighlightId ?? 0
+        //        }).ToList()
+        //    };
 
-            return Ok(resultDto);
-        }
+        //    return Ok(resultDto);
+        //}
 
         [HttpGet("assignment/{assignmentId}")]
         public async Task<IActionResult> GetReviewByAssignmentId(int assignmentId)
