@@ -188,41 +188,41 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             return NoContent();
         }
 
-        [HttpPut("{reviewId}/update-status")]
-        public async Task<IActionResult> UpdateRevisionStatusAndForceCompleteReview(int reviewId, [FromForm] string revisionStatus)
-        {
-            var review = await _reviewRepository.GetById(reviewId);
-            if (review == null)
-                return NotFound($"Review with ID {reviewId} not found.");
+        //[HttpPut("{reviewId}/update-status")]
+        //public async Task<IActionResult> UpdateRevisionStatusAndForceCompleteReview(int reviewId, [FromForm] string revisionStatus)
+        //{
+        //    var review = await _reviewRepository.GetById(reviewId);
+        //    if (review == null)
+        //        return NotFound($"Review with ID {reviewId} not found.");
 
-            var revision = await _paperRevisionRepository.GetPaperRevisionByIdAsync(review.RevisionId);
-            if (revision == null)
-                return NotFound($"Revision with ID {review.RevisionId} not found.");
+        //    var revision = await _paperRevisionRepository.GetPaperRevisionByIdAsync(review.RevisionId);
+        //    if (revision == null)
+        //        return NotFound($"Revision with ID {review.RevisionId} not found.");
 
-            // Update Revision
-            revision.Status = revisionStatus;
-            await _paperRevisionRepository.UpdatePaperRevisionAsync(revision);
+        //    // Update Revision
+        //    revision.Status = revisionStatus;
+        //    await _paperRevisionRepository.UpdatePaperRevisionAsync(revision);
 
-            // Update Paper
-            var paper = await _paperRepository.GetPaperByIdAsync(revision.PaperId);
-            if (paper != null)
-            {
-                paper.Status = revisionStatus;
-                await _paperRepository.UpdatePaperAsync(paper);
-            }
+        //    // Update Paper
+        //    var paper = await _paperRepository.GetPaperByIdAsync(revision.PaperId);
+        //    if (paper != null)
+        //    {
+        //        paper.Status = revisionStatus;
+        //        await _paperRepository.UpdatePaperAsync(paper);
+        //    }
 
-            // Update Review
-            review.Status = "Completed";
-            await _reviewRepository.Update(review);
+        //    // Update Review
+        //    review.Status = "Completed";
+        //    await _reviewRepository.Update(review);
 
-            return Ok(new
-            {
-                message = "Revision and Paper statuses updated. Review marked as Completed.",
-                revisionStatus = revision.Status,
-                paperStatus = paper?.Status,
-                reviewStatus = review.Status
-            });
-        }
+        //    return Ok(new
+        //    {
+        //        message = "Revision and Paper statuses updated. Review marked as Completed.",
+        //        revisionStatus = revision.Status,
+        //        paperStatus = paper?.Status,
+        //        reviewStatus = review.Status
+        //    });
+        //}
 
 
 
