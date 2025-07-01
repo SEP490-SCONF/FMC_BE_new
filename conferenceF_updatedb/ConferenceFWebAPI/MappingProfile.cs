@@ -54,7 +54,9 @@ namespace ConferenceFWebAPI
             .ForMember(dest => dest.FilePath, opt => opt.MapFrom(src => src.Revision.FilePath))
 
             .ForMember(dest => dest.Highlights, opt => opt.MapFrom(src => src.ReviewHighlights))
-            .ForMember(dest => dest.CommentsList, opt => opt.MapFrom(src => src.ReviewComments))
+            //.ForMember(dest => dest.CommentsList, opt => opt.MapFrom(src => src.ReviewComments))
+            .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.ReviewComments))
+
             .ForMember(dest => dest.Paper, opt => opt.MapFrom(src => src.Paper)); 
 
 
@@ -107,6 +109,10 @@ namespace ConferenceFWebAPI
             CreateMap<AddReviewHighlightWithCommentDTO, ReviewHighlight>();
 
             CreateMap<ReviewComment, ReviewCommentDTO>();
+            CreateMap<ReviewComment, CommentsDTO>();
+            CreateMap<ReviewHighlight, HighlightDTO>();
+
+
             CreateMap<AddReviewCommentDTO, ReviewComment>();
             CreateMap<UpdateReviewCommentDTO, ReviewComment>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));

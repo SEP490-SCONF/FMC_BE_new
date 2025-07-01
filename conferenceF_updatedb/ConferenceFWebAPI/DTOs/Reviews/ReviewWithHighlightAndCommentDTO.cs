@@ -19,9 +19,9 @@ namespace ConferenceFWebAPI.DTOs.Reviews
         public string? FilePath { get; set; }
 
 
-        public List<ReviewHightlightDTO> Highlights { get; set; } = new();
+        //public List<ReviewHightlightDTO> Highlights { get; set; } = new();
 
-        public List<ReviewCommentDTO> CommentsList { get; set; } = new();
+        //public List<ReviewCommentDTO> CommentsList { get; set; } = new();
         public PaperResponseDto? Paper { get; set; }
         // List of Highlights
         public List<HighlightDTO> Highlights { get; set; }
