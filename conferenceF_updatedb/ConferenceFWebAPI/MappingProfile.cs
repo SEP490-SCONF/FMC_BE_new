@@ -22,9 +22,24 @@ namespace ConferenceFWebAPI
             CreateMap<Paper, PaperResponseWT>()
             .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.TopicName)) // Lấy tên topic
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.PaperAuthors.FirstOrDefault().Author.Name)) // Lấy tên tác giả
-            .ForMember(dest => dest.PaperRevisions, opt => opt.MapFrom(src => src.PaperRevisions)); // Ánh xạ PaperRevisions
+            .ForMember(dest => dest.PaperRevisions, opt => opt.MapFrom(src => src.PaperRevisions)) // Ánh xạ PaperRevisions
 
 
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src =>
+                    src.PaperAuthors.FirstOrDefault() != null
+                        ? src.PaperAuthors.FirstOrDefault().Author.Name
+                        : "Unknown"))
+                .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.TopicName))
+                .ForMember(dest => dest.IsAssigned, opt => opt.MapFrom(src =>
+                    src.ReviewerAssignments != null && src.ReviewerAssignments.Any()))
+.ForMember(dest => dest.AssignedReviewerName, opt => opt.MapFrom(src =>
+    src.ReviewerAssignments
+        .OrderByDescending(ra => ra.AssignedAt) // hoặc OrderByDescending(ra => ra.AssignmentId)
+        .Select(ra => ra.Reviewer)
+        .FirstOrDefault(r =>
+            r.UserConferenceRoles.Any(ucr => ucr.ConferenceRole.RoleName == "Reviewer")
+        ).Name
+));
 
 
             CreateMap<User, UserInfomation>();
@@ -43,7 +58,7 @@ namespace ConferenceFWebAPI
                            .ForMember(dest => dest.Status, opt => opt.Ignore()) // Status sẽ được gán trong controller
                            .ForMember(dest => dest.SubmittedAt, opt => opt.Ignore()); // SubmittedAt sẽ được gán trong controller
 
-            // Mapping từ PaperRevision Entity sang PaperRevisionResponseDto
+
             CreateMap<PaperRevision, PaperRevisionResponseDto>();
             CreateMap<PaperRevision, PaperRevisionDTO>();
 
@@ -89,7 +104,7 @@ namespace ConferenceFWebAPI
                 .ForMember(dest => dest.Abstract, opt => opt.MapFrom(src => src.Paper.Abstract))
                 .ForMember(dest => dest.Keywords, opt => opt.MapFrom(src => src.Paper.Keywords))
                 .ForMember(dest => dest.TopicId, opt => opt.MapFrom(src => src.Paper.TopicId))
-                .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Paper.Topic.TopicName)) 
+                .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Paper.Topic.TopicName))
 
                 .ForMember(dest => dest.Revisions,
                  opt => opt.MapFrom(src => src.Paper.PaperRevisions

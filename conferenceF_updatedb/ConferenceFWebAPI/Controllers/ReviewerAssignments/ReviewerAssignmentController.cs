@@ -56,7 +56,7 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
             return Ok(result);
         }
 
-        // POST: api/ReviewerAssignment
+        //POST: api/ReviewerAssignment
         [HttpPost]
         public async Task<IActionResult> Add([FromBody] AddReviewerAssignmentDTO dto)
         {
@@ -83,7 +83,6 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
                 await _revisionRepository.UpdatePaperRevisionAsync(revision);
             }
 
-           
 
             var result = _mapper.Map<ReviewerAssignmentDTO>(entity);
             return CreatedAtAction(nameof(GetById), new { id = entity.AssignmentId }, result);
