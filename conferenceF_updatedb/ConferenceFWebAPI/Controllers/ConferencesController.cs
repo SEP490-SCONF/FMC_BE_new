@@ -176,16 +176,12 @@ namespace FMC_BE.Controllers
                     bannerUrl = await _azureBlobStorageService.UploadFileAsync(conferenceDto.BannerImage, bannerContainerName);
                 }
 
-                // 5. Ánh xạ các thuộc tính từ DTO vào đối tượng đã lấy từ DB
                 _mapper.Map(conferenceDto, conferenceToUpdate);
 
-                // 6. Cập nhật các thuộc tính không có trong DTO một cách tường minh
                 conferenceToUpdate.BannerUrl = bannerUrl; // Cập nhật URL banner (mới hoặc cũ)
 
-                // 7. Lưu thay đổi vào database
                 await _conferenceRepository.Update(conferenceToUpdate);
 
-                // 8. Trả về một phản hồi chi tiết và hữu ích
                 return Ok(new
                 {
                     Message = "Conference updated successfully.",
