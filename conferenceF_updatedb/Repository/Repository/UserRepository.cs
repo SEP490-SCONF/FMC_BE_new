@@ -57,5 +57,10 @@ namespace Repository
         {
             return await _userDao.GetByRefreshToken(refreshToken);
         }
+        public async Task<bool> RoleExists(int roleId)
+        {
+            return await _userDao.RoleExists(roleId);
+        }
+
     }
 }

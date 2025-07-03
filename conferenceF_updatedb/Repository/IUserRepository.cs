@@ -10,5 +10,7 @@ namespace Repository
         Task<int> GetUserCount();
         Task<IEnumerable<User>> GetOrganizers();
         Task<User?> GetByRefreshToken(string refreshToken);
+        Task<bool> RoleExists(int roleId);
+
     }
 }

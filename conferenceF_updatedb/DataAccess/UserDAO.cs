@@ -18,13 +18,17 @@ namespace DataAccess
         {
             try
             {
-                return await _context.Users.AsNoTracking().ToListAsync();
+                return await _context.Users
+                    .Include(u => u.Role) 
+                    .AsNoTracking()
+                    .ToListAsync();
             }
             catch (Exception ex)
             {
                 throw new Exception("Error occurred while retrieving all users.", ex);
             }
         }
+
 
         // Get user by ID
         public async Task<User> GetUserById(int id)
@@ -152,5 +156,18 @@ namespace DataAccess
                 throw new Exception("Error occurred while retrieving organizers.", ex);
             }
         }
+
+        public async Task<bool> RoleExists(int roleId)
+        {
+            try
+            {
+                return await _context.Roles.AnyAsync(r => r.RoleId == roleId);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error checking if Role exists", ex);
+            }
+        }
+
     }
 }

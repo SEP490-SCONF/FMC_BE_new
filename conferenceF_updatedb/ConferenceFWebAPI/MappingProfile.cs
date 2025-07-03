@@ -118,6 +118,11 @@ namespace ConferenceFWebAPI
             .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName))
             .ForMember(dest => dest.CreatedAt,
         opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt ?? DateTime.MinValue, DateTimeKind.Unspecified))); ;
+            CreateMap<UpdateUserDTO, User>()
+    .ForAllMembers(opts =>
+        opts.Condition((src, dest, srcMember) =>
+            srcMember != null && !(srcMember is string str && string.IsNullOrWhiteSpace(str))));
+
             CreateMap<ReviewHighlight, ReviewHightlightDTO>();
             CreateMap<UpdateReviewHightlightDTO, ReviewHighlight>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
