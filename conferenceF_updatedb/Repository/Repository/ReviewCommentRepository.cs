@@ -43,5 +43,9 @@ namespace Repository
         {
             return await _dao.GetByReviewId(reviewId);
         }
+        public async Task<ReviewComment> GetByHighlightId(int highlightId)
+        {
+            return await _dao.GetByHighlightId(highlightId);
+        }
     }
 }

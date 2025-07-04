@@ -42,11 +42,11 @@ namespace ConferenceFWebAPI.Controllers.Authen
                 {
                     return Unauthorized(new { success = false, message = "Admin user does not exist." });
                 }
-
+                string admin = user.Role?.RoleName;
                 // Phải là role Admin
                 if (user.Role?.RoleName != "Admin")
                 {
-                    return Forbid("You are not authorized to access admin functionality.");
+                    return StatusCode(403, new { success = false, message = "You are not authorized to access admin functionality." });
                 }
 
                 // Update refresh token

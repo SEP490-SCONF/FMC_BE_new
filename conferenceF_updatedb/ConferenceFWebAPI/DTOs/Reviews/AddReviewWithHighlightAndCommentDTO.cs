@@ -8,11 +8,13 @@
         public int? Score { get; set; }
         public string? Comments { get; set; }
 
-        // Highlight
-        public int? PageNumber { get; set; }
-        public int? OffsetStart { get; set; }
-        public int? OffsetEnd { get; set; }
-        public string? TextHighlighted { get; set; }
+        public int PageIndex { get; set; }  
+        public double Left { get; set; }    
+        public double Top { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public string? TextHighlighted { get; set; }  
+
 
         // Comment
         public int UserId { get; set; }
