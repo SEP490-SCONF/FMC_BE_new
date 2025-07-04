@@ -14,14 +14,16 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
         private readonly IReviewerAssignmentRepository _repository;
         private readonly IUserConferenceRoleRepository _userConferenceRoleRepository;
         private readonly IPaperRepository _paperRepository;
-
+        private readonly IPaperRevisionRepository _paperRevisionRepository;
         private readonly IMapper _mapper;
 
-        public ReviewerAssignmentController(IReviewerAssignmentRepository repository, IMapper mapper, IUserConferenceRoleRepository userConferenceRoleRepository)
+        public ReviewerAssignmentController(IReviewerAssignmentRepository repository, IMapper mapper, IUserConferenceRoleRepository userConferenceRoleRepository, IPaperRevisionRepository paperRevisionRepository)
         {
+
             _repository = repository;
             _mapper = mapper;
             _userConferenceRoleRepository = userConferenceRoleRepository;
+            _paperRevisionRepository = paperRevisionRepository;
         }
 
         // GET: api/ReviewerAssignment
@@ -73,11 +75,11 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
                 await _paperRepository.UpdatePaperAsync(paper);
             }
 
-            var revisions = await _revisionRepository.GetRevisionsByPaperIdAsync(dto.PaperId);
+            var revisions = await _paperRevisionRepository.GetRevisionsByPaperIdAsync(dto.PaperId);
             foreach (var revision in revisions)
             {
                 revision.Status = "Under Review";
-                await _revisionRepository.UpdatePaperRevisionAsync(revision);
+                await _paperRevisionRepository.UpdatePaperRevisionAsync(revision);
             }
 
 
