@@ -97,6 +97,8 @@ namespace ConferenceFWebAPI
                     )
                 );
 
+            CreateMap<AddOrUpdateTopicDTO, Topic>()
+    .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.TopicName));
 
 
             CreateMap<ReviewerAssignment, ReviewerAssignmentDTO>()
