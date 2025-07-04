@@ -7,5 +7,7 @@ namespace Repository
     {
         Task<int> GetConferenceCount();
         Task UpdateConferenceStatus(int conferenceId, bool newStatus);
+        Task<IEnumerable<Conference>> GetAllConferencesFalse();
+
     }
 }
