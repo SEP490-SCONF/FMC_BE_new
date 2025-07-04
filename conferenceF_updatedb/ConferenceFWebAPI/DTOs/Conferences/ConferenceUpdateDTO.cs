@@ -15,6 +15,6 @@
         public string? CallForPaper { get; set; }
 
         // BannerImage là optional, chỉ cần gửi khi muốn thay đổi ảnh.
-        public IFormFile? BannerImage { get; set; }
+        //public IFormFile? BannerImage { get; set; }
     }
 }

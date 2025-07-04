@@ -24,7 +24,7 @@ namespace ConferenceFWebAPI.Controllers
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _userRepository.GetAll();
-            var result = _mapper.Map<IEnumerable<UserProfile>>(users);
+            var result = _mapper.Map<IEnumerable<UserInformationDTO>>(users);
             return Ok(result);
         }
 
@@ -34,8 +34,6 @@ namespace ConferenceFWebAPI.Controllers
             var existingUser = await _userRepository.GetById(id);
             if (existingUser == null)
                 return NotFound($"User with ID {id} not found.");
-
-          
 
             if (!string.IsNullOrWhiteSpace(dto.Name))
                 existingUser.Name = dto.Name;
@@ -52,13 +50,19 @@ namespace ConferenceFWebAPI.Controllers
                 existingUser.RoleId = dto.RoleId.Value;
             }
 
+            if (dto.Status.HasValue)
+            {
+                existingUser.Status = dto.Status.Value;
+            }
+
             await _userRepository.Update(existingUser);
 
             var updatedUser = await _userRepository.GetById(id);
-            var result = _mapper.Map<UserProfile>(updatedUser);
+            var result = _mapper.Map<UserInformationDTO>(updatedUser);
 
             return Ok(result);
         }
+
 
 
 
@@ -89,7 +93,7 @@ namespace ConferenceFWebAPI.Controllers
 
             var addedUser = await _userRepository.GetById(newUser.UserId);
 
-            var userProfile = _mapper.Map<UserProfile>(addedUser);
+            var userProfile = _mapper.Map<UserInformationDTO>(addedUser);
 
             return CreatedAtAction(nameof(GetUserById), new { id = addedUser.UserId }, userProfile);
         }
@@ -103,7 +107,7 @@ namespace ConferenceFWebAPI.Controllers
                 return NotFound();
             }
 
-            var userProfile = _mapper.Map<UserProfile>(user);
+            var userProfile = _mapper.Map<UserInformationDTO>(user);
             return Ok(userProfile);
         }
     }

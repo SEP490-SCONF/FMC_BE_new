@@ -5,5 +5,7 @@
         public string? Name { get; set; }
         public string? AvatarUrl { get; set; }
         public int? RoleId { get; set; }
+        public bool? Status { get; set; }
+
     }
 }

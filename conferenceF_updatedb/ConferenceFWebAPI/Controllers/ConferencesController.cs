@@ -157,30 +157,30 @@ namespace FMC_BE.Controllers
                     return NotFound($"Conference with ID {id} not found.");
                 }
 
-                string bannerUrl = conferenceToUpdate.BannerUrl; // Giữ lại URL cũ làm mặc định
+                //string bannerUrl = conferenceToUpdate.BannerUrl; // Giữ lại URL cũ làm mặc định
 
-                if (conferenceDto.BannerImage != null && conferenceDto.BannerImage.Length > 0)
-                {
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                    var extension = Path.GetExtension(conferenceDto.BannerImage.FileName)?.ToLowerInvariant();
-                    if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
-                    {
-                        return BadRequest("Invalid image file format. Only .jpg, .jpeg, .png, .gif are allowed.");
-                    }
+                //if (conferenceDto.BannerImage != null && conferenceDto.BannerImage.Length > 0)
+                //{
+                //    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                //    var extension = Path.GetExtension(conferenceDto.BannerImage.FileName)?.ToLowerInvariant();
+                //    if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+                //    {
+                //        return BadRequest("Invalid image file format. Only .jpg, .jpeg, .png, .gif are allowed.");
+                //    }
 
-                    var bannerContainerName = _configuration.GetValue<string>("BlobContainers:Banners");
-                    if (string.IsNullOrEmpty(bannerContainerName))
-                    {
-                        return StatusCode(500, "Banner storage container name is not configured.");
-                    }
-                    bannerUrl = await _azureBlobStorageService.UploadFileAsync(conferenceDto.BannerImage, bannerContainerName);
-                }
+                //    var bannerContainerName = _configuration.GetValue<string>("BlobContainers:Banners");
+                //    if (string.IsNullOrEmpty(bannerContainerName))
+                //    {
+                //        return StatusCode(500, "Banner storage container name is not configured.");
+                //    }
+                //    bannerUrl = await _azureBlobStorageService.UploadFileAsync(conferenceDto.BannerImage, bannerContainerName);
+                //}
 
                 // 5. Ánh xạ các thuộc tính từ DTO vào đối tượng đã lấy từ DB
                 _mapper.Map(conferenceDto, conferenceToUpdate);
 
                 // 6. Cập nhật các thuộc tính không có trong DTO một cách tường minh
-                conferenceToUpdate.BannerUrl = bannerUrl; // Cập nhật URL banner (mới hoặc cũ)
+                //conferenceToUpdate.BannerUrl = bannerUrl; // Cập nhật URL banner (mới hoặc cũ)
 
                 // 7. Lưu thay đổi vào database
                 await _conferenceRepository.Update(conferenceToUpdate);

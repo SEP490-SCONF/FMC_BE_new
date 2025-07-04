@@ -151,6 +151,10 @@ namespace ConferenceFWebAPI
                     TopicId = (int)dict["TopicId"]
                 });
 
+            CreateMap<User, UserInformationDTO>()
+    .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName))
+    .ForMember(dest => dest.CreatedAt,
+        opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt ?? DateTime.MinValue, DateTimeKind.Unspecified)));
 
 
 
