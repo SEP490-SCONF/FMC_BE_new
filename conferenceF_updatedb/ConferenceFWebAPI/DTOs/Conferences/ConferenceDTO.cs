@@ -5,8 +5,7 @@ namespace ConferenceFWebAPI.DTOs.Conferences
 {
     public class ConferenceDTO
     {
-        [Required]
-        public int ConferenceId { get; set; }
+
         public string Title { get; set; }
         public string? Description { get; set; }
         public DateTime StartDate { get; set; }
@@ -17,8 +16,6 @@ namespace ConferenceFWebAPI.DTOs.Conferences
         public bool? Status { get; set; }
         public IFormFile? BannerImage { get; set; } 
 
-        
-        public List<TopicDTO>? Topics { get; set; }
 
 
     }
