@@ -307,7 +307,31 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             // 4. Trả về thông báo thành công
             return Ok("Feedback sent and statuses updated.");
         }
+        [HttpDelete("DeletWithHighlightAndComment/{highlightId}")]
+        public async Task<IActionResult> DeleteWithHighlightAndComment(int highlightId)
+        {
+            // 1. Kiểm tra xem ReviewHighlight có tồn tại không
+            var highlight = await _highlightRepository.GetById(highlightId);
+            if (highlight == null)
+                return NotFound($"Highlight with ID {highlightId} not found.");
 
+            // 2. Lấy ReviewComment liên kết với HighlightId
+            var comment = await _commentRepository.GetByHighlightId(highlightId);
+            if (comment == null)
+            {
+                // Nếu không tìm thấy comment, trả về lỗi
+                return NotFound($"No comment found for HighlightId {highlightId}. Make sure the highlight has an associated comment.");
+            }
+
+            // 3. Xóa ReviewComment
+            await _commentRepository.Delete(comment.CommentId);
+
+            // 4. Xóa ReviewHighlight
+            await _highlightRepository.Delete(highlightId);
+
+            // 5. Trả về NoContent để chỉ ra rằng xóa thành công
+            return NoContent();
+        }
 
 
 
