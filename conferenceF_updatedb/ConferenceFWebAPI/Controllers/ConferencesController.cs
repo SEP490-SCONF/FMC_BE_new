@@ -24,7 +24,7 @@ namespace FMC_BE.Controllers
         private readonly IConfiguration _configuration;
         private readonly ITopicRepository _topicRepository;
 
-        public ConferencesController(IConferenceRepository conferenceRepository, IAzureBlobStorageService azureBlobStorageService,IMapper mapper, IConfiguration configuration,
+        public ConferencesController(IConferenceRepository conferenceRepository, IAzureBlobStorageService azureBlobStorageService, IMapper mapper, IConfiguration configuration,
                                      IUserRepository userRepository, IEmailService emailService, ITopicRepository topicRepository)
         {
             _conferenceRepository = conferenceRepository;
@@ -114,14 +114,14 @@ namespace FMC_BE.Controllers
 
                 var conference = _mapper.Map<Conference>(conferenceDto);
 
-                conference.BannerUrl = bannerUrl; 
-                conference.CreatedAt = DateTime.UtcNow; 
-                                                       
-                await _conferenceRepository.Add(conference); 
+                conference.BannerUrl = bannerUrl;
+                conference.CreatedAt = DateTime.UtcNow;
+
+                await _conferenceRepository.Add(conference);
                 return Ok(new
                 {
                     Message = "Conference created successfully.",
-                    ConferenceId = conference.ConferenceId, 
+                    ConferenceId = conference.ConferenceId,
                     BannerUrl = conference.BannerUrl
                 });
             }
@@ -157,24 +157,24 @@ namespace FMC_BE.Controllers
                     return NotFound($"Conference with ID {id} not found.");
                 }
 
-                //string bannerUrl = conferenceToUpdate.BannerUrl; // Giữ lại URL cũ làm mặc định
+                string bannerUrl = conferenceToUpdate.BannerUrl; // Giữ lại URL cũ làm mặc định
 
-                //if (conferenceDto.BannerImage != null && conferenceDto.BannerImage.Length > 0)
-                //{
-                //    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                //    var extension = Path.GetExtension(conferenceDto.BannerImage.FileName)?.ToLowerInvariant();
-                //    if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
-                //    {
-                //        return BadRequest("Invalid image file format. Only .jpg, .jpeg, .png, .gif are allowed.");
-                //    }
+                if (conferenceDto.BannerImage != null && conferenceDto.BannerImage.Length > 0)
+                {
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                    var extension = Path.GetExtension(conferenceDto.BannerImage.FileName)?.ToLowerInvariant();
+                    if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+                    {
+                        return BadRequest("Invalid image file format. Only .jpg, .jpeg, .png, .gif are allowed.");
+                    }
 
-                //    var bannerContainerName = _configuration.GetValue<string>("BlobContainers:Banners");
-                //    if (string.IsNullOrEmpty(bannerContainerName))
-                //    {
-                //        return StatusCode(500, "Banner storage container name is not configured.");
-                //    }
-                //    bannerUrl = await _azureBlobStorageService.UploadFileAsync(conferenceDto.BannerImage, bannerContainerName);
-                //}
+                    var bannerContainerName = _configuration.GetValue<string>("BlobContainers:Banners");
+                    if (string.IsNullOrEmpty(bannerContainerName))
+                    {
+                        return StatusCode(500, "Banner storage container name is not configured.");
+                    }
+                    bannerUrl = await _azureBlobStorageService.UploadFileAsync(conferenceDto.BannerImage, bannerContainerName);
+                }
 
                 // 5. Ánh xạ các thuộc tính từ DTO vào đối tượng đã lấy từ DB
                 _mapper.Map(conferenceDto, conferenceToUpdate);
