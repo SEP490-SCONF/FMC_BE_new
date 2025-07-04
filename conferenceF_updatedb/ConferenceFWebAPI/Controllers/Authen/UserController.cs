@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using ConferenceFWebAPI.DTOs.User;
+using ConferenceFWebAPI.DTOs.UserProfile;
 using DataAccess;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

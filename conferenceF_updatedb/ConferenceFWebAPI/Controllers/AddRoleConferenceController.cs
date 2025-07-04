@@ -67,38 +67,54 @@ namespace ConferenceFWebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] UserConferenceRoleCreateDto dto)
         {
-            // Kiểm tra User - Conference - Role đã tồn tại chưa
+            // Kiểm tra xem người dùng đã tồn tại hay chưa
+            var user = await _userRepository.GetByEmail(dto.Email);
+            if (user == null)
+            {
+                // Nếu không tồn tại, tạo người dùng mới
+                user = new User
+                {
+                    Email = dto.Email,
+                    CreatedAt = DateTime.UtcNow,
+                    RoleId = 2, // Gán role mặc định, bạn có thể thay đổi nếu cần
+                    Status = true // Status mặc định
+                };
+
+                // Thêm người dùng vào cơ sở dữ liệu
+                await _userRepository.Add(user);
+            }
+
+            // Kiểm tra xem User - Conference - Role đã tồn tại chưa
             var existing = await _repo.GetByCondition(x =>
-                x.UserId == dto.UserId &&
+                x.UserId == user.UserId &&
                 x.ConferenceId == dto.ConferenceId &&
-                x.ConferenceRoleId == dto.ConferenceRoleId);
+                x.ConferenceRoleId == 4); // Kiểm tra role với ConferenceRoleId = 4
 
             if (existing.Any())
             {
                 return Ok("Người dùng đã được gán vai trò này trong hội thảo.");
             }
 
-            // Kiểm tra dữ liệu liên quan
-            var user = await _userRepository.GetById(dto.UserId);
-            if (user == null)
+            // Kiểm tra dữ liệu liên quan (User, Conference, Role)
+            var foundUser = await _userRepository.GetById(user.UserId);
+            if (foundUser == null)
                 return BadRequest("User không tồn tại.");
 
             var conference = await _conferenceRepository.GetById(dto.ConferenceId);
             if (conference == null)
                 return BadRequest("Hội thảo không tồn tại.");
 
-            var role = await _conferenceRoleRepository.GetById(dto.ConferenceRoleId);
+            var role = await _conferenceRoleRepository.GetById(4); // Kiểm tra vai trò với ConferenceRoleId = 4
             if (role == null)
                 return BadRequest("Vai trò không tồn tại.");
 
             // Tạo mới quan hệ User - Conference - Role
             var entity = new UserConferenceRole
             {
-                UserId = dto.UserId,
-                ConferenceRoleId = dto.ConferenceRoleId,
+                UserId = foundUser.UserId,
+                ConferenceRoleId = 4, // Vai trò được gán
                 ConferenceId = dto.ConferenceId,
-                AssignedAt = DateTime.UtcNow,            
-               
+                AssignedAt = DateTime.UtcNow,
             };
 
             await _repo.Add(entity);
@@ -106,15 +122,15 @@ namespace ConferenceFWebAPI.Controllers
             // Chuẩn bị nội dung email
             string subject = $"Bạn đã được gán vai trò '{role.RoleName}' trong hội thảo '{conference.Title}'";
             string body = $@"
-                <h3>Xin chào {user.Name},</h3>
-                <p>Bạn vừa được gán vai trò <strong>{role.RoleName}</strong> trong hội thảo <strong>{conference.Title}</strong>.</p>
-                <p>Thời gian gán: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
-                <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
-                <br/>
-                <p>Trân trọng,<br/>Ban tổ chức</p>";
+        <h3>Xin chào {foundUser.Name},</h3>
+        <p>Bạn vừa được gán vai trò <strong>{role.RoleName}</strong> trong hội thảo <strong>{conference.Title}</strong>.</p>
+        <p>Thời gian gán: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
+        <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
+        <br/>
+        <p>Trân trọng,<br/>Ban tổ chức</p>";
 
             // Gửi email
-            await _emailService.SendEmailAsync(user.Email, subject, body);
+            await _emailService.SendEmailAsync(foundUser.Email, subject, body);
 
             return Ok("Success");
         }

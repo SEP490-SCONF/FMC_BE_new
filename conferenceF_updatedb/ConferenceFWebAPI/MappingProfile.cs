@@ -155,10 +155,6 @@ namespace ConferenceFWebAPI
     .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName))
     .ForMember(dest => dest.CreatedAt,
         opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt ?? DateTime.MinValue, DateTimeKind.Unspecified)));
-
-
-
-
         }
     }
 }
