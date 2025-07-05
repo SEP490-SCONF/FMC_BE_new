@@ -180,7 +180,7 @@ namespace FMC_BE.Controllers
                 _mapper.Map(conferenceDto, conferenceToUpdate);
 
                 // 6. Cập nhật các thuộc tính không có trong DTO một cách tường minh
-                //conferenceToUpdate.BannerUrl = bannerUrl; // Cập nhật URL banner (mới hoặc cũ)
+                conferenceToUpdate.BannerUrl = bannerUrl; // Cập nhật URL banner (mới hoặc cũ)
 
                 // 7. Lưu thay đổi vào database
                 await _conferenceRepository.Update(conferenceToUpdate);
