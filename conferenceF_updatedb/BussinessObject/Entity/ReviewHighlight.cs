@@ -24,4 +24,5 @@ public partial class ReviewHighlight
     public virtual Review Review { get; set; } = null!;
 
     public virtual ICollection<ReviewComment> ReviewComments { get; set; } = new List<ReviewComment>();
+    public virtual ICollection<HighlightArea> HighlightAreas { get; set; } = new List<HighlightArea>();
 }

@@ -32,6 +32,8 @@ public partial class ConferenceFTestContext : DbContext
 
     public virtual DbSet<ForumQuestion> ForumQuestions { get; set; }
 
+    public virtual DbSet<HighlightArea> HighlightAreas { get; set; }
+
     public virtual DbSet<Notification> Notifications { get; set; }
 
     public virtual DbSet<NotificationStatus> NotificationStatuses { get; set; }
@@ -67,6 +69,9 @@ public partial class ConferenceFTestContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserConferenceRole> UserConferenceRoles { get; set; }
+    
+    public virtual DbSet<TimeLine> TimeLines { get; set; }
+
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -101,6 +106,22 @@ public partial class ConferenceFTestContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__AnswerLik__Liked__7E37BEF6");
         });
+        modelBuilder.Entity<HighlightArea>(entity =>
+{
+    entity.HasKey(e => e.HighlightAreaId);
+    entity.ToTable("HighlightArea");
+
+    entity.Property(e => e.PageIndex);
+    entity.Property(e => e.Left);
+    entity.Property(e => e.Top);
+    entity.Property(e => e.Width);
+    entity.Property(e => e.Height);
+
+    entity.HasOne(e => e.ReviewHighlight)
+        .WithMany(r => r.HighlightAreas)
+        .HasForeignKey(e => e.HighlightId)
+        .OnDelete(DeleteBehavior.Cascade);
+});
          modelBuilder.Entity<Role>().HasData(
         new Role { RoleId = 1, RoleName = "Admin" },
         new Role { RoleId = 2, RoleName = "Member" 
@@ -148,6 +169,22 @@ public partial class ConferenceFTestContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__CallForPa__Confe__44CA3770");
         });
+      
+modelBuilder.Entity<TimeLine>(entity =>
+{
+    entity.HasKey(e => e.TimeLineId);
+    entity.ToTable("TimeLine");
+
+    entity.Property(e => e.Description).HasMaxLength(255);
+
+    entity.Property(e => e.Date).HasColumnType("datetime");
+
+    entity.HasOne(e => e.Conference)
+        .WithMany(c => c.TimeLines)
+        .HasForeignKey(e => e.ConferenceId)
+        .OnDelete(DeleteBehavior.Cascade);
+});
+
 
         modelBuilder.Entity<Certificate>(entity =>
         {
@@ -170,6 +207,11 @@ public partial class ConferenceFTestContext : DbContext
             entity.HasOne(d => d.Reg).WithOne(p => p.Certificate)
                 .HasForeignKey<Certificate>(d => d.RegId)
                 .HasConstraintName("FK_Certificate_Registration");
+
+            entity.HasOne(d => d.UserConferenceRole)
+                .WithMany()
+                .HasForeignKey(d => d.UserConferenceRoleId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Conference>(entity =>
@@ -279,6 +321,11 @@ public partial class ConferenceFTestContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK__Notificat__UserI__282DF8C2");
+
+            entity.HasOne(d => d.UserConferenceRole)
+                .WithMany()
+                .HasForeignKey(d => d.UserConferenceRoleId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<NotificationStatus>(entity =>
