@@ -332,6 +332,19 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             // 5. Trả về NoContent để chỉ ra rằng xóa thành công
             return NoContent();
         }
+        // GET: api/Review/revision/{revisionId}
+        [HttpGet("revision/{revisionId}")]
+        public async Task<IActionResult> GetReviewByRevisionId(int revisionId)
+        {
+            var review = await _reviewRepository.GetByRevisionId(revisionId);
+            if (review == null)
+            {
+                return NotFound($"Review not found for Revision ID {revisionId}");
+            }
+
+            var result = _mapper.Map<ReviewDTO>(review);
+            return Ok(result);
+        }   
 
 
 
