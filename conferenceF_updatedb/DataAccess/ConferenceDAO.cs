@@ -31,6 +31,20 @@ namespace DataAccess
                 throw new Exception("Error occurred while retrieving all active conferences.", ex);
             }
         }
+        public async Task<IEnumerable<Conference>> GetAllConferencesFalse()
+        {
+            try
+            {
+                return await _context.Conferences
+                                     .Where(c => c.Status == false)
+                                     .AsNoTracking()
+                                     .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error occurred while retrieving all active conferences.", ex);
+            }
+        }
 
 
         // Get conference by ID

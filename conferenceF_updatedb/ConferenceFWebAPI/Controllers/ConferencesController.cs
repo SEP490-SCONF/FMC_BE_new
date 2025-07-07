@@ -48,6 +48,27 @@ namespace FMC_BE.Controllers
             return Ok(conferenceDTOs);
 
         }
+        [HttpGet("inactive")] // HTTP GET request đến /api/Conferences/inactive
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<IEnumerable<ConferenceResponseDTO>>> GetInactiveConferences()
+        {
+            try
+            {
+                var conferences = await _conferenceRepository.GetAllConferencesFalse();
+                var conferenceDTOs = _mapper.Map<IEnumerable<ConferenceResponseDTO>>(conferences);
+                return Ok(conferenceDTOs);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while retrieving inactive conferences: {ex.Message}");
+            }
+        }
+
+        // Bạn có thể thêm các hàm GET khác ở đây, ví dụ:
+        // [HttpGet("{id}")] // HTTP GET request đến /api/Conferences/{id}
+        // public async Task<ActionResult<ConferenceResponseDTO>> GetById(int id) { ... }
+    
 
         // GET: api/Conference/5
         [HttpGet("{id}")]
