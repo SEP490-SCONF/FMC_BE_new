@@ -115,9 +115,8 @@ namespace ConferenceFWebAPI
             CreateMap<AddReviewerAssignmentDTO, ReviewerAssignment>();
             CreateMap<UpdateReviewerAssignmentDTO, ReviewerAssignment>();
             CreateMap<User, UserProfile>()
-            .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName))
-            .ForMember(dest => dest.CreatedAt,
-        opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt ?? DateTime.MinValue, DateTimeKind.Unspecified))); ;
+            .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName));
+            
             CreateMap<UpdateUserDTO, User>()
     .ForAllMembers(opts =>
         opts.Condition((src, dest, srcMember) =>
