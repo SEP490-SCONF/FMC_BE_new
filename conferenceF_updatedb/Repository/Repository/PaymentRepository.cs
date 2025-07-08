@@ -1,5 +1,6 @@
 ﻿using BussinessObject.Entity;
 using DataAccess;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -12,6 +13,20 @@ namespace Repository
         public PaymentRepository(PaymentDAO paymentDao)
         {
             _paymentDao = paymentDao;
+        }
+
+        public async Task<IEnumerable<Payment>> GetByStatus(string status)
+        {
+            return await _paymentDao.GetByStatus(status);
+        }
+        public async Task<IEnumerable<Payment>> GetRecentPayments(DateTime fromDate)
+        {
+            return await _paymentDao.GetRecentPayments(fromDate);
+        }
+
+        public async Task<IEnumerable<Payment>> GetByConferenceId(int conferenceId)
+        {
+            return await _paymentDao.GetByConferenceId(conferenceId);
         }
 
         public async Task<IEnumerable<Payment>> GetAll()
@@ -28,12 +43,19 @@ namespace Repository
         {
             await _paymentDao.Add(entity);
         }
+        public async Task<Payment?> GetByOrderCode(String orderCode)
+        {
+            return await _paymentDao.GetByOrderCode(orderCode);
+        }
 
         public async Task Update(Payment entity)
         {
             await _paymentDao.Update(entity);
         }
-
+        public async Task<Payment?> GetLatestPendingByUserId(int userId)
+        {
+            return await _paymentDao.GetLatestPendingByUserId(userId);
+        }
         public async Task Delete(int id)
         {
             await _paymentDao.Delete(id);

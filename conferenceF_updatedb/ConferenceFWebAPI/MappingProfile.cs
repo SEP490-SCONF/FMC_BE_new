@@ -12,6 +12,7 @@ using ConferenceFWebAPI.DTOs.ReviewHightlights;
 using ConferenceFWebAPI.DTOs.Reviews;
 using ConferenceFWebAPI.DTOs.User;
 using ConferenceFWebAPI.DTOs.UserProfile;
+using ConferenceFWebAPI.DTOs.Payment;
 
 namespace ConferenceFWebAPI
 {
@@ -157,6 +158,13 @@ namespace ConferenceFWebAPI
     .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName))
     .ForMember(dest => dest.CreatedAt,
         opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt ?? DateTime.MinValue, DateTimeKind.Unspecified)));
+
+            CreateMap<Payment, PaymentDTO>();
+            CreateMap<CreatePaymentDTO, Payment>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.PaperId, opt => opt.MapFrom(src => src.PaperId));
+            CreateMap<UpdatePaymentDTO, Payment>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }

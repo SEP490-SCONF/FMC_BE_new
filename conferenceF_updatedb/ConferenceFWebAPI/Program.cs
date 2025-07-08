@@ -138,7 +138,7 @@ builder.Services.AddScoped<IReviewerAssignmentRepository, ReviewerAssignmentRepo
 builder.Services.AddScoped<IUserConferenceRoleRepository, UserConferenceRoleRepository>();
 
 //PAYOS
-builder.Services.AddSingleton(new PayOS("295a3346-3eeb-449c-bb7b-cdbf495577ec", "a5e3d88f-3ae6-4235-b30e-e81c2b3686a2", "2a895d2b7938d4880973602f579a44043a2bc63183aa80e685ace2e9164cab5f"));
+builder.Services.AddSingleton(new PayOS("acb29369-96a5-4ec4-bd78-b8fa316bfee6", "41751deb-82ed-4c9b-80a9-3d6cdb1cd940", "e4850839d6415b5a8e7fd60d16271e14b0adc351c7a977a40548649186da072f"));
 //AddCors
 builder.Services.AddCors(options =>
 {
