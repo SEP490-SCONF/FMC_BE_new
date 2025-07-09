@@ -273,7 +273,7 @@ namespace ConferenceFWebAPI.Controllers
             return NoContent();
         }
         [HttpGet("user/{userId}/conferences/{roleName}")]
-        [ProducesResponseType(typeof(List<ConferenceDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ConferenceResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetConferencesByUserAndRole(int userId, string roleName)
         {
@@ -282,7 +282,7 @@ namespace ConferenceFWebAPI.Controllers
             if (conferences == null || !conferences.Any())
                 return NotFound($"No conferences found for user {userId} with role {roleName}.");
 
-            var conferenceDtos = _mapper.Map<List<ConferenceDTO>>(conferences);
+            var conferenceDtos = _mapper.Map<List<ConferenceResponseDTO>>(conferences);
             return Ok(conferenceDtos);
         }
 

@@ -18,6 +18,8 @@ public partial class Certificate
     public bool Status { get; set; }
 
     public DateTime CreatedAt { get; set; }
+    public int? UserConferenceRoleId { get; set; }
+    public virtual UserConferenceRole? UserConferenceRole { get; set; }
 
     public virtual Registration Reg { get; set; } = null!;
 }
