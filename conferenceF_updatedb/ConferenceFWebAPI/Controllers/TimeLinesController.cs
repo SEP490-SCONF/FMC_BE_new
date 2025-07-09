@@ -3,85 +3,156 @@ using ConferenceFWebAPI.DTOs.TimeLines;
 using Microsoft.AspNetCore.Mvc;
 using Repository;
 using Hangfire;
+using ConferenceFWebAPI.Service;
 
 
 namespace ConferenceFWebAPI.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-
-    public class TimeLinesController : ControllerBase
+    [Route("api/[controller]")]
+    public class TimelinesController : ControllerBase
     {
-        private readonly ITimeLineRepository _timeLineRepository;
-        // KHÔNG CẦN inject IBackgroundJobClient nữa
-        // private readonly IBackgroundJobClient _backgroundJobClient; 
+        private readonly TimeLineManager _timeLineManager;
+        private readonly ITimeLineRepository _timeLineRepository; // Vẫn giữ để GetTimeLinesByConference
 
-        public TimeLinesController(ITimeLineRepository timeLineRepository) // Bỏ IBackgroundJobClient khỏi constructor
+        // Inject TimeLineManager và ITimeLineRepository
+        public TimelinesController(TimeLineManager timeLineManager, ITimeLineRepository timeLineRepository)
         {
+            _timeLineManager = timeLineManager;
             _timeLineRepository = timeLineRepository;
-            // _backgroundJobClient = backgroundJobClient; // Bỏ dòng này
         }
 
-        // GET: api/timelines/conference/{conferenceId}
+        // Endpoint chỉ để test Hangfire hoạt động
+        [HttpGet("test-hangfire-job")]
+        public IActionResult TestHangfireJob()
+        {
+            // Lên lịch một job sẽ chạy sau 10 giây
+            Hangfire.BackgroundJob.Schedule(
+                () => Console.WriteLine("Hangfire test job executed!"),
+                TimeSpan.FromSeconds(10)
+            );
+            return Ok("Test job scheduled. Check Hangfire Dashboard in 10 seconds.");
+        }
+
+        /// <summary>
+        /// Lấy danh sách các Timelines theo ID của Conference.
+        /// </summary>
+        /// <param name="conferenceId">ID của Conference.</param>
+        /// <returns>Danh sách các Timeline.</returns>
         [HttpGet("conference/{conferenceId}")]
-        public async Task<ActionResult<IEnumerable<TimeLine>>> GetTimeLinesByConference(int conferenceId)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<IEnumerable<TimelineResponseDto>>> GetTimeLinesByConference(int conferenceId)
         {
             var timeLines = await _timeLineRepository.GetTimeLinesByConferenceAsync(conferenceId);
-            return Ok(timeLines);
+            if (timeLines == null || !timeLines.Any())
+            {
+                return NotFound($"No timelines found for conference ID: {conferenceId}");
+            }
+
+            // Chuyển đổi từ entity sang DTO để trả về
+            var responseDtos = timeLines.Select(tl => new TimelineResponseDto
+            {
+                TimeLineId = tl.TimeLineId,
+                ConferenceId = tl.ConferenceId,
+                Date = tl.Date,
+                Description = tl.Description
+            }).ToList();
+
+            return Ok(responseDtos);
         }
 
-        // POST: api/timelines
+        /// <summary>
+        /// Tạo một Timeline mới và lên lịch nhắc nhở.
+        /// </summary>
+        /// <param name="createDto">Thông tin Timeline cần tạo.</param>
+        /// <returns>Timeline đã được tạo.</returns>
         [HttpPost]
-        public async Task<ActionResult<TimeLine>> CreateTimeLine([FromBody] TimeLineCreateDto createDto)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<TimelineResponseDto>> CreateTimeline([FromForm] TimeLineCreateDto createDto)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(ModelState); // Trả về lỗi validation từ DTO
             }
 
+            // Chuyển đổi DTO sang Entity
             var newTimeLine = new TimeLine
             {
                 ConferenceId = createDto.ConferenceId,
                 Date = createDto.Date.ToUniversalTime(), // Luôn dùng UTC cho server
                 Description = createDto.Description,
-                HangfireJobId = null // Job ID sẽ được gán bởi BackgroundService sau
+                HangfireJobId = null // Job ID sẽ được gán bởi TimeLineManager
             };
 
-            var createdTimeLine = await _timeLineRepository.CreateTimeLineAsync(newTimeLine);
+            var createdTimeLine = await _timeLineManager.CreateTimelineWithReminderAsync(newTimeLine);
 
-            // BackgroundService sẽ tự động phát hiện và lên lịch job cho timeline mới này.
+            // Chuyển đổi Entity sang Response DTO trước khi trả về
+            var responseDto = new TimelineResponseDto
+            {
+                TimeLineId = createdTimeLine.TimeLineId,
+                ConferenceId = createdTimeLine.ConferenceId,
+                Date = createdTimeLine.Date,
+                Description = createdTimeLine.Description
+            };
 
-            return CreatedAtAction(nameof(GetTimeLinesByConference), new { conferenceId = createdTimeLine.ConferenceId }, createdTimeLine);
+            // Sử dụng GetTimeLinesByConference cho CreatedAtAction
+            return CreatedAtAction(nameof(GetTimeLinesByConference), new { conferenceId = responseDto.ConferenceId }, responseDto);
         }
 
-        // PUT: api/timelines/{id}
+        /// <summary>
+        /// Cập nhật một Timeline hiện có và cập nhật nhắc nhở.
+        /// </summary>
+        /// <param name="id">ID của Timeline cần cập nhật.</param>
+        /// <param name="updateDto">Thông tin cập nhật Timeline.</param>
+        /// <returns>Không có nội dung nếu thành công.</returns>
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTimeLine(int id, [FromBody] TimeLineUpdateDto updateDto)
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateTimeline(int id, [FromForm] TimeLineUpdateDto updateDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var existingTimeLine = await _timeLineRepository.GetTimeLineByIdAsync(id);
-            if (existingTimeLine == null)
+            // Tạo entity tạm thời với dữ liệu từ DTO và ID từ URL
+            var timelineToUpdate = new TimeLine
+            {
+                TimeLineId = id, // ID từ URL
+                Date = updateDto.Date.ToUniversalTime(),
+                Description = updateDto.Description
+                // ConferenceId không được cập nhật qua UpdateDto này, nếu cần thì lấy từ existingTimeLine
+            };
+
+            var updatedTimelineEntity = await _timeLineManager.UpdateTimelineWithReminderAsync(id, timelineToUpdate);
+
+            if (updatedTimelineEntity == null)
             {
                 return NotFound();
             }
-            existingTimeLine.Date = updateDto.Date.ToUniversalTime();
-            existingTimeLine.Description = updateDto.Description;
-            existingTimeLine.HangfireJobId = null; // Đây là điểm quan trọng: Reset để background service biết cần lên lịch lại
 
-            var success = await _timeLineRepository.UpdateTimeLineAsync(existingTimeLine);
+            return NoContent();
+        }
 
-            if (!success)
+        /// <summary>
+        /// Xóa một Timeline và nhắc nhở liên quan.
+        /// </summary>
+        /// <param name="id">ID của Timeline cần xóa.</param>
+        /// <returns>Không có nội dung nếu thành công.</returns>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteTimeline(int id)
+        {
+            var result = await _timeLineManager.DeleteTimelineAndReminderAsync(id);
+            if (!result)
             {
-                return NotFound(); // Có thể xảy ra nếu có race condition
+                return NotFound();
             }
-
-            // BackgroundService sẽ tự động phát hiện sự thay đổi và cập nhật/reschedule job.
-
-            return NoContent(); // HTTP 204: Thành công và không có nội dung trả về
+            return NoContent();
         }
     }
 }

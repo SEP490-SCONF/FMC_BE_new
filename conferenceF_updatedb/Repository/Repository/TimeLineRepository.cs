@@ -1,5 +1,6 @@
 ﻿using BussinessObject.Entity;
 using DataAccess;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace Repository.Repository
     public class TimeLineRepository : ITimeLineRepository
     {
         private readonly TimeLineDAO _timeLineDAO;
+        private readonly ConferenceFTestContext _context; // Đảm bảo đã inject DbContext
 
         public TimeLineRepository(TimeLineDAO timeLineDAO)
         {
@@ -48,6 +50,18 @@ namespace Repository.Repository
 
             await _timeLineDAO.UpdateAsync(existingTimeLine);
             return true;
+        }
+        public async Task<bool> DeleteTimeLineAsync(int id)
+        {
+            var timeLine = await _context.TimeLines.FindAsync(id);
+            if (timeLine == null)
+            {
+                return false; // Không tìm thấy timeline để xóa
+            }
+
+            _context.TimeLines.Remove(timeLine);
+            await _context.SaveChangesAsync();
+            return true; // Xóa thành công
         }
     }
 }

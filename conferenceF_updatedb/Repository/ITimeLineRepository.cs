@@ -13,5 +13,7 @@ namespace Repository
         Task<TimeLine?> GetTimeLineByIdAsync(int id);
         Task<TimeLine> CreateTimeLineAsync(TimeLine timeLine);
         Task<bool> UpdateTimeLineAsync(TimeLine timeLine);
+        Task<bool> DeleteTimeLineAsync(int id);
+
     }
 }
