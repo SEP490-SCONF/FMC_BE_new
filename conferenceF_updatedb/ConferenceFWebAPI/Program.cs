@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using DataAccess;
-
+using Hangfire; // Đảm bảo có using này
+using Hangfire.SqlServer;
 
 
 using BussinessObject.Entity;
@@ -43,6 +44,15 @@ builder.Services.AddDbContext<ConferenceFTestContext>(options =>
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    // Cấu hình lưu trữ Hangfire của bạn
+    // Ví dụ với SQL Server:
+    .UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")));
+builder.Services.AddHangfireServer();
+
 // Đăng ký các service
 builder.Services.AddScoped<IEmailService, EmailService>();
 // DAO registrations
@@ -69,7 +79,7 @@ builder.Services.AddScoped<ReviewerAssignmentDAO>();
 builder.Services.AddScoped<ScheduleDAO>();
 builder.Services.AddScoped<TopicDAO>();
 builder.Services.AddScoped<UserConferenceRoleDAO>();
-
+builder.Services.AddScoped<TimeLineDAO>();
 // Add Scoped services for each repository
 // User
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -137,6 +147,8 @@ builder.Services.AddScoped<IReviewerAssignmentRepository, ReviewerAssignmentRepo
 // UserConferenceRole
 builder.Services.AddScoped<IUserConferenceRoleRepository, UserConferenceRoleRepository>();
 
+builder.Services.AddScoped<ITimeLineRepository, TimeLineRepository>();
+
 //PAYOS
 builder.Services.AddSingleton(new PayOS("295a3346-3eeb-449c-bb7b-cdbf495577ec", "a5e3d88f-3ae6-4235-b30e-e81c2b3686a2", "2a895d2b7938d4880973602f579a44043a2bc63183aa80e685ace2e9164cab5f"));
 //AddCors
@@ -195,7 +207,8 @@ builder.Services.AddAutoMapper(typeof(PaperProfile).Assembly);
 builder.Services.AddScoped<NotificationService>();
 
 builder.Services.AddScoped<IAzureBlobStorageService, AzureBlobStorageService>();
-
+builder.Services.AddScoped<HangfireReminderService>(); // Đăng ký service chứa logic job
+builder.Services.AddHostedService<TimeLineJobSchedulerService>(); // Đăng ký Background Service
 // Add services to the container.
 builder.Services.AddControllers().AddOData(opt => opt.Select().Filter().OrderBy().Expand().Count().SetMaxTop(100));
 
@@ -216,6 +229,7 @@ app.UseCors("SpecificOrigin");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseHangfireDashboard();
 
 app.MapControllers();
 // 3. Map Hub của bạn tới một endpoint

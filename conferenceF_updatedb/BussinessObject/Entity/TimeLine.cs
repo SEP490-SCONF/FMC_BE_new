@@ -8,6 +8,7 @@ public partial class TimeLine
     public int ConferenceId { get; set; }
     public DateTime Date { get; set; }
     public string? Description { get; set; }
+    public string? HangfireJobId { get; set; }
 
     public virtual Conference Conference { get; set; } = null!;
 }
