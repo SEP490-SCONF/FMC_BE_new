@@ -47,12 +47,13 @@ namespace DataAccess
         }
 
 
-        // Get conference by ID
+        // Get conference by ID (include Topics)
         public async Task<Conference> GetConferenceById(int id)
         {
             try
             {
                 return await _context.Conferences
+                                     .Include(c => c.Topics) 
                                      .AsNoTracking()
                                      .FirstOrDefaultAsync(c => c.ConferenceId == id);
             }
@@ -61,6 +62,7 @@ namespace DataAccess
                 throw new Exception($"Error occurred while retrieving conference with ID {id}.", ex);
             }
         }
+
 
         // Add a new conference
         public async Task AddConference(Conference conference)
@@ -83,16 +85,38 @@ namespace DataAccess
         // Update existing conference
         public async Task UpdateConference(Conference updatedConference)
         {
-            var existingConference = await _context.Conferences.FirstOrDefaultAsync(c => c.ConferenceId == updatedConference.ConferenceId);
+            var existingConference = await _context.Conferences
+                .Include(c => c.Topics) // ✅ Bao gồm danh sách topic hiện tại
+                .FirstOrDefaultAsync(c => c.ConferenceId == updatedConference.ConferenceId);
 
             if (existingConference == null)
             {
                 throw new Exception($"Conference with ID {updatedConference.ConferenceId} not found.");
             }
 
+            // ✅ Cập nhật các thuộc tính scalar
             _context.Entry(existingConference).CurrentValues.SetValues(updatedConference);
+
+            // ✅ Cập nhật lại các Topic mới nếu có
+            if (updatedConference.Topics != null && updatedConference.Topics.Any())
+            {
+                // Xóa liên kết cũ
+                existingConference.Topics.Clear();
+
+                // Gán lại danh sách Topic mới
+                foreach (var topic in updatedConference.Topics)
+                {
+                    var trackedTopic = await _context.Topics.FindAsync(topic.TopicId);
+                    if (trackedTopic != null)
+                    {
+                        existingConference.Topics.Add(trackedTopic);
+                    }
+                }
+            }
+
             await _context.SaveChangesAsync();
         }
+
 
 
         // Delete conference by ID

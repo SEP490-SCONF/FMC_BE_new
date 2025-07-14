@@ -14,6 +14,8 @@ namespace Repository
         List<Paper> GetPapersByConferenceId(int conferenceId);
         List<Paper> GetPapersByUserIdAndConferenceId(int userId, int conferenceId);
         List<Paper> GetPapersByConferenceIdAndStatus(int conferenceId, string status);
+        List<Paper> GetPublishedPapersByConferenceId(int conferenceId);
+
         // Có thể thêm các phương thức khác tùy theo nhu cầu của ứng dụng
         // Ví dụ: Task<IEnumerable<Paper>> GetAllPapersAsync();
     }

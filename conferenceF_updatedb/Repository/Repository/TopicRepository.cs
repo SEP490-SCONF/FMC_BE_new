@@ -45,5 +45,11 @@ namespace Repository
         //{
         //    return await _topicDao.GetTopicsByConferenceId(conferenceId);
         //}
+
+        public async Task<IEnumerable<Topic>> GetTopicsByIdsAsync(List<int> topicIds)
+        {
+            return await _topicDao.GetTopicsByIdsAsync(topicIds);
+        }
+
     }
 }

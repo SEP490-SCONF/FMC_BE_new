@@ -14,6 +14,7 @@
 
         public string? CallForPaper { get; set; }
         public bool? Status { get; set; }
+        public List<int>? TopicIds { get; set; }  // ✅ Thêm dòng này
 
 
 

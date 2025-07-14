@@ -45,7 +45,7 @@ namespace Repository.Repository
             // Repository chỉ ủy quyền công việc cho DAO
             return await _dao.UpdateConferenceRoleForUser(userId, conferenceId, newConferenceRoleId);
         }
-        public async Task<IEnumerable<User>> GetUsersByConferenceIdAndRolesAsync(int conferenceId, List<int> roleIds)
+        public async Task<IEnumerable<UserConferenceRole>> GetUsersByConferenceIdAndRolesAsync(int conferenceId, List<int> roleIds)
         {
             return await _dao.GetUsersByConferenceIdAndRoles(conferenceId, roleIds);
         }

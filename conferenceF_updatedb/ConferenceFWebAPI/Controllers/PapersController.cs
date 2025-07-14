@@ -312,5 +312,19 @@ namespace ConferenceFWebAPI.Controllers
             var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
             return Ok(paperDtos);
         }
+
+        [HttpGet("conference/{conferenceId}/published")]
+        [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetPublishedPapers(int conferenceId)
+        {
+            var papers = _paperRepository.GetPublishedPapersByConferenceId(conferenceId);
+            if (papers == null || !papers.Any())
+                return NotFound($"No published papers found for conference ID: {conferenceId}");
+
+            var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
+            return Ok(paperDtos);
+        }
+
     }
 }

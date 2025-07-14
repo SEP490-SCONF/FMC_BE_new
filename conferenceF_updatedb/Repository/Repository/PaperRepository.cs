@@ -58,6 +58,11 @@ namespace Repository
         {
             return _paperDAO.GetPapersByConferenceIdAndStatus(conferenceId, status);
         }
+        public List<Paper> GetPublishedPapersByConferenceId(int conferenceId)
+        {
+            return _paperDAO.GetPublishedPapersByConferenceId(conferenceId);
+        }
+
 
     }
 }

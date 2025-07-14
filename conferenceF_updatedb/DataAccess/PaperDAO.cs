@@ -75,6 +75,22 @@ namespace DataAccess
                 .ToList();
         }
 
+        public List<Paper> GetPublishedPapersByConferenceId(int conferenceId)
+        {
+            return _context.Papers
+                .Where(p => p.ConferenceId == conferenceId
+                            && p.IsPublished == true
+                            && p.Status != "Deleted")
+                .Include(p => p.Topic)
+                .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author)
+                .Include(p => p.PaperRevisions
+                    .Where(pr => pr.Status == "Accepted"))
+                .ToList();
+        }
+
+
+
 
     }
 }

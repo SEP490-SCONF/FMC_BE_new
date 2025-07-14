@@ -155,6 +155,8 @@ namespace ConferenceFWebAPI
     .ForMember(dest => dest.CreatedAt,
         opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt ?? DateTime.MinValue, DateTimeKind.Unspecified)));
 
+            CreateMap<Conference, ConferenceResponseDTO>()
+    .ForMember(dest => dest.Topics, opt => opt.MapFrom(src => src.Topics));
 
 
 
