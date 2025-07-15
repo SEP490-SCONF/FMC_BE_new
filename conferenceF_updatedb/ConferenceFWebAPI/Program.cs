@@ -189,6 +189,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     // Cấu hình định dạng DateTime
     options.JsonSerializerOptions.Converters.Add(new CustomDateTimeConverter());
     });
+builder.Services.AddHttpClient();
 
 //AddAuthentication
 

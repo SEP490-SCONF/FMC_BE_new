@@ -26,6 +26,7 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IConferenceRoleRepository _conferenceRoleRepository;
         private readonly IEmailService _emailService;
         private readonly IWebHostEnvironment _env;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         public PapersController(
             IPaperRepository paperRepository,
@@ -38,7 +39,8 @@ namespace ConferenceFWebAPI.Controllers
             IConferenceRepository conferenceRepository,
             IConferenceRoleRepository conferenceRoleRepository,
             IEmailService emailService,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env,
+            IHttpClientFactory httpClientFactory)
         {
             _paperRepository = paperRepository;
             _azureBlobStorageService = azureBlobStorageService;
@@ -51,6 +53,7 @@ namespace ConferenceFWebAPI.Controllers
             _conferenceRoleRepository = conferenceRoleRepository;
             _emailService = emailService;
             _env = env;
+            _httpClientFactory = httpClientFactory;
         }
 
         [HttpGet("conference/{conferenceId}")]
@@ -108,11 +111,19 @@ namespace ConferenceFWebAPI.Controllers
             if (!paperDto.AuthorIds.Contains(uploaderUserId))
                 return BadRequest($"User ID {uploaderUserId} must be one of the provided Author IDs.");
 
+            // ADDED: Sử dụng MemoryStream để có thể đọc file nhiều lần
+            await using var memoryStream = new MemoryStream();
+            await paperDto.PdfFile.CopyToAsync(memoryStream);
+
             try
             {
                 var paperContainerName = _configuration.GetValue<string>("BlobContainers:Papers");
                 if (string.IsNullOrEmpty(paperContainerName))
                     return StatusCode(500, "Blob storage container name is not configured.");
+
+                // CHANGED: Upload từ MemoryStream
+                memoryStream.Position = 0;
+
 
                 string fileUrl = await _azureBlobStorageService.UploadFileAsync(paperDto.PdfFile, paperContainerName);
 
@@ -140,6 +151,50 @@ namespace ConferenceFWebAPI.Controllers
                     SubmittedAt = DateTime.UtcNow // Sử dụng DateTime.UtcNow thay vì DateTime.Now
                 };
                 await _paperRevisionRepository.AddPaperRevisionAsync(initialRevision);
+
+                // --- ADDED: GỌI N8N ĐỂ KIỂM TRA ĐẠO VĂN ---
+                string plagiarismResult = "Check pending";
+                try
+                {
+                    var n8nWebhookUrl = _configuration["N8nWebhookUrl"];
+                    if (!string.IsNullOrEmpty(n8nWebhookUrl))
+                    {
+                        var client = _httpClientFactory.CreateClient();
+
+                        // Reset vị trí của stream để gửi cho n8n
+                        memoryStream.Position = 0;
+
+                        using var multipartContent = new MultipartFormDataContent();
+                        multipartContent.Add(new StreamContent(memoryStream), "data", paperDto.PdfFile.FileName);
+
+                        // Gửi PaperId để n8n có thể định danh bài báo khi xử lý
+                        var response = await client.PostAsync($"{n8nWebhookUrl}?scanId={paper.PaperId}", multipartContent);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            plagiarismResult = await response.Content.ReadAsStringAsync();
+                            Console.WriteLine($"n8n plagiarism check for PaperId {paper.PaperId} succeeded. Result: {plagiarismResult}");
+                            // TODO: Lưu kết quả đạo văn vào database
+                            // Ví dụ: paper.PlagiarismScore = ...; await _paperRepository.UpdatePaperAsync(paper);
+                        }
+                        else
+                        {
+                            plagiarismResult = "Check failed";
+                            Console.WriteLine($"Error calling n8n workflow for PaperId {paper.PaperId}. Status: {response.StatusCode}. Details: {await response.Content.ReadAsStringAsync()}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("N8nWebhookUrl is not configured. Skipping plagiarism check.");
+                        plagiarismResult = "Check skipped: Not configured.";
+                    }
+                }
+                catch (Exception n8nEx)
+                {
+                    Console.WriteLine($"An exception occurred while calling n8n for PaperId {paper.PaperId}: {n8nEx.Message}");
+                    plagiarismResult = "Check failed due to an exception.";
+                }
+                // --- KẾT THÚC PHẦN GỌI N8N ---
 
                 int conferenceId = paper.ConferenceId;
                 int newRoleId = 2; // Role = 2
@@ -224,7 +279,8 @@ namespace ConferenceFWebAPI.Controllers
                     Message = "File uploaded and paper + revision saved. Roles updated.",
                     FileUrl = fileUrl,
                     PaperId = paper.PaperId,
-                    RevisionId = initialRevision.RevisionId
+                    RevisionId = initialRevision.RevisionId,
+                    PlagiarismCheckStatus = plagiarismResult
                 });
             }
             catch (Exception ex)
