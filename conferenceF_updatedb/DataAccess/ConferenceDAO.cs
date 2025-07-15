@@ -22,7 +22,7 @@ namespace DataAccess
             try
             {
                 return await _context.Conferences
-                                     .Where(c => c.Status == true)
+                                     //.Where(c => c.Status == true)
                                      .AsNoTracking()
                                      .ToListAsync();
             }

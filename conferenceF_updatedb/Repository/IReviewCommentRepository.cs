@@ -7,5 +7,6 @@ namespace Repository
     public interface IReviewCommentRepository : IRepositoryBase<ReviewComment>
     {
         Task<IEnumerable<ReviewComment>> GetByReviewId(int reviewId);
+        Task<ReviewComment> GetByHighlightId(int highlightId);
     }
 }

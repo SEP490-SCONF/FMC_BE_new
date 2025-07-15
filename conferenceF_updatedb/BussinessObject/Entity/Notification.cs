@@ -16,6 +16,8 @@ public partial class Notification
     public string? RoleTarget { get; set; }
 
     public DateTime? CreatedAt { get; set; }
+    public int? UserConferenceRoleId { get; set; }
+    public virtual UserConferenceRole? UserConferenceRole { get; set; }
 
     public virtual ICollection<NotificationStatus> NotificationStatuses { get; set; } = new List<NotificationStatus>();
 

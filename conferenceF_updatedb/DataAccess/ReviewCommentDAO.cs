@@ -83,7 +83,20 @@ namespace DataAccess
                 throw new Exception($"Error updating review comment with ID {comment.CommentId}.", ex);
             }
         }
-
+        public async Task<ReviewComment> GetByHighlightId(int highlightId)
+        {
+            try
+            {
+                return await _context.ReviewComments
+                    .Where(rc => rc.HighlightId == highlightId)  // Lọc theo HighlightId
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();  // Trả về comment đầu tiên, nếu có
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving comment for highlight ID {highlightId}.", ex);
+            }
+        }
         public async Task Delete(int id)
         {
             try

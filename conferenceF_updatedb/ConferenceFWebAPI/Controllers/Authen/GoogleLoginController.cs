@@ -61,6 +61,13 @@ namespace ConferenceFWebAPI.Controllers.Authen
                     await _userRepository.Add(user);
                     isNew = true;
                 }
+                else
+                {
+                    // Update 3 trường nếu có giá trị mới
+                    user.Email = payload.Email;
+                    user.Name = payload.Name;
+                    user.AvatarUrl = payload.Picture;
+                }
                 // 3. Cập nhật refresh token
                 user.RefreshToken = GenerateRefreshToken();
                 user.TokenExpiry = DateTime.UtcNow.AddDays(7);

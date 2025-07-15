@@ -72,9 +72,9 @@ namespace ConferenceFWebAPI
             //.ForMember(dest => dest.CommentsList, opt => opt.MapFrom(src => src.ReviewComments))
             .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.ReviewComments))
 
-            .ForMember(dest => dest.Paper, opt => opt.MapFrom(src => src.Paper)); 
+            .ForMember(dest => dest.Paper, opt => opt.MapFrom(src => src.Paper));
 
-
+            CreateMap<Review, ReviewDTO>();
             CreateMap<AddReviewDTO, Review>();
             CreateMap<AddReviewWithHighlightAndCommentDTO, Review>();
 
@@ -97,6 +97,8 @@ namespace ConferenceFWebAPI
                     )
                 );
 
+            CreateMap<AddOrUpdateTopicDTO, Topic>()
+    .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.TopicName));
 
 
             CreateMap<ReviewerAssignment, ReviewerAssignmentDTO>()

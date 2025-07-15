@@ -4,6 +4,7 @@ using BussinessObject.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BussinessObject.Migrations
 {
     [DbContext(typeof(ConferenceFTestContext))]
-    partial class ConferenceFTestContextModelSnapshot : ModelSnapshot
+    [Migration("20250707113841_AddHighlightArea")]
+    partial class AddHighlightArea
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -162,13 +165,8 @@ namespace BussinessObject.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<int?>("UserConferenceRoleId")
-                        .HasColumnType("int");
-
                     b.HasKey("CertificateId")
                         .HasName("PK__Certific__BBF8A7C17F0C82A8");
-
-                    b.HasIndex("UserConferenceRoleId");
 
                     b.HasIndex(new[] { "RegId" }, "UQ_Certificate_Reg")
                         .IsUnique();
@@ -387,16 +385,11 @@ namespace BussinessObject.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("UserConferenceRoleId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("NotiId")
                         .HasName("PK__Notifica__EDC08E92567D61C6");
-
-                    b.HasIndex("UserConferenceRoleId");
 
                     b.HasIndex("UserId");
 
@@ -966,34 +959,6 @@ namespace BussinessObject.Migrations
                     b.ToTable("Schedule", (string)null);
                 });
 
-            modelBuilder.Entity("BussinessObject.Entity.TimeLine", b =>
-                {
-                    b.Property<int>("TimeLineId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TimeLineId"));
-
-                    b.Property<int>("ConferenceId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("HangfireJobId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("TimeLineId");
-
-                    b.HasIndex("ConferenceId");
-
-                    b.ToTable("TimeLine", (string)null);
-                });
-
             modelBuilder.Entity("BussinessObject.Entity.Topic", b =>
                 {
                     b.Property<int>("TopicId")
@@ -1203,14 +1168,7 @@ namespace BussinessObject.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Certificate_Registration");
 
-                    b.HasOne("BussinessObject.Entity.UserConferenceRole", "UserConferenceRole")
-                        .WithMany()
-                        .HasForeignKey("UserConferenceRoleId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("Reg");
-
-                    b.Navigation("UserConferenceRole");
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.Conference", b =>
@@ -1267,19 +1225,12 @@ namespace BussinessObject.Migrations
 
             modelBuilder.Entity("BussinessObject.Entity.Notification", b =>
                 {
-                    b.HasOne("BussinessObject.Entity.UserConferenceRole", "UserConferenceRole")
-                        .WithMany()
-                        .HasForeignKey("UserConferenceRoleId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("BussinessObject.Entity.User", "User")
                         .WithMany("Notifications")
                         .HasForeignKey("UserId")
                         .HasConstraintName("FK__Notificat__UserI__282DF8C2");
 
                     b.Navigation("User");
-
-                    b.Navigation("UserConferenceRole");
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.NotificationStatus", b =>
@@ -1554,17 +1505,6 @@ namespace BussinessObject.Migrations
                     b.Navigation("Presenter");
                 });
 
-            modelBuilder.Entity("BussinessObject.Entity.TimeLine", b =>
-                {
-                    b.HasOne("BussinessObject.Entity.Conference", "Conference")
-                        .WithMany("TimeLines")
-                        .HasForeignKey("ConferenceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Conference");
-                });
-
             modelBuilder.Entity("BussinessObject.Entity.User", b =>
                 {
                     b.HasOne("BussinessObject.Entity.Role", "Role")
@@ -1658,8 +1598,6 @@ namespace BussinessObject.Migrations
                     b.Navigation("Registrations");
 
                     b.Navigation("Schedules");
-
-                    b.Navigation("TimeLines");
 
                     b.Navigation("UserConferenceRoles");
                 });
