@@ -216,7 +216,8 @@ builder.Services.AddScoped<NotificationService>();
 
 builder.Services.AddScoped<IAzureBlobStorageService, AzureBlobStorageService>();
 builder.Services.AddScoped<HangfireReminderService>(); // Đăng ký service chứa logic job
-builder.Services.AddScoped<TimeLineManager>(); 
+builder.Services.AddScoped<TimeLineManager>();
+builder.Services.AddScoped<PaperDeadlineService>();
 
 
 // Add services to the container.

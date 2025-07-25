@@ -9,6 +9,7 @@ namespace Repository
 {
     public interface ITimeLineRepository
     {
+
         Task<List<TimeLine>> GetTimeLinesByConferenceAsync(int conferenceId);
         Task<TimeLine?> GetTimeLineByIdAsync(int id);
         Task<TimeLine> CreateTimeLineAsync(TimeLine timeLine);

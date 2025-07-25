@@ -15,6 +15,10 @@ namespace Repository
             _paperDAO = paperDAO;
         }
 
+         public async Task<Paper?> GetPaperWithConferenceAndTimelinesAsync(int paperId)
+        {
+            return await _paperDAO.GetPaperWithConferenceAndTimelinesAsync(paperId);
+        }
         public IQueryable<Paper> GetAllPapers()
         {
             return _paperDAO.GetAllPapers();

@@ -16,6 +16,13 @@ namespace DataAccess
             _context = context;
         }
 
+        public async Task<Paper?> GetPaperWithConferenceAndTimelinesAsync(int paperId)
+        {
+            return await _context.Papers
+                                 .Include(p => p.Conference)
+                                     .ThenInclude(c => c.TimeLines)
+                                 .FirstOrDefaultAsync(p => p.PaperId == paperId);
+        }
         public List<Paper> GetPapersByConferenceId(int conferenceId)
         {
             return _context.Papers

@@ -26,6 +26,8 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IConferenceRoleRepository _conferenceRoleRepository;
         private readonly IEmailService _emailService;
         private readonly IWebHostEnvironment _env;
+        private readonly PaperDeadlineService _paperDeadlineService; // THÊM CÁI NÀY
+        private readonly ITimeLineRepository _timeLineRepository;
 
         public PapersController(
             IPaperRepository paperRepository,
@@ -38,7 +40,10 @@ namespace ConferenceFWebAPI.Controllers
             IConferenceRepository conferenceRepository,
             IConferenceRoleRepository conferenceRoleRepository,
             IEmailService emailService,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env,
+            PaperDeadlineService paperDeadlineService, // THÊM VÀO CONSTRUCTOR
+            ITimeLineRepository timeLineRepository)
+
         {
             _paperRepository = paperRepository;
             _azureBlobStorageService = azureBlobStorageService;
@@ -51,6 +56,9 @@ namespace ConferenceFWebAPI.Controllers
             _conferenceRoleRepository = conferenceRoleRepository;
             _emailService = emailService;
             _env = env;
+            _paperDeadlineService = paperDeadlineService; // GÁN
+            _timeLineRepository = timeLineRepository; // GÁN
+
         }
 
         [HttpGet("conference/{conferenceId}")]
@@ -131,7 +139,8 @@ namespace ConferenceFWebAPI.Controllers
                     }).ToList();
 
                 await _paperRepository.AddPaperAsync(paper);
-
+                // THÊM LỜI GỌI ĐẾN PAPERDEADLINESERVICE
+                await _paperDeadlineService.SchedulePaperReminders(paper.PaperId);
                 var initialRevision = new PaperRevision
                 {
                     PaperId = paper.PaperId,
@@ -261,17 +270,37 @@ namespace ConferenceFWebAPI.Controllers
         [HttpPut("mark-as-deleted/{paperId}")]
         public async Task<IActionResult> MarkPaperAsDeleted(int paperId)
         {
-            var paper = await _paperRepository.GetPaperByIdAsync(paperId);
+            // Để hủy job Hangfire, chúng ta cần truy vấn Paper với thông tin Conference và TimeLines
+            // Điều này yêu cầu một phương thức repository mới nếu chưa có, ví dụ: GetPaperWithConferenceAndTimelinesAsync
+            var paper = await _paperRepository.GetPaperWithConferenceAndTimelinesAsync(paperId);
             if (paper == null) return NotFound("Paper not found.");
 
             try
             {
                 paper.Status = "Deleted";
                 await _paperRepository.UpdatePaperAsync(paper);
-                return Ok($"Paper with ID {paperId} marked as 'Deleted'.");
+
+                // THÊM: Hủy các job Hangfire liên quan đến các timeline của hội thảo này
+                // nếu bài báo bị xóa (hoặc "soft-deleted")
+                if (paper.Conference != null && paper.Conference.TimeLines != null)
+                {
+                    foreach (var timeline in paper.Conference.TimeLines)
+                    {
+                        if (!string.IsNullOrEmpty(timeline.HangfireJobId))
+                        {
+                            _paperDeadlineService.CancelScheduledReminder(timeline.HangfireJobId);
+                            // Xóa HangfireJobId khỏi DB để tránh nhầm lẫn
+                            timeline.HangfireJobId = null;
+                            await _timeLineRepository.UpdateTimeLineAsync(timeline); // Cập nhật TimeLine trong DB
+                        }
+                    }
+                }
+
+                return Ok($"Paper with ID {paperId} marked as 'Deleted' and associated reminders cancelled.");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error marking paper as deleted: {ex.ToString()}");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
