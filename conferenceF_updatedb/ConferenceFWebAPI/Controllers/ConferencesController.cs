@@ -9,6 +9,7 @@ using Google.Apis.Drive.v3.Data;
 using DataAccess;
 using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.Conferences;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace FMC_BE.Controllers
 {
@@ -41,6 +42,7 @@ namespace FMC_BE.Controllers
 
         // GET: api/Conference
         [HttpGet]
+        [EnableQuery]
         public async Task<ActionResult<IEnumerable<ConferenceResponseDTO>>> GetAll()
         {
             var conferences = await _conferenceRepository.GetAll();
