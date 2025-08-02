@@ -164,22 +164,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("SpecificOrigin", build =>
     {
-        build.WithOrigins("http://localhost:5173")
+        build.WithOrigins("http://localhost:5173", "http://localhost:5174")
              .AllowAnyMethod()
              .AllowAnyHeader()
              .AllowCredentials();
     });
 });
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("SpecificOrigin", build =>
-//    {
-//        build.WithOrigins("http://localhost:5174")
-//             .AllowAnyMethod()
-//             .AllowAnyHeader()
-//             .AllowCredentials();
-//    });
-//});
+
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
