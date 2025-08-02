@@ -12,6 +12,8 @@ namespace Repository
         Task DeletePaperRevisionAsync(int revisionId);
         Task<IEnumerable<PaperRevision>> GetRevisionsByPaperIdAsync(int paperId);
         List<PaperRevision> GetPaperRevisionsByPaperId(int paperId);
+        Task<string?> GetAcceptedFilePathByPaperIdAsync(int paperId);
+
 
     }
 }

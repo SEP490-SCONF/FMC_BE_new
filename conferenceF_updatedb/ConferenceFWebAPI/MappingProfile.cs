@@ -6,6 +6,7 @@ using ConferenceFWebAPI.DTOs.ConferenceTopics;
 using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.PaperRevisions;
 using ConferenceFWebAPI.DTOs.Papers;
+using ConferenceFWebAPI.DTOs.Proccedings;
 using ConferenceFWebAPI.DTOs.ReviewComments;
 using ConferenceFWebAPI.DTOs.ReviewerAssignments;
 using ConferenceFWebAPI.DTOs.ReviewHightlights;
@@ -160,6 +161,9 @@ namespace ConferenceFWebAPI
             CreateMap<Conference, ConferenceResponseDTO>()
     .ForMember(dest => dest.Topics, opt => opt.MapFrom(src => src.Topics));
 
+            CreateMap<Proceeding, ProceedingResponseDto>()
+    .ForMember(dest => dest.PublishedByName, opt => opt.MapFrom(src => src.PublishedByNavigation.Name));
+            CreateMap<ProceedingCreateDto, Proceeding>().ForMember(dest => dest.FilePath, opt => opt.Ignore());
 
 
         }
