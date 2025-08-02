@@ -7,6 +7,10 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using DataAccess;
 using ConferenceFWebAPI.Configurations;
+using Hangfire; // Đảm bảo có using này
+using Hangfire.SqlServer;
+
+
 using BussinessObject.Entity;
 using ConferenceFWebAPI.Service;
 using Repository.Repository;
@@ -34,12 +38,29 @@ builder.Services.AddControllers().AddOData(
 
 // 2. Thêm dịch vụ SignalR và kết nối với Azure SignalR Service
 builder.Services.AddSignalR().AddAzureSignalR(signalRConnectionString);
+builder.Services.AddSignalR()
+    .AddAzureSignalR(builder.Configuration["Azure:SignalR:ConnectionString"]);
 
 builder.Services.AddDbContext<ConferenceFTestContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 // Cấu hình EmailSettings từ appsettings.json
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddTransient<ConferenceFWebAPI.Service.HangfireReminderService>();
+
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_170) // Hoặc phiên bản mới nhất
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection"), new Hangfire.SqlServer.SqlServerStorageOptions
+    {
+        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+        QueuePollInterval = TimeSpan.FromSeconds(15),
+        UseRecommendedIsolationLevel = true,
+        DisableGlobalLocks = true
+    }));
+builder.Services.AddHangfireServer();
 
 // Đăng ký các service
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -67,7 +88,7 @@ builder.Services.AddScoped<ReviewerAssignmentDAO>();
 builder.Services.AddScoped<ScheduleDAO>();
 builder.Services.AddScoped<TopicDAO>();
 builder.Services.AddScoped<UserConferenceRoleDAO>();
-
+builder.Services.AddScoped<TimeLineDAO>();
 // Add Scoped services for each repository
 // User
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -149,7 +170,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("SpecificOrigin", build =>
     {
-        build.WithOrigins("http://localhost:5173")
+        build.WithOrigins("http://localhost:5173", "http://localhost:5174")
              .AllowAnyMethod()
              .AllowAnyHeader()
              .AllowCredentials();
@@ -190,6 +211,9 @@ builder.Services.AddAutoMapper(typeof(PaperProfile).Assembly);
 builder.Services.AddScoped<NotificationService>();
 
 builder.Services.AddScoped<IAzureBlobStorageService, AzureBlobStorageService>();
+builder.Services.AddScoped<HangfireReminderService>(); // Đăng ký service chứa logic job
+builder.Services.AddScoped<TimeLineManager>(); 
+
 
 // Add services to the container.
 builder.Services.AddControllers().AddOData(opt => opt.Select().Filter().OrderBy().Expand().Count().SetMaxTop(100));
@@ -211,9 +235,8 @@ app.UseCors("SpecificOrigin");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseHangfireDashboard();
 app.MapControllers();
 // 3. Map Hub của bạn tới một endpoint
-app.MapHub<NotificationHub>("/notificationhub"); // Client sẽ kết nối tới URL này
 
 app.Run();
