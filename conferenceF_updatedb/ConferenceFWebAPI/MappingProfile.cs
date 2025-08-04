@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
+using ConferenceFWebAPI.DTOs.CallForPapers;
 using ConferenceFWebAPI.DTOs.Conferences;
 using ConferenceFWebAPI.DTOs.ConferenceTopics;
 using ConferenceFWebAPI.DTOs.Paper;
@@ -53,7 +54,15 @@ namespace ConferenceFWebAPI
            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<Topic, TopicDTO>();
             CreateMap<TopicDTO, Topic>();
-            CreateMap<Paper, PaperResponseDto>(); // <-- Thêm dòng này
+            CreateMap<Paper, PaperResponseDto>()
+                .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.TopicName))
+                .ForMember(dest => dest.Authors, opt => opt.MapFrom(src => src.PaperAuthors));
+
+            CreateMap<PaperAuthor, AuthorDto>()
+    .ForMember(dest => dest.AuthorId, opt => opt.MapFrom(src => src.AuthorId))
+    .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.Author.Name))
+    .ForMember(dest => dest.AuthorOrder, opt => opt.MapFrom(src => src.AuthorOrder));
+
             CreateMap<PaperRevisionUploadDto, PaperRevision>()
                            .ForMember(dest => dest.FilePath, opt => opt.Ignore()) // FilePath sẽ được xử lý riêng bởi Azure Blob Service
                            .ForMember(dest => dest.Status, opt => opt.Ignore()) // Status sẽ được gán trong controller
@@ -164,6 +173,8 @@ namespace ConferenceFWebAPI
             CreateMap<Proceeding, ProceedingResponseDto>()
     .ForMember(dest => dest.PublishedByName, opt => opt.MapFrom(src => src.PublishedByNavigation.Name));
             CreateMap<ProceedingCreateDto, Proceeding>().ForMember(dest => dest.FilePath, opt => opt.Ignore());
+
+            CreateMap<CallForPaper, CallForPaperDto>();
 
 
         }

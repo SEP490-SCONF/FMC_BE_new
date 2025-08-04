@@ -20,6 +20,9 @@ namespace DataAccess
         {
             return _context.Papers
                            .Where(p => p.ConferenceId == conferenceId)
+                           .Include(p => p.Topic)
+                           .Include(p => p.PaperAuthors)
+            .ThenInclude(pa => pa.Author)
                            .ToList();
         }
         public IQueryable<Paper> GetAllPapers()
@@ -27,10 +30,16 @@ namespace DataAccess
             return _context.Papers.Where(p => p.Status != "Deleted").AsQueryable();
         }
 
+        // PaperDAO.cs
         public async Task<Paper> GetByIdAsync(int id)
         {
-            return await _context.Papers.FindAsync(id);
+            return await _context.Papers
+                .Include(p => p.Topic)
+                .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author) 
+                .FirstOrDefaultAsync(p => p.PaperId == id);
         }
+
 
         public async Task AddAsync(Paper entity)
         {

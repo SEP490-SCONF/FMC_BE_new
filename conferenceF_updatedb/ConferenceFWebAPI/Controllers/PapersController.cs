@@ -54,6 +54,8 @@ namespace ConferenceFWebAPI.Controllers
         }
 
         [HttpGet("conference/{conferenceId}")]
+        [EnableQuery]
+
         [ProducesResponseType(typeof(List<PaperResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetPapersByConference(int conferenceId)
@@ -62,9 +64,12 @@ namespace ConferenceFWebAPI.Controllers
             if (papers == null || !papers.Any())
                 return NotFound($"No papers found for conference ID: {conferenceId}");
 
-            var paperDto = _mapper.Map<List<PaperResponseDto>>(papers);
+            //var paperDto = _mapper.Map<List<PaperResponseDto>>(papers);
+            var paperDto = _mapper.Map<List<PaperResponseDto>>(papers).AsQueryable();
+
             return Ok(paperDto);
         }
+
         [HttpGet("conference/{conferenceId}/status/submitted")]
         [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -325,6 +330,8 @@ namespace ConferenceFWebAPI.Controllers
             var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
             return Ok(paperDtos);
         }
+
+
 
     }
 }

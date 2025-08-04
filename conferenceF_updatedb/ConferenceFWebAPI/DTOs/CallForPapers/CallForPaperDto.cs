@@ -1,4 +1,6 @@
-﻿namespace ConferenceFWebAPI.DTOs.CallForPapers
+﻿using ConferenceFWebAPI.DTOs.Conferences;
+
+namespace ConferenceFWebAPI.DTOs.CallForPapers
 {
     public class CallForPaperDto
     {
@@ -8,5 +10,7 @@
         public DateTime? Deadline { get; set; }
         public string? TemplatePath { get; set; } 
         public DateTime? CreatedAt { get; set; }
+        public ConferenceResponseDTO? Conference { get; set; }
+
     }
 }

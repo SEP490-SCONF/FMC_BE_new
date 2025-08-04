@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Repository;
 using BussinessObject.Entity; // Thêm namespace cho Entity
 using Microsoft.Extensions.Configuration; // Thêm để đọc config
+using AutoMapper;
 
 namespace ConferenceFWebAPI.Controllers.CallForPaper
 {
@@ -15,15 +16,20 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
         private readonly ICallForPaperRepository _callForPaperRepository;
         private readonly IAzureBlobStorageService _azureBlobStorageService;
         private readonly IConfiguration _configuration;
+        private readonly IMapper _mapper;
+
 
         public CallForPaperController(
             ICallForPaperRepository callForPaperRepository,
             IAzureBlobStorageService azureBlobStorageService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IMapper mapper)
         {
             _callForPaperRepository = callForPaperRepository;
             _azureBlobStorageService = azureBlobStorageService;
             _configuration = configuration;
+            _mapper = mapper;
+
         }
 
         // GET: api/CallForPaper
@@ -32,16 +38,8 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
         public async Task<ActionResult<IEnumerable<CallForPaperDto>>> GetCallForPapers()
         {
             var callForPapers = await _callForPaperRepository.GetAllCallForPapers();
-            var callForPaperDtos = callForPapers.Select(cf => new CallForPaperDto
-            {
-                Cfpid = cf.Cfpid,
-                ConferenceId = cf.ConferenceId,
-                Description = cf.Description,
-                Deadline = cf.Deadline,
-                TemplatePath = cf.TemplatePath,
-                CreatedAt = cf.CreatedAt
-            }).ToList();
-            return Ok(callForPaperDtos);
+            var result = _mapper.Map<IEnumerable<CallForPaperDto>>(callForPapers);
+            return Ok(result);
         }
 
         // GET: api/CallForPaper/5
@@ -52,19 +50,10 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
         {
             var callForPaper = await _callForPaperRepository.GetCallForPaperById(id);
             if (callForPaper == null)
-            {
                 return NotFound();
-            }
-            var callForPaperDto = new CallForPaperDto
-            {
-                Cfpid = callForPaper.Cfpid,
-                ConferenceId = callForPaper.ConferenceId,
-                Description = callForPaper.Description,
-                Deadline = callForPaper.Deadline,
-                TemplatePath = callForPaper.TemplatePath,
-                CreatedAt = callForPaper.CreatedAt
-            };
-            return Ok(callForPaperDto);
+
+            var result = _mapper.Map<CallForPaperDto>(callForPaper);
+            return Ok(result);
         }
 
         // GET: api/CallForPaper/byconference/1
@@ -74,23 +63,8 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
         public async Task<ActionResult<IEnumerable<CallForPaperDto>>> GetCallForPapersByConferenceId(int conferenceId)
         {
             var callForPapers = await _callForPaperRepository.GetCallForPapersByConferenceId(conferenceId);
-
-            if (callForPapers == null || !callForPapers.Any())
-            {
-                return NotFound($"Không tìm thấy CallForPaper nào cho ConferenceId: {conferenceId}");
-            }
-            
-            var callForPaperDtos = callForPapers.Select(cf => new CallForPaperDto
-            {
-                Cfpid = cf.Cfpid,
-                ConferenceId = cf.ConferenceId,
-                Description = cf.Description,
-                Deadline = cf.Deadline,
-                TemplatePath = cf.TemplatePath,
-                CreatedAt = cf.CreatedAt
-            }).ToList();
-
-            return Ok(callForPaperDtos);
+            var result = _mapper.Map<IEnumerable<CallForPaperDto>>(callForPapers);
+            return Ok(result);
         }
 
 
