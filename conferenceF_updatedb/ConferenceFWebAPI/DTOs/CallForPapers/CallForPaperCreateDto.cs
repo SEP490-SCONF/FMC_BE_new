@@ -10,6 +10,8 @@ namespace ConferenceFWebAPI.DTOs.CallForPapers
         public string? Description { get; set; }
 
         public DateTime? Deadline { get; set; }
+        public bool Status { get; set; } 
+
 
         public IFormFile? TemplateFile { get; set; } 
 

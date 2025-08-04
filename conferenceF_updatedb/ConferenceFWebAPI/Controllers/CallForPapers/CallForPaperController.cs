@@ -103,7 +103,8 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
                     Description = createDto.Description,
                     Deadline = createDto.Deadline,
                     TemplatePath = templateUrl, // Lưu URL từ Azure
-                    Status = true,
+                    Status = createDto.Status, 
+
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -168,7 +169,9 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
                 existingCallForPaper.ConferenceId = updateDto.ConferenceId;
                 existingCallForPaper.Description = updateDto.Description;
                 existingCallForPaper.Deadline = updateDto.Deadline;
-                
+                existingCallForPaper.Status = updateDto.Status; 
+
+
                 await _callForPaperRepository.UpdateCallForPaper(existingCallForPaper);
             }
             catch (DbUpdateConcurrencyException)

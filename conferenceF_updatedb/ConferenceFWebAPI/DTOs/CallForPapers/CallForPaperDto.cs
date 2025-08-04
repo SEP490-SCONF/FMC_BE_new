@@ -8,6 +8,8 @@ namespace ConferenceFWebAPI.DTOs.CallForPapers
         public int ConferenceId { get; set; }
         public string? Description { get; set; }
         public DateTime? Deadline { get; set; }
+        public bool Status { get; set; }
+
         public string? TemplatePath { get; set; } 
         public DateTime? CreatedAt { get; set; }
         public ConferenceResponseDTO? Conference { get; set; }
