@@ -7,7 +7,8 @@ namespace Repository
     public interface IPaperRepository
     {
         IQueryable<Paper> GetAllPapers();
-        Task<Paper> GetPaperByIdAsync(int paperId);
+        Task<Paper?> GetPaperByIdAsync(int paperId);
+        Task<Paper?> GetPaperByIdWithIncludesAsync(int paperId);
         Task AddPaperAsync(Paper paper);
         Task UpdatePaperAsync(Paper paper);
         Task DeletePaperAsync(int paperId);

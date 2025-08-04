@@ -47,22 +47,54 @@ builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<ConferenceFWebAPI.Service.HangfireReminderService>();
 
-builder.Services.AddHangfire(configuration => configuration
-    .SetDataCompatibilityLevel(CompatibilityLevel.Version_170) // Hoặc phiên bản mới nhất
-    .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
-    .UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection"), new Hangfire.SqlServer.SqlServerStorageOptions
+// Cấu hình Hangfire với try-catch để tránh crash khi không có database
+try
+{
+    var hangfireConnectionString = builder.Configuration.GetConnectionString("HangfireConnection") 
+                                 ?? builder.Configuration.GetConnectionString("DefaultConnection");
+    
+    if (!string.IsNullOrEmpty(hangfireConnectionString))
     {
-        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
-        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
-        QueuePollInterval = TimeSpan.FromSeconds(15),
-        UseRecommendedIsolationLevel = true,
-        DisableGlobalLocks = true
-    }));
-builder.Services.AddHangfireServer();
+        builder.Services.AddHangfire(configuration => configuration
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseSqlServerStorage(hangfireConnectionString, new Hangfire.SqlServer.SqlServerStorageOptions
+            {
+                CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+                SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                QueuePollInterval = TimeSpan.FromSeconds(15),
+                UseRecommendedIsolationLevel = true,
+                DisableGlobalLocks = true,
+                PrepareSchemaIfNecessary = true
+            }));
+        builder.Services.AddHangfireServer();
+        Console.WriteLine("Hangfire configured successfully.");
+    }
+    else
+    {
+        Console.WriteLine("No Hangfire connection string found. Hangfire disabled.");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Hangfire configuration failed: {ex.Message}. Application will continue without background jobs.");
+}
 
 // Đăng ký các service
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ICertificateService, CertificateService>();
+
+// Conditional BackgroundCertificateService registration
+try
+{
+    builder.Services.AddScoped<BackgroundCertificateService>();
+    Console.WriteLine("BackgroundCertificateService registered successfully.");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"BackgroundCertificateService registration failed: {ex.Message}");
+}
 // DAO registrations
 builder.Services.AddScoped<UserDAO>();
 builder.Services.AddScoped<RoleDAO>();
@@ -88,6 +120,7 @@ builder.Services.AddScoped<ScheduleDAO>();
 builder.Services.AddScoped<TopicDAO>();
 builder.Services.AddScoped<UserConferenceRoleDAO>();
 builder.Services.AddScoped<TimeLineDAO>();
+builder.Services.AddScoped<CertificateDAO>();
 // Add Scoped services for each repository
 // User
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -157,6 +190,9 @@ builder.Services.AddScoped<IUserConferenceRoleRepository, UserConferenceRoleRepo
 
 builder.Services.AddScoped<ITimeLineRepository, TimeLineRepository>();
 
+// Certificate
+builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
+
 //PAYOS
 builder.Services.AddSingleton(new PayOS("295a3346-3eeb-449c-bb7b-cdbf495577ec", "a5e3d88f-3ae6-4235-b30e-e81c2b3686a2", "2a895d2b7938d4880973602f579a44043a2bc63183aa80e685ace2e9164cab5f"));
 //AddCors
@@ -194,7 +230,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                builder.Configuration["Jwt:Key"] ?? "default-secret-key-for-development-only-do-not-use-in-production"))
         };
     });
 
@@ -230,7 +267,17 @@ app.UseCors("SpecificOrigin");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseHangfireDashboard();
+
+// Conditional Hangfire dashboard
+try
+{
+    app.UseHangfireDashboard();
+    Console.WriteLine("Hangfire dashboard enabled at /hangfire");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Hangfire dashboard disabled: {ex.Message}");
+}
 app.MapControllers();
 // 3. Map Hub của bạn tới một endpoint
 

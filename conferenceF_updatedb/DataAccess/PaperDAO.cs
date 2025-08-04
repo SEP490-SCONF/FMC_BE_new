@@ -27,9 +27,21 @@ namespace DataAccess
             return _context.Papers.Where(p => p.Status != "Deleted").AsQueryable();
         }
 
-        public async Task<Paper> GetByIdAsync(int id)
+        public async Task<Paper?> GetByIdAsync(int id)
         {
             return await _context.Papers.FindAsync(id);
+        }
+
+        public async Task<Paper?> GetByIdWithIncludesAsync(int id)
+        {
+            return await _context.Papers
+                .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author)
+                .Include(p => p.Conference)
+                .Include(p => p.Topic)
+                .Include(p => p.PaperRevisions)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.PaperId == id);
         }
 
         public async Task AddAsync(Paper entity)
