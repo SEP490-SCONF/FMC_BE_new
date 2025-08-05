@@ -115,13 +115,39 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            // 1. Kiểm tra assignment có tồn tại không
             var existing = await _repository.GetById(id);
             if (existing == null)
                 return NotFound($"Assignment with ID {id} not found.");
 
+            int paperId = existing.PaperId;
+
+            // 2. Xoá assignment
             await _repository.Delete(id);
+
+            // 3. Kiểm tra còn reviewer nào khác cho bài báo này không
+            var remainingAssignments = await _repository.GetAllByPaperId(paperId);
+            if (remainingAssignments == null || !remainingAssignments.Any())
+            {
+                // 4. Nếu không còn ai: cập nhật lại status bài báo và các bản revision
+                var paper = await _paperRepository.GetPaperByIdAsync(paperId);
+                if (paper != null)
+                {
+                    paper.Status = "Submitted"; // hoặc "Awaiting Reviewer"
+                    await _paperRepository.UpdatePaperAsync(paper);
+                }
+
+                var revisions = await _revisionRepository.GetRevisionsByPaperIdAsync(paperId);
+                foreach (var revision in revisions)
+                {
+                    revision.Status = "Submitted"; // hoặc trạng thái khác
+                    await _revisionRepository.UpdatePaperRevisionAsync(revision);
+                }
+            }
+
             return NoContent();
         }
+
 
         // GET: api/ReviewerAssignment/reviewer/{reviewerId}
         [HttpGet("reviewer/{reviewerId}")]

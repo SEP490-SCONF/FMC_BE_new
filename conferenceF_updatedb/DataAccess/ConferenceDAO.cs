@@ -23,6 +23,7 @@ namespace DataAccess
             {
                 return await _context.Conferences
                                      //.Where(c => c.Status == true)
+                                     .Include(c => c.Topics)
                                      .AsNoTracking()
                                      .ToListAsync();
             }

@@ -16,7 +16,7 @@ namespace ConferenceFWebAPI.DTOs.Papers
         public string? FilePath { get; set; }
         public string? Status { get; set; }
         public DateTime? SubmitDate { get; set; }
-
+        public int? AssignmentId { get; set; }
         // Thêm một thuộc tính để chứa thông tin từ PaperRevision
         public List<PaperRevisionDTO> PaperRevisions { get; set; } // Dữ liệu của PaperRevision
     }

@@ -88,7 +88,10 @@ builder.Services.AddScoped<ScheduleDAO>();
 builder.Services.AddScoped<TopicDAO>();
 builder.Services.AddScoped<UserConferenceRoleDAO>();
 builder.Services.AddScoped<TimeLineDAO>();
+builder.Services.AddScoped<HighlightAreaDAO>();
 // Add Scoped services for each repository
+builder.Services.AddScoped<IHighlightAreaRepository, HighlightAreaRepository>();
+
 // User
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Role

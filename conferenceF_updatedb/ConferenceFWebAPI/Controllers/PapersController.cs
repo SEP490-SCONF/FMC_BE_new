@@ -65,6 +65,7 @@ namespace ConferenceFWebAPI.Controllers
             var paperDto = _mapper.Map<List<PaperResponseDto>>(papers);
             return Ok(paperDto);
         }
+        [EnableQuery]
         [HttpGet("conference/{conferenceId}/status/submitted")]
         [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

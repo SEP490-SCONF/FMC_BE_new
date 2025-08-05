@@ -21,9 +21,9 @@ namespace ConferenceFWebAPI
         public MappingProfile()
         {
             CreateMap<Paper, PaperResponseWT>()
-            .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.TopicName)) // Lấy tên topic
-            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.PaperAuthors.FirstOrDefault().Author.Name)) // Lấy tên tác giả
-            .ForMember(dest => dest.PaperRevisions, opt => opt.MapFrom(src => src.PaperRevisions)) // Ánh xạ PaperRevisions
+                .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.TopicName)) // Lấy tên topic
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.PaperAuthors.FirstOrDefault().Author.Name)) // Lấy tên tác giả
+                .ForMember(dest => dest.PaperRevisions, opt => opt.MapFrom(src => src.PaperRevisions)) // Ánh xạ PaperRevisions
 
 
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src =>
@@ -33,14 +33,20 @@ namespace ConferenceFWebAPI
                 .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.TopicName))
                 .ForMember(dest => dest.IsAssigned, opt => opt.MapFrom(src =>
                     src.ReviewerAssignments != null && src.ReviewerAssignments.Any()))
-.ForMember(dest => dest.AssignedReviewerName, opt => opt.MapFrom(src =>
-    src.ReviewerAssignments
-        .OrderByDescending(ra => ra.AssignedAt) // hoặc OrderByDescending(ra => ra.AssignmentId)
-        .Select(ra => ra.Reviewer)
-        .FirstOrDefault(r =>
-            r.UserConferenceRoles.Any(ucr => ucr.ConferenceRole.RoleName == "Reviewer")
-        ).Name
-));
+                .ForMember(dest => dest.AssignedReviewerName, opt => opt.MapFrom(src =>
+                    src.ReviewerAssignments
+                        .OrderByDescending(ra => ra.AssignedAt) // hoặc OrderByDescending(ra => ra.AssignmentId)
+                        .Select(ra => ra.Reviewer)
+                        .FirstOrDefault(r =>
+                            r.UserConferenceRoles.Any(ucr => ucr.ConferenceRole.RoleName == "Reviewer")
+                        ).Name
+                ))
+                .ForMember(dest => dest.AssignmentId, opt => opt.MapFrom(src =>
+                    src.ReviewerAssignments
+                        .OrderByDescending(ra => ra.AssignedAt)
+                        .Select(ra => (int?)ra.AssignmentId)
+                        .FirstOrDefault()
+                ));
 
 
             CreateMap<User, UserInfomation>();
