@@ -25,6 +25,11 @@ namespace Repository
             return await _paperDAO.GetByIdAsync(paperId);
         }
 
+         public async Task<Paper?> GetPaperByIdWithIncludesAsync(int paperId)
+        {
+            return await _paperDAO.GetByIdWithIncludesAsync(paperId);
+        }
+
         public async Task AddPaperAsync(Paper paper)
         {
             await _paperDAO.AddAsync(paper);
