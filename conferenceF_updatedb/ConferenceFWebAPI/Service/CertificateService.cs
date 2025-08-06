@@ -1,5 +1,11 @@
 using BussinessObject.Entity;
+using iText.Kernel.Geom;
+using iText.Layout;
+
+using iText.Kernel.Pdf;
+using iText.Layout.Element;
 using Repository;
+using System.Drawing.Printing;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -11,17 +17,22 @@ namespace ConferenceFWebAPI.Service
         private readonly IPaymentRepository _paymentRepository;
         private readonly IRegistrationRepository _registrationRepository;
         private readonly IPaperRepository _paperRepository;
+        private readonly IUserConferenceRoleRepository _userConferenceRoleRepository;
 
         public CertificateService(
             ICertificateRepository certificateRepository,
             IPaymentRepository paymentRepository,
             IRegistrationRepository registrationRepository,
-            IPaperRepository paperRepository)
+            IPaperRepository paperRepository,
+            IUserConferenceRoleRepository userConferenceRoleRepository
+            )
+
         {
             _certificateRepository = certificateRepository;
             _paymentRepository = paymentRepository;
             _registrationRepository = registrationRepository;
             _paperRepository = paperRepository;
+            _userConferenceRoleRepository = userConferenceRoleRepository;
         }
 
         public async Task<Certificate?> GenerateCertificateOnPaymentComplete(int paymentId)
@@ -58,7 +69,7 @@ namespace ConferenceFWebAPI.Service
             try
             {
                 var certificates = new List<Certificate>();
-                
+
                 // Get paper details
                 var paper = await _paperRepository.GetPaperByIdAsync(paperId);
                 if (paper == null || (paper.Status != "Approved" && paper.Status != "Published"))
@@ -69,7 +80,7 @@ namespace ConferenceFWebAPI.Service
                 // Get all authors of this paper
                 // Note: Cần implement method GetAuthorsByPaperId trong PaperRepository
                 // Tạm thời return empty list
-                
+
                 return certificates;
             }
             catch (Exception ex)
@@ -90,7 +101,7 @@ namespace ConferenceFWebAPI.Service
             {
                 var certificates = await _certificateRepository.GetAll();
                 var certificate = certificates.FirstOrDefault(c => c.CertificateNumber == certificateNumber);
-                
+
                 return certificate != null && certificate.Status;
             }
             catch
@@ -107,12 +118,15 @@ namespace ConferenceFWebAPI.Service
         private string GenerateBlockchainHash(Certificate certificate)
         {
             var dataToHash = $"{certificate.RegId}_{certificate.CertificateNumber}_{certificate.IssueDate:yyyyMMddHHmmss}";
-            
+
             using (var sha256 = SHA256.Create())
             {
                 var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(dataToHash));
                 return Convert.ToHexString(hashBytes).ToLower();
             }
         }
+
+     
     }
+
 }

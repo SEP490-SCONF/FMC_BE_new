@@ -27,6 +27,8 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IUserConferenceRoleRepository _userConferenceRoleRepository;
         private readonly IMapper _mapper;
         private readonly IAzureBlobStorageService _azureBlobStorageService;
+        
+
 
         public CertificatesController(
             ICertificateRepository certificateRepository,
@@ -35,7 +37,8 @@ namespace ConferenceFWebAPI.Controllers
             IPaperRepository paperRepository,
             IUserConferenceRoleRepository userConferenceRoleRepository,
             IMapper mapper,
-            IAzureBlobStorageService azureBlobStorageService)
+            IAzureBlobStorageService azureBlobStorageService,
+            ICertificateService certificateService)
         {
             _certificateRepository = certificateRepository;
             _registrationRepository = registrationRepository;
@@ -44,6 +47,8 @@ namespace ConferenceFWebAPI.Controllers
             _userConferenceRoleRepository = userConferenceRoleRepository;
             _mapper = mapper;
             _azureBlobStorageService = azureBlobStorageService;
+            
+
         }
 
         // GET: api/Certificates
@@ -908,5 +913,8 @@ namespace ConferenceFWebAPI.Controllers
                 return Convert.ToHexString(hashBytes).ToLower();
             }
         }
+
+
+
     }
 }

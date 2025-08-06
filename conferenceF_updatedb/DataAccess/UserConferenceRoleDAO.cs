@@ -175,6 +175,18 @@ namespace DataAccess
 
 
 
+        public async Task<UserConferenceRole?> GetReviewerByUserAndConference(int userId, int conferenceId)
+        {
+            return await _context.UserConferenceRoles
+                .Include(u => u.User)
+                .Include(u => u.Conference)
+                .Include(u => u.ConferenceRole)
+                .FirstOrDefaultAsync(u =>
+                    u.UserId == userId &&
+                    u.ConferenceId == conferenceId &&
+                    u.ConferenceRoleId == 3); // 3 là Reviewer
+        }
+
 
     }
 

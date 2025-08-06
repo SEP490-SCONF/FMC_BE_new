@@ -17,6 +17,8 @@ namespace Repository
         Task<UserConferenceRole?> UpdateConferenceRoleForUserInConference(int userId, int conferenceId, int newConferenceRoleId);
         Task<IEnumerable<UserConferenceRole>> GetUsersByConferenceIdAndRolesAsync(int conferenceId, List<int> roleIds);
         Task<List<Conference>> GetConferencesByUserIdAndRoleAsync(int userId, string roleName);
+        Task<UserConferenceRole?> GetByUserAndConference(int userId, int conferenceId);
+
 
 
     }

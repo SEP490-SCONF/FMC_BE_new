@@ -8,5 +8,6 @@ namespace ConferenceFWebAPI.Service
         Task<byte[]> GeneratePdfCertificate(int certificateId);
         Task<bool> ValidateCertificate(string certificateNumber);
         Task<string> GetBlockchainHash(Certificate certificate);
+        //Task<byte[]> GenerateReviewerCertificateAsync(int userId, int conferenceId);
     }
 }
