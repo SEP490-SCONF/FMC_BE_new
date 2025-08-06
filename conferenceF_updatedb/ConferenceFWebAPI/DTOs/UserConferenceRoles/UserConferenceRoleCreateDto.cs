@@ -7,5 +7,6 @@
 
         
         public int ConferenceId { get; set; } // Giữ lại ConferenceId
+
     }
 }

@@ -83,7 +83,7 @@ namespace DataAccess
         public List<Paper> GetPapersByConferenceIdAndStatus(int conferenceId, string status)
         {
             return _context.Papers
-                .Where(p => p.ConferenceId == conferenceId && p.Status == status)
+                .Where(p => p.ConferenceId == conferenceId)
                 .Include(p => p.Topic)
                 .Include(p => p.PaperAuthors)
                     .ThenInclude(pa => pa.Author)
