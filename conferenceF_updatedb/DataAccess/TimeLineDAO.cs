@@ -42,5 +42,19 @@ namespace DataAccess
             _context.Entry(timeLine).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var timeLine = await _context.TimeLines.FindAsync(id);
+            if (timeLine == null)
+                return false;
+
+            _context.TimeLines.Remove(timeLine);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+
+
     }
 }
