@@ -108,6 +108,19 @@ namespace DataAccess
                 .ToList();
         }
 
+        public async Task<List<Paper>> GetAcceptedPapersWithRegistrationsByAuthor(int authorId)
+        {
+            return await _context.Papers
+                .Where(p => p.Status == "Accepted" &&
+                            p.PaperAuthors.Any(pa => pa.AuthorId == authorId))
+                .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author)
+                .Include(p => p.Topic)
+                .Include(p => p.PaperRevisions)
+                .Include(p => p.Conference)
+                .ToListAsync();
+        }
+
 
 
 

@@ -1,4 +1,4 @@
-using BussinessObject.Entity;
+﻿using BussinessObject.Entity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -247,5 +247,42 @@ namespace DataAccess
                 throw new Exception($"Error retrieving approved paper authors for paper ID {paperId}.", ex);
             }
         }
+
+
+        public async Task<IEnumerable<Certificate>> GetCertificatesByPaperId(int paperId)
+        {
+            try
+            {
+                
+                var acceptedPaper = await _context.Papers
+                    .Include(p => p.PaperAuthors)
+                    .FirstOrDefaultAsync(p => p.PaperId == paperId && p.Status == "Accepted");
+
+                if (acceptedPaper == null)
+                    return Enumerable.Empty<Certificate>();
+
+                var authorIds = acceptedPaper.PaperAuthors.Select(pa => pa.AuthorId).ToList();
+
+                var certificates = await _context.Certificates
+                    .Include(c => c.Reg)
+                        .ThenInclude(r => r.User)
+                    .Include(c => c.Reg)
+                        .ThenInclude(r => r.Conference)
+                    .Include(c => c.UserConferenceRole)
+                        .ThenInclude(ucr => ucr.ConferenceRole)
+                    .Where(c => c.Reg != null && authorIds.Contains(c.Reg.UserId))
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                return certificates;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving certificates for paper ID {paperId}.", ex);
+            }
+        }
+
+
+
     }
 }

@@ -13,6 +13,7 @@ using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp.Drawing;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ConferenceFWebAPI.Controllers
 {
@@ -913,6 +914,21 @@ namespace ConferenceFWebAPI.Controllers
                 return Convert.ToHexString(hashBytes).ToLower();
             }
         }
+
+        [HttpGet("by-paper/{paperId}")]
+        public async Task<IActionResult> GetCertificatesByPaperId(int paperId)
+        {
+            var certs = await _certificateRepository.GetCertificatesByPaperId(paperId);
+            if (certs == null || !certs.Any())
+            {
+                return NotFound("No certificate found for this paper or paper is not accepted.");
+            }
+
+            var certDtos = _mapper.Map<IEnumerable<CertificateDto>>(certs);
+            return Ok(certDtos);
+        }
+
+
 
 
 

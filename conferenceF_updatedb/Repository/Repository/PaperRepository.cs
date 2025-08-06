@@ -67,6 +67,11 @@ namespace Repository
         {
             return _paperDAO.GetPublishedPapersByConferenceId(conferenceId);
         }
+        public async Task<List<Paper>> GetAcceptedPapersWithRegistrationsByAuthor(int authorId)
+        {
+            return await _paperDAO.GetAcceptedPapersWithRegistrationsByAuthor(authorId);
+        }
+
 
 
 

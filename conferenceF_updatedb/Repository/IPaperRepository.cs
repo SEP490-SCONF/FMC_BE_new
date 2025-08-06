@@ -16,6 +16,8 @@ namespace Repository
         List<Paper> GetPapersByUserIdAndConferenceId(int userId, int conferenceId);
         List<Paper> GetPapersByConferenceIdAndStatus(int conferenceId, string status);
         List<Paper> GetPublishedPapersByConferenceId(int conferenceId);
+        Task<List<Paper>> GetAcceptedPapersWithRegistrationsByAuthor(int authorId);
+
 
 
         // Có thể thêm các phương thức khác tùy theo nhu cầu của ứng dụng

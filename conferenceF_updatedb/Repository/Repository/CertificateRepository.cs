@@ -419,5 +419,11 @@ namespace Repository.Repository
                 return Convert.ToHexString(hashBytes).ToLower();
             }
         }
+
+        public async Task<IEnumerable<Certificate>> GetCertificatesByPaperId(int paperId)
+        {
+            return await _certificateDao.GetCertificatesByPaperId(paperId);
+        }
+
     }
 }

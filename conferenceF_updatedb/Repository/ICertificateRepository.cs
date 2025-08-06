@@ -14,5 +14,7 @@ namespace Repository
         Task<Certificate> GenerateCertificate(int regId);
         Task<Certificate> GenerateCertificateForApprovedPaper(int paperId, int authorId);
         Task<byte[]> GenerateCertificatePdf(int certificateId);
+        Task<IEnumerable<Certificate>> GetCertificatesByPaperId(int paperId);
+
     }
 }
