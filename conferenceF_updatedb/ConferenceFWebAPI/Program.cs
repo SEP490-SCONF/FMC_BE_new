@@ -10,7 +10,6 @@ using ConferenceFWebAPI.Configurations;
 using Hangfire; // Đảm bảo có using này
 using Hangfire.SqlServer;
 
-
 using BussinessObject.Entity;
 using ConferenceFWebAPI.Service;
 using Repository.Repository;
@@ -90,6 +89,7 @@ builder.Services.AddScoped<TopicDAO>();
 builder.Services.AddScoped<UserConferenceRoleDAO>();
 builder.Services.AddScoped<TimeLineDAO>();
 // Add Scoped services for each repository
+
 // User
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Role
@@ -156,6 +156,8 @@ builder.Services.AddScoped<IReviewerAssignmentRepository, ReviewerAssignmentRepo
 // UserConferenceRole
 builder.Services.AddScoped<IUserConferenceRoleRepository, UserConferenceRoleRepository>();
 
+builder.Services.AddScoped<ITimeLineRepository, TimeLineRepository>();
+
 // BIND cấu hình từ appsettings
 builder.Services.Configure<PayOSConfig>(builder.Configuration.GetSection("PayOS"));
 
@@ -165,6 +167,17 @@ builder.Services.AddSingleton<PayOS>(sp =>
     var config = sp.GetRequiredService<IConfiguration>().GetSection("PayOS").Get<PayOSConfig>();
     return new PayOS(config.ClientId, config.ApiKey, config.ChecksumKey);
 });
+
+// MemoryCache để cache kết quả phân tích AI
+builder.Services.AddMemoryCache();
+
+// HttpClient cho service gọi Hugging Face API
+builder.Services.AddHttpClient();
+
+// Đăng ký AI Detector Service
+builder.Services.AddScoped<IAiDetectorService, HuggingFaceDetectorService>();
+
+
 //AddCors
 builder.Services.AddCors(options =>
 {
