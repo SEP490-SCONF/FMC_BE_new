@@ -188,6 +188,8 @@ builder.Services.AddScoped<IReviewerAssignmentRepository, ReviewerAssignmentRepo
 // UserConferenceRole
 builder.Services.AddScoped<IUserConferenceRoleRepository, UserConferenceRoleRepository>();
 
+builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
+
 builder.Services.AddScoped<ITimeLineRepository, TimeLineRepository>();
 
 // BIND cấu hình từ appsettings
