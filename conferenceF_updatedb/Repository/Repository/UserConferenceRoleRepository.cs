@@ -45,13 +45,22 @@ namespace Repository.Repository
             // Repository chỉ ủy quyền công việc cho DAO
             return await _dao.UpdateConferenceRoleForUser(userId, conferenceId, newConferenceRoleId);
         }
-        public async Task<IEnumerable<User>> GetUsersByConferenceIdAndRolesAsync(int conferenceId, List<int> roleIds)
+        public async Task<IEnumerable<UserConferenceRole>> GetUsersByConferenceIdAndRolesAsync(int conferenceId, List<int> roleIds)
         {
             return await _dao.GetUsersByConferenceIdAndRoles(conferenceId, roleIds);
         }
         public async Task<List<Conference>> GetConferencesByUserIdAndRoleAsync(int userId, string roleName)
         {
             return await _dao.GetConferencesByUserIdAndRoleAsync(userId, roleName);
+        }
+
+        public async Task<UserConferenceRole?> GetByUserAndConference(int userId, int conferenceId)
+        {
+            return await _dao.GetReviewerByUserAndConference(userId, conferenceId);
+        }
+        public async Task<bool> HasUserAnyRoleInConference(int userId, int conferenceId, List<string> roles)
+        {
+            return await _dao.HasUserAnyRoleInConference(userId, conferenceId, roles);
         }
 
     }

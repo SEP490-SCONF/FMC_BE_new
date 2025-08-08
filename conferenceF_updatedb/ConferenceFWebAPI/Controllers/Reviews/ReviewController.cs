@@ -16,15 +16,16 @@ namespace ConferenceFWebAPI.Controllers.Reviews
         private readonly IReviewCommentRepository _commentRepository;
         private readonly IReviewHighlightRepository _highlightRepository;
         private readonly IPaperRevisionRepository _paperRevisionRepository;
+        private readonly IHighlightAreaRepository _highlightAreaRepository;
 
-
-        public ReviewController(IReviewRepository reviewRepository, IMapper mapper, IReviewCommentRepository commentRepository, IReviewHighlightRepository highlightRepository, IPaperRevisionRepository paperRevisionRepository)
+        public ReviewController(IReviewRepository reviewRepository, IMapper mapper, IReviewCommentRepository commentRepository, IReviewHighlightRepository highlightRepository, IPaperRevisionRepository paperRevisionRepository, IHighlightAreaRepository highlightAreaRepository)
         {
             _reviewRepository = reviewRepository;
             _mapper = mapper;
             _commentRepository = commentRepository;
             _highlightRepository = highlightRepository;
             _paperRevisionRepository = paperRevisionRepository;
+            _highlightAreaRepository = highlightAreaRepository;
         }
 
         // GET: api/Review
@@ -136,21 +137,35 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             // 3. Tạo Highlight
             var highlight = new ReviewHighlight
             {
-                ReviewId = review.ReviewId,
-                PageIndex = dto.PageIndex, 
-                Left = dto.Left,           
-                Top = dto.Top,             
-                Width = dto.Width,         
-                Height = dto.Height,      
-                TextHighlighted = dto.TextHighlighted,
+                ReviewId = dto.ReviewId,
+                TextHighlighted = dto.Quote,
                 CreatedAt = DateTime.Now
             };
             await _highlightRepository.Add(highlight);
 
-            // 4. Tạo Comment
+            // 4. Tạo các HighlightArea (nhiều vùng)
+            if (dto.HighlightAreas != null)
+            {
+                foreach (var area in dto.HighlightAreas)
+                {
+                    var highlightArea = new HighlightArea
+                    {
+                        HighlightId = highlight.HighlightId,
+                        PageIndex = area.PageIndex,
+                        Left = area.Left,
+                        Top = area.Top,
+                        Width = area.Width,
+                        Height = area.Height
+                    };
+                    // Lưu vào DB (giả sử có HighlightAreaRepository)
+                    await _highlightAreaRepository.AddAsync(highlightArea);
+                }
+            }
+
+            // 5. Tạo Comment
             var comment = new ReviewComment
             {
-                ReviewId = review.ReviewId,
+                ReviewId = dto.ReviewId,
                 HighlightId = highlight.HighlightId,
                 UserId = dto.UserId,
                 CommentText = dto.CommentText,
@@ -159,9 +174,9 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             };
             await _commentRepository.Add(comment);
 
-            return CreatedAtAction(nameof(GetById), new { id = review.ReviewId }, new
+            return CreatedAtAction(nameof(GetById), new { id = dto.ReviewId }, new
             {
-                Review = review,
+                Review = dto.ReviewId,
                 Highlight = highlight,
                 Comment = comment
             });
@@ -195,6 +210,31 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             _mapper.Map(dto, highlight);  // Cập nhật highlight
             await _highlightRepository.Update(highlight);
 
+            // 4.1. Xóa các HighlightArea cũ của HighlightId
+            var oldAreas = await _highlightAreaRepository.GetByHighlightIdAsync(dto.HighlightId);
+            foreach (var area in oldAreas)
+            {
+                await _highlightAreaRepository.DeleteAsync(area.HighlightAreaId);
+            }
+
+            // 4.2. Thêm lại các HighlightArea mới từ DTO
+            if (dto.HighlightAreas != null)
+            {
+                foreach (var area in dto.HighlightAreas)
+                {
+                    var highlightArea = new HighlightArea
+                    {
+                        HighlightId = highlight.HighlightId,
+                        PageIndex = area.PageIndex,
+                        Left = area.Left,
+                        Top = area.Top,
+                        Width = area.Width,
+                        Height = area.Height
+                    };
+                    await _highlightAreaRepository.AddAsync(highlightArea);
+                }
+            }
+
             // 5. Lấy ReviewComment liên kết với ReviewHighlight
             var comment = await _commentRepository.GetByHighlightId(dto.HighlightId); // Lấy comment theo HighlightId
             if (comment == null)
@@ -205,7 +245,6 @@ namespace ConferenceFWebAPI.Controllers.Reviews
 
             dto.CommentId = comment.CommentId;
             _mapper.Map(dto, comment);
-            
             await _commentRepository.Update(comment);
 
             return NoContent();  // Trả về NoContent để chỉ ra rằng update thành công
@@ -219,14 +258,35 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             if (review == null)
                 return NotFound($"Review with ID {reviewId} not found.");
 
-            // Lấy tất cả highlights và comments cho reviewId
+            // Lấy tất cả highlights cho reviewId
             var highlights = await _highlightRepository.GetByReviewId(reviewId);
+
+            // Lấy tất cả highlightAreas cho từng highlight
+            var highlightDtos = new List<HighlightDTO>();
+            foreach (var highlight in highlights)
+            {
+                var areas = await _highlightAreaRepository.GetByHighlightIdAsync(highlight.HighlightId);
+                highlightDtos.Add(new HighlightDTO
+                {
+                    HighlightId = highlight.HighlightId,
+                    TextHighlighted = highlight.TextHighlighted,
+                    Areas = areas.Select(a => new HighlightAreaDTO
+                    {
+                        HighlightAreaId = a.HighlightAreaId,
+                        PageIndex = a.PageIndex,
+                        Left = a.Left,
+                        Top = a.Top,
+                        Width = a.Width,
+                        Height = a.Height
+                    }).ToList()
+                });
+            }
+
+            // Lấy tất cả comments cho reviewId
             var comments = await _commentRepository.GetByReviewId(reviewId);
 
-            // Tạo đối tượng DTO kết hợp review, highlights và comments
             var result = new ReviewWithHighlightAndCommentDTO
             {
-                // Review
                 ReviewId = review.ReviewId,
                 PaperId = review.PaperId,
                 ReviewerId = review.ReviewerId,
@@ -235,20 +295,7 @@ namespace ConferenceFWebAPI.Controllers.Reviews
                 Comment = review.Comments,
                 Status = review.Status,
                 ReviewedAt = review.ReviewedAt,
-
-                // Highlight
-                Highlights = highlights.Select(highlight => new HighlightDTO
-                {
-                    HighlightId = highlight.HighlightId,
-                    PageIndex = highlight.PageIndex ?? 0,  
-                    Left = highlight.Left ?? 0,            
-                    Top = highlight.Top ?? 0,
-                    Width = highlight.Width ?? 0,
-                    Height = highlight.Height ?? 0,
-                    TextHighlighted = highlight.TextHighlighted
-                }).ToList(),
-
-                // Comment
+                Highlights = highlightDtos,
                 Comments = comments.Select(comment => new CommentsDTO
                 {
                     CommentId = comment.CommentId,
@@ -317,19 +364,25 @@ namespace ConferenceFWebAPI.Controllers.Reviews
 
             // 2. Lấy ReviewComment liên kết với HighlightId
             var comment = await _commentRepository.GetByHighlightId(highlightId);
-            if (comment == null)
+            // Không bắt buộc phải có comment, có thể chỉ xóa nếu tồn tại
+
+            // 3. Xóa tất cả HighlightArea liên quan
+            var highlightAreas = await _highlightAreaRepository.GetByHighlightIdAsync(highlightId);
+            foreach (var area in highlightAreas)
             {
-                // Nếu không tìm thấy comment, trả về lỗi
-                return NotFound($"No comment found for HighlightId {highlightId}. Make sure the highlight has an associated comment.");
+                await _highlightAreaRepository.DeleteAsync(area.HighlightAreaId);
             }
 
-            // 3. Xóa ReviewComment
-            await _commentRepository.Delete(comment.CommentId);
+            // 4. Xóa ReviewComment nếu có
+            if (comment != null)
+            {
+                await _commentRepository.Delete(comment.CommentId);
+            }
 
-            // 4. Xóa ReviewHighlight
+            // 5. Xóa ReviewHighlight
             await _highlightRepository.Delete(highlightId);
 
-            // 5. Trả về NoContent để chỉ ra rằng xóa thành công
+            // 6. Trả về NoContent để chỉ ra rằng xóa thành công
             return NoContent();
         }
         // GET: api/Review/revision/{revisionId}

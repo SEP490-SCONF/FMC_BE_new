@@ -46,6 +46,24 @@ namespace DataAccess
             }
         }
 
+        // Get users by RoleId
+        public async Task<IEnumerable<User>> GetUsersByRoleId(int roleId)
+        {
+            try
+            {
+                return await _context.Users
+                                     .Include(u => u.Role)
+                                     .AsNoTracking()
+                                     .Where(u => u.RoleId == roleId)
+                                     .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error occurred while retrieving users with RoleId {roleId}.", ex);
+            }
+        }
+
+
 
         // Add a new user
         public async Task AddUser(User user)

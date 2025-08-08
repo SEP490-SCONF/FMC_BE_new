@@ -1,51 +1,64 @@
-﻿using ConferenceFWebAPI.Service;
+﻿using AutoMapper;
+using BussinessObject.Entity;
+using ConferenceFWebAPI.DTOs;
+using ConferenceFWebAPI.Service;
 using Microsoft.AspNetCore.Mvc;
+using Repository;
 
 namespace ConferenceFWebAPI.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
+    public class NotificationController : ControllerBase
+    {
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IMapper _mapper;
 
-        [ApiController]
-        [Route("api/[controller]")]
-        public class NotificationsController : ControllerBase
+        public NotificationController(INotificationRepository notificationRepository, IMapper mapper)
         {
-            private readonly NotificationService _notificationService;
+            _notificationRepository = notificationRepository;
+            _mapper = mapper;
+        }
 
-            public NotificationsController(NotificationService notificationService)
+        [HttpPost("test")]
+        public async Task<IActionResult> AddTestNotification(int userId, string roleTarget = "Reviewer")
+        {
+            try
             {
-                _notificationService = notificationService;
-            }
-
-            /// <summary>
-            /// Gửi thông báo đến một người dùng cụ thể.
-            /// </summary>
-            [HttpPost("send-to-user")]
-            public async Task<IActionResult> SendNotificationToUser([FromQuery] int userId, [FromQuery] string title, [FromQuery] string content)
-            {
-                if (userId <= 0 || string.IsNullOrEmpty(title) || string.IsNullOrEmpty(content))
+                var notification = new Notification
                 {
-                    return BadRequest("UserId, Title, and Content are required.");
-                }
+                    Title = "Thông báo kiểm tra",
+                    Content = $"Đây là một thông báo thử nghiệm cho người dùng có ID: {userId}.",
+                    UserId = userId,
+                    RoleTarget = roleTarget,
+                    CreatedAt = DateTime.UtcNow
+                };
 
-                await _notificationService.SendNotificationToUserAsync(userId, title, content);
-                return Ok($"Notification sent to user {userId}.");
+                await _notificationRepository.AddNotificationAsync(notification);
+
+                return Ok(new { Message = "Thông báo đã được thêm thành công vào cơ sở dữ liệu.", Notification = notification });
             }
-
-            /// <summary>
-            /// Gửi thông báo đến tất cả người dùng có một vai trò cụ thể trong một hội thảo.
-            /// </summary>
-            [HttpPost("send-to-role")]
-            public async Task<IActionResult> SendNotificationToRole([FromQuery] int conferenceId, [FromQuery] string roleName, [FromQuery] string title, [FromQuery] string content)
+            catch (Exception ex)
             {
-                if (conferenceId <= 0 || string.IsNullOrEmpty(roleName) || string.IsNullOrEmpty(title) || string.IsNullOrEmpty(content))
-                {
-                    return BadRequest("ConferenceId, RoleName, Title, and Content are required.");
-                }
+                return StatusCode(500, $"Có lỗi xảy ra: {ex.Message}");
+            }
+        }
+        
+        [HttpGet("{userId}")]
+        public async Task<ActionResult<IEnumerable<NotificationDto>>> GetNotificationByUserId(int userId)
+        {
+            var notifications = await _notificationRepository.GetNotificationsByUserIdAsync(userId);
 
-                await _notificationService.SendNotificationToRoleAsync(conferenceId, roleName, title, content);
-                return Ok($"Notification sent to role '{roleName}' in conference {conferenceId}.");
+            if (notifications == null || !notifications.Any())
+            {
+                return NotFound($"Không tìm thấy thông báo nào cho người dùng có ID: {userId}.");
             }
 
-            // Bạn có thể thêm các endpoint khác nếu cần, ví dụ để lấy danh sách thông báo đã lưu
+            // Sử dụng AutoMapper để chuyển đổi từ Notification sang NotificationDto
+            var notificationDtos = _mapper.Map<IEnumerable<NotificationDto>>(notifications);
+
+            return Ok(notificationDtos);
         }
     }
+}
 

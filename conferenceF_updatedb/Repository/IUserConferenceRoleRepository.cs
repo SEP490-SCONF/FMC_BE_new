@@ -15,9 +15,10 @@ namespace Repository
         Task<bool> IsReviewer(int userId);
         Task<IEnumerable<UserConferenceRole>> GetByCondition(Expression<Func<UserConferenceRole, bool>> predicate);
         Task<UserConferenceRole?> UpdateConferenceRoleForUserInConference(int userId, int conferenceId, int newConferenceRoleId);
-        Task<IEnumerable<User>> GetUsersByConferenceIdAndRolesAsync(int conferenceId, List<int> roleIds);
+        Task<IEnumerable<UserConferenceRole>> GetUsersByConferenceIdAndRolesAsync(int conferenceId, List<int> roleIds);
         Task<List<Conference>> GetConferencesByUserIdAndRoleAsync(int userId, string roleName);
-
+        Task<UserConferenceRole?> GetByUserAndConference(int userId, int conferenceId);
+        Task<bool> HasUserAnyRoleInConference(int userId, int conferenceId, List<string> roles);
     }
 }
-﻿
+

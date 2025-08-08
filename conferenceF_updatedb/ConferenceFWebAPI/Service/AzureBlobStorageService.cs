@@ -16,7 +16,7 @@ namespace ConferenceFWebAPI.Service
                 throw new ArgumentNullException("AzureStorage:ConnectionString is not configured.");
             }
             _blobServiceClient = new BlobServiceClient(connectionString);
-            _paperContainerName = configuration.GetValue<string>("BlobContainers:Papers");
+            _paperContainerName = configuration.GetValue<string>("BlobContainers:Papers") ?? "papers";
             if (string.IsNullOrEmpty(_paperContainerName))
             {
                 throw new ArgumentNullException("BlobContainers:Papers is not configured.");
@@ -45,6 +45,68 @@ namespace ConferenceFWebAPI.Service
             using (var stream = file.OpenReadStream())
             {
                 await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = file.ContentType });
+            }
+
+            // Trả về URL công khai của file
+            return blobClient.Uri.ToString();
+        }
+
+        public async Task<string> UploadContentAsync(string content, string fileName, string containerName, string contentType)
+        {
+            if (string.IsNullOrEmpty(content))
+            {
+                throw new ArgumentException("Content cannot be null or empty.");
+            }
+
+            if (string.IsNullOrEmpty(fileName))
+            {
+                throw new ArgumentException("File name cannot be null or empty.");
+            }
+
+            // Lấy container client
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob); // Đảm bảo container tồn tại
+
+            // Lấy blob client
+            BlobClient blobClient = containerClient.GetBlobClient(fileName);
+
+            // Convert content to byte array
+            byte[] contentBytes = System.Text.Encoding.UTF8.GetBytes(content);
+
+            // Upload content
+            using (var stream = new MemoryStream(contentBytes))
+            {
+                await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = contentType });
+            }
+
+            // Trả về URL công khai của file
+            return blobClient.Uri.ToString();
+        }
+
+        public async Task<string> UploadImageAsync(byte[] imageBytes, string fileName, string containerName)
+        {
+            if (imageBytes == null || imageBytes.Length == 0)
+            {
+                throw new ArgumentException("Image bytes cannot be null or empty.");
+            }
+
+            if (string.IsNullOrEmpty(fileName))
+            {
+                throw new ArgumentException("File name cannot be null or empty.");
+            }
+
+            // Lấy container client
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob); // Đảm bảo container tồn tại
+
+            // Lấy blob client
+            BlobClient blobClient = containerClient.GetBlobClient(fileName);
+
+            // Upload image bytes
+            using (var stream = new MemoryStream(imageBytes))
+            {
+                var contentType = fileName.EndsWith(".svg") ? "image/svg+xml" : "image/png";
+                await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = contentType });
             }
 
             // Trả về URL công khai của file

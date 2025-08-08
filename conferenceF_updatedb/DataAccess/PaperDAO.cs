@@ -16,10 +16,26 @@ namespace DataAccess
             _context = context;
         }
 
-        public List<Paper> GetPapersByConferenceId(int conferenceId)
+        public async Task<Paper?> GetPaperWithConferenceAndTimelinesAsync(int paperId)
+        {
+            return await _context.Papers
+                 .Include(p => p.Conference)
+                .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author)
+                        .ThenInclude(a => a.UserConferenceRoles) // Tải đến đây là đủ
+                                                                 // Nếu cần, bạn có thể thêm ThenInclude trên các nhánh khác
+                .Include(p => p.ReviewerAssignments)
+                    .ThenInclude(ra => ra.Reviewer)
+                        .ThenInclude(r => r.UserConferenceRoles) // Tải đến đây là đủ
+                .FirstOrDefaultAsync(p => p.PaperId == paperId);
+        }
+          public List<Paper> GetPapersByConferenceId(int conferenceId)
         {
             return _context.Papers
                            .Where(p => p.ConferenceId == conferenceId)
+                           .Include(p => p.Topic)
+                           .Include(p => p.PaperAuthors)
+            .ThenInclude(pa => pa.Author)
                            .ToList();
         }
         public IQueryable<Paper> GetAllPapers()
@@ -27,9 +43,25 @@ namespace DataAccess
             return _context.Papers.Where(p => p.Status != "Deleted").AsQueryable();
         }
 
-        public async Task<Paper> GetByIdAsync(int id)
+       public async Task<Paper?> GetByIdAsync(int id)
         {
-            return await _context.Papers.FindAsync(id);
+            return await _context.Papers
+                .Include(p => p.Topic)
+                .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author) 
+                .FirstOrDefaultAsync(p => p.PaperId == id);
+        }
+
+        public async Task<Paper?> GetByIdWithIncludesAsync(int id)
+        {
+            return await _context.Papers
+                .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author)
+                .Include(p => p.Conference)
+                .Include(p => p.Topic)
+                .Include(p => p.PaperRevisions)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.PaperId == id);
         }
 
         public async Task AddAsync(Paper entity)
@@ -73,6 +105,33 @@ namespace DataAccess
                         .ThenInclude(r => r.UserConferenceRoles)
                             .ThenInclude(ucr => ucr.ConferenceRole)
                 .ToList();
+        }
+
+         public List<Paper> GetPublishedPapersByConferenceId(int conferenceId)
+        {
+            return _context.Papers
+                .Where(p => p.ConferenceId == conferenceId
+                            && p.IsPublished == true
+                            && p.Status != "Deleted")
+                .Include(p => p.Topic)
+                .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author)
+                .Include(p => p.PaperRevisions
+                    .Where(pr => pr.Status == "Accepted"))
+                .ToList();
+        }
+
+        public async Task<List<Paper>> GetAcceptedPapersWithRegistrationsByAuthor(int authorId)
+        {
+            return await _context.Papers
+                .Where(p => p.Status == "Accepted" &&
+                            p.PaperAuthors.Any(pa => pa.AuthorId == authorId))
+                .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author)
+                .Include(p => p.Topic)
+                .Include(p => p.PaperRevisions)
+                .Include(p => p.Conference)
+                .ToListAsync();
         }
 
 

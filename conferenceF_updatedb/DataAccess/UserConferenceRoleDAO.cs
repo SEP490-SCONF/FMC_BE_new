@@ -18,15 +18,15 @@ namespace DataAccess
             _context = context;
         }
 
-        public async Task<IEnumerable<User>> GetUsersByConferenceIdAndRoles(int conferenceId, List<int> roleIds)
+        public async Task<IEnumerable<UserConferenceRole>> GetUsersByConferenceIdAndRoles(int conferenceId, List<int> roleIds)
         {
-            // Truy vấn UserConferenceRole, lọc theo ConferenceId và ConferenceRoleId,
-            // sau đó Include đối tượng User liên quan và chọn ra các User riêng biệt.
             return await _context.UserConferenceRoles
-                                   .Where(ucr => ucr.ConferenceId == conferenceId && roleIds.Contains(ucr.ConferenceRoleId))
-                                   .Select(ucr => ucr.User) // Chỉ chọn đối tượng User
-                                   .Distinct() // Đảm bảo chỉ lấy các User riêng biệt (nếu một user có nhiều vai trò phù hợp)
-                                   .ToListAsync();
+        .Where(ucr => ucr.ConferenceId == conferenceId && roleIds.Contains(ucr.ConferenceRoleId))
+        .Include(ucr => ucr.User)
+        .Include(ucr => ucr.Conference)
+        .Include(ucr => ucr.ConferenceRole)
+        .AsNoTracking()
+        .ToListAsync();
         }
         public async Task<IEnumerable<UserConferenceRole>> GetAll()
         {
@@ -61,15 +61,21 @@ namespace DataAccess
             try
             {
                 return await _context.UserConferenceRoles
-                    .Where(u => u.ConferenceId == conferenceId)
+                 .Where(u => u.ConferenceId == conferenceId)
+                .Include(u => u.User)
+                 .Include(u => u.Conference)
+                     .Include(u => u.ConferenceRole)
                     .AsNoTracking()
                     .ToListAsync();
-            }
+                }
             catch (Exception ex)
             {
                 throw new Exception($"Error retrieving roles for conference ID {conferenceId}.", ex);
             }
         }
+
+        
+
 
         public async Task Add(UserConferenceRole entity)
         {
@@ -165,6 +171,29 @@ namespace DataAccess
                                  .Select(ucr => ucr.Conference)
                                  .Distinct() // Đảm bảo không có hội thảo trùng lặp
                                  .ToListAsync();
+        }
+
+
+
+        public async Task<UserConferenceRole?> GetReviewerByUserAndConference(int userId, int conferenceId)
+        {
+            return await _context.UserConferenceRoles
+                .Include(u => u.User)
+                .Include(u => u.Conference)
+                .Include(u => u.ConferenceRole)
+                .FirstOrDefaultAsync(u =>
+                    u.UserId == userId &&
+                    u.ConferenceId == conferenceId &&
+                    u.ConferenceRoleId == 3); // 3 là Reviewer
+        }
+
+        public async Task<bool> HasUserAnyRoleInConference(int userId, int conferenceId, List<string> roles)
+        {
+            return await _context.UserConferenceRoles
+                .Include(x => x.ConferenceRole)
+                .AnyAsync(x => x.UserId == userId
+                            && x.ConferenceId == conferenceId
+                            && roles.Contains(x.ConferenceRole.RoleName));
         }
 
 

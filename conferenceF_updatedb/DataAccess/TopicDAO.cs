@@ -135,5 +135,20 @@ namespace DataAccess
                 throw new Exception($"Error occurred while deleting topic with ID {topicId}.", ex);
             }
         }
+
+        public async Task<IEnumerable<Topic>> GetTopicsByIdsAsync(List<int> topicIds)
+        {
+            try
+            {
+                return await _context.Topics
+                                     .Where(t => topicIds.Contains(t.TopicId))
+                                     .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error occurred while retrieving topics by IDs.", ex);
+            }
+        }
+
     }
 }

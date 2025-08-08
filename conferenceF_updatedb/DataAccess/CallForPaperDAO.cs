@@ -18,26 +18,36 @@ namespace DataAccess
                 _dbContext = dbContext;
             }
 
-            public async Task<IEnumerable<CallForPaper>> GetAllCallForPapers()
-            {
-                return await _dbContext.CallForPapers.ToListAsync();
-            }
+        public async Task<IEnumerable<CallForPaper>> GetAllCallForPapers()
+        {
+            return await _dbContext.CallForPapers
+                .Include(cf => cf.Conference)
+                    .ThenInclude(c => c.Topics)
+                .ToListAsync();
+        }
+
 
         public async Task<IEnumerable<CallForPaper>> GetCallForPapersByConferenceId(int conferenceId)
         {
             return await _dbContext.CallForPapers
-                                   .Where(cf => cf.ConferenceId == conferenceId)
-                                   .ToListAsync();
+                .Where(cf => cf.ConferenceId == conferenceId)
+                .Include(cf => cf.Conference)
+                    .ThenInclude(c => c.Topics)
+                .ToListAsync();
         }
         public async Task<CallForPaper?> GetCallForPaperById(int id)
-            {
-                return await _dbContext.CallForPapers.FirstOrDefaultAsync(cf => cf.Cfpid == id);
-            }
+        {
+            return await _dbContext.CallForPapers
+                .Include(cf => cf.Conference)
+                    .ThenInclude(c => c.Topics)
+                .FirstOrDefaultAsync(cf => cf.Cfpid == id);
+        }
 
-            /// <summary>
-            /// Thêm một CallForPaper mới.
-            /// </summary>
-            public async Task AddCallForPaper(CallForPaper callForPaper)
+
+        /// <summary>
+        /// Thêm một CallForPaper mới.
+        /// </summary>
+        public async Task AddCallForPaper(CallForPaper callForPaper)
             {
                 if (callForPaper == null)
                 {
@@ -71,5 +81,11 @@ namespace DataAccess
                     await _dbContext.SaveChangesAsync();
                 }
             }
+
+        public async Task<bool> HasActiveCallForPaper(int conferenceId)
+        {
+            return await _dbContext.CallForPapers
+                .AnyAsync(cfp => cfp.ConferenceId == conferenceId && cfp.Status == true);
         }
+    }
 }

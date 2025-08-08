@@ -15,6 +15,10 @@ namespace Repository
             _paperDAO = paperDAO;
         }
 
+         public async Task<Paper?> GetPaperWithConferenceAndTimelinesAsync(int paperId)
+        {
+            return await _paperDAO.GetPaperWithConferenceAndTimelinesAsync(paperId);
+        }
         public IQueryable<Paper> GetAllPapers()
         {
             return _paperDAO.GetAllPapers();
@@ -23,6 +27,11 @@ namespace Repository
         public async Task<Paper> GetPaperByIdAsync(int paperId)
         {
             return await _paperDAO.GetByIdAsync(paperId);
+        }
+
+         public async Task<Paper?> GetPaperByIdWithIncludesAsync(int paperId)
+        {
+            return await _paperDAO.GetByIdWithIncludesAsync(paperId);
         }
 
         public async Task AddPaperAsync(Paper paper)
@@ -58,6 +67,17 @@ namespace Repository
         {
             return _paperDAO.GetPapersByConferenceIdAndStatus(conferenceId, status);
         }
+        public List<Paper> GetPublishedPapersByConferenceId(int conferenceId)
+        {
+            return _paperDAO.GetPublishedPapersByConferenceId(conferenceId);
+        }
+        public async Task<List<Paper>> GetAcceptedPapersWithRegistrationsByAuthor(int authorId)
+        {
+            return await _paperDAO.GetAcceptedPapersWithRegistrationsByAuthor(authorId);
+        }
+
+
+
 
     }
 }

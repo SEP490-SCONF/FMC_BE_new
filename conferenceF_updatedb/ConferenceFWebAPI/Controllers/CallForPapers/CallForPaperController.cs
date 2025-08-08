@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Repository;
 using BussinessObject.Entity; // Thêm namespace cho Entity
 using Microsoft.Extensions.Configuration; // Thêm để đọc config
+using AutoMapper;
 
 namespace ConferenceFWebAPI.Controllers.CallForPaper
 {
@@ -15,15 +16,20 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
         private readonly ICallForPaperRepository _callForPaperRepository;
         private readonly IAzureBlobStorageService _azureBlobStorageService;
         private readonly IConfiguration _configuration;
+        private readonly IMapper _mapper;
+
 
         public CallForPaperController(
             ICallForPaperRepository callForPaperRepository,
             IAzureBlobStorageService azureBlobStorageService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IMapper mapper)
         {
             _callForPaperRepository = callForPaperRepository;
             _azureBlobStorageService = azureBlobStorageService;
             _configuration = configuration;
+            _mapper = mapper;
+
         }
 
         // GET: api/CallForPaper
@@ -32,16 +38,8 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
         public async Task<ActionResult<IEnumerable<CallForPaperDto>>> GetCallForPapers()
         {
             var callForPapers = await _callForPaperRepository.GetAllCallForPapers();
-            var callForPaperDtos = callForPapers.Select(cf => new CallForPaperDto
-            {
-                Cfpid = cf.Cfpid,
-                ConferenceId = cf.ConferenceId,
-                Description = cf.Description,
-                Deadline = cf.Deadline,
-                TemplatePath = cf.TemplatePath,
-                CreatedAt = cf.CreatedAt
-            }).ToList();
-            return Ok(callForPaperDtos);
+            var result = _mapper.Map<IEnumerable<CallForPaperDto>>(callForPapers);
+            return Ok(result);
         }
 
         // GET: api/CallForPaper/5
@@ -52,19 +50,10 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
         {
             var callForPaper = await _callForPaperRepository.GetCallForPaperById(id);
             if (callForPaper == null)
-            {
                 return NotFound();
-            }
-            var callForPaperDto = new CallForPaperDto
-            {
-                Cfpid = callForPaper.Cfpid,
-                ConferenceId = callForPaper.ConferenceId,
-                Description = callForPaper.Description,
-                Deadline = callForPaper.Deadline,
-                TemplatePath = callForPaper.TemplatePath,
-                CreatedAt = callForPaper.CreatedAt
-            };
-            return Ok(callForPaperDto);
+
+            var result = _mapper.Map<CallForPaperDto>(callForPaper);
+            return Ok(result);
         }
 
         // GET: api/CallForPaper/byconference/1
@@ -74,23 +63,8 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
         public async Task<ActionResult<IEnumerable<CallForPaperDto>>> GetCallForPapersByConferenceId(int conferenceId)
         {
             var callForPapers = await _callForPaperRepository.GetCallForPapersByConferenceId(conferenceId);
-
-            if (callForPapers == null || !callForPapers.Any())
-            {
-                return NotFound($"Không tìm thấy CallForPaper nào cho ConferenceId: {conferenceId}");
-            }
-            
-            var callForPaperDtos = callForPapers.Select(cf => new CallForPaperDto
-            {
-                Cfpid = cf.Cfpid,
-                ConferenceId = cf.ConferenceId,
-                Description = cf.Description,
-                Deadline = cf.Deadline,
-                TemplatePath = cf.TemplatePath,
-                CreatedAt = cf.CreatedAt
-            }).ToList();
-
-            return Ok(callForPaperDtos);
+            var result = _mapper.Map<IEnumerable<CallForPaperDto>>(callForPapers);
+            return Ok(result);
         }
 
 
@@ -108,18 +82,26 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
 
             try
             {
+                
+                
+
+                // Nếu đã có CFP đang active thì từ chối tạo mới
+                bool hasActive = await _callForPaperRepository.HasActiveCallForPaper(createDto.ConferenceId);
+                if (hasActive)
+                {
+                    return BadRequest("Only one Call For Paper can be active at a time.");
+                }
+
                 string? templateUrl = null;
-                // ** [THAY ĐỔI] UPLOAD FILE LÊN AZURE STORAGE **
+
                 if (createDto.TemplateFile != null && createDto.TemplateFile.Length > 0)
                 {
-                    // Lấy tên container từ appsettings.json
                     var containerName = _configuration.GetValue<string>("BlobContainers:CallForPapers");
                     if (string.IsNullOrEmpty(containerName))
                     {
                         return StatusCode(500, "CallForPapers storage container name is not configured.");
                     }
 
-                    // Gọi service để upload và nhận lại URL
                     templateUrl = await _azureBlobStorageService.UploadFileAsync(createDto.TemplateFile, containerName);
                 }
 
@@ -128,8 +110,8 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
                     ConferenceId = createDto.ConferenceId,
                     Description = createDto.Description,
                     Deadline = createDto.Deadline,
-                    TemplatePath = templateUrl, // Lưu URL từ Azure
-                    Status = true,
+                    TemplatePath = templateUrl,
+                    Status = true, 
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -142,7 +124,9 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
                     Description = callForPaper.Description,
                     Deadline = callForPaper.Deadline,
                     TemplatePath = callForPaper.TemplatePath,
-                    CreatedAt = callForPaper.CreatedAt
+                    CreatedAt = callForPaper.CreatedAt,
+                    Status = callForPaper.Status
+
                 };
 
                 return CreatedAtAction(nameof(GetCallForPaper), new { id = callForPaper.Cfpid }, callForPaperDto);
@@ -152,6 +136,8 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+
 
         // PUT: api/CallForPaper/5
         [HttpPut("{id}")]
@@ -194,7 +180,9 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
                 existingCallForPaper.ConferenceId = updateDto.ConferenceId;
                 existingCallForPaper.Description = updateDto.Description;
                 existingCallForPaper.Deadline = updateDto.Deadline;
-                
+                existingCallForPaper.Status = updateDto.Status; 
+
+
                 await _callForPaperRepository.UpdateCallForPaper(existingCallForPaper);
             }
             catch (DbUpdateConcurrencyException)

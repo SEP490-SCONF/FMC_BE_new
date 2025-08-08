@@ -65,6 +65,16 @@ namespace ConferenceFWebAPI.Controllers
 
 
 
+        [HttpGet("role/{roleId}")]
+        public async Task<IActionResult> GetUsersByRoleId(int roleId)
+        {
+            var users = await _userRepository.GetUsersByRoleId(roleId);
+            if (users == null || !users.Any())
+                return NotFound($"No users found with RoleId {roleId}");
+
+            var userDtos = _mapper.Map<IEnumerable<UserInformationDTO>>(users);
+            return Ok(userDtos);
+        }
 
 
 

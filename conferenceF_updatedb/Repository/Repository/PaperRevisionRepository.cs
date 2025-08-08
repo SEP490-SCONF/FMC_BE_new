@@ -42,5 +42,11 @@ namespace Repository
         {
             return await _paperRevisionDAO.GetRevisionsByPaperIdAsync(paperId);
         }
+
+        public async Task<string?> GetAcceptedFilePathByPaperIdAsync(int paperId)
+        {
+            return await _paperRevisionDAO.GetAcceptedFilePathByPaperIdAsync(paperId);
+        }
+
     }
 }

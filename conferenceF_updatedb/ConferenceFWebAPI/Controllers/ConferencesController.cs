@@ -9,6 +9,7 @@ using Google.Apis.Drive.v3.Data;
 using DataAccess;
 using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.Conferences;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace FMC_BE.Controllers
 {
@@ -41,6 +42,7 @@ namespace FMC_BE.Controllers
 
         // GET: api/Conference
         [HttpGet]
+        [EnableQuery]
         public async Task<ActionResult<IEnumerable<ConferenceResponseDTO>>> GetAll()
         {
             var conferences = await _conferenceRepository.GetAll();
@@ -48,6 +50,27 @@ namespace FMC_BE.Controllers
             return Ok(conferenceDTOs);
 
         }
+        [HttpGet("inactive")] // HTTP GET request đến /api/Conferences/inactive
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<IEnumerable<ConferenceResponseDTO>>> GetInactiveConferences()
+        {
+            try
+            {
+                var conferences = await _conferenceRepository.GetAllConferencesFalse();
+                var conferenceDTOs = _mapper.Map<IEnumerable<ConferenceResponseDTO>>(conferences);
+                return Ok(conferenceDTOs);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while retrieving inactive conferences: {ex.Message}");
+            }
+        }
+
+        // Bạn có thể thêm các hàm GET khác ở đây, ví dụ:
+        // [HttpGet("{id}")] // HTTP GET request đến /api/Conferences/{id}
+        // public async Task<ActionResult<ConferenceResponseDTO>> GetById(int id) { ... }
+
 
         // GET: api/Conference/5
         [HttpGet("{id}")]
@@ -60,8 +83,16 @@ namespace FMC_BE.Controllers
             }
 
             var conferenceDTO = _mapper.Map<ConferenceResponseDTO>(conference);
+
+            // 🔥 Gán danh sách topic cho DTO nếu chưa được map tự động
+            if (conference.Topics != null && conference.Topics.Any())
+            {
+                conferenceDTO.Topics = _mapper.Map<List<TopicDTO>>(conference.Topics);
+            }
+
             return Ok(conferenceDTO);
         }
+
 
         [HttpGet("topics/{id}")] // Route mới để phân biệt
         public async Task<ActionResult<ConferenceResponseDTO>> GetConferenceHasTopicsById(int id)
@@ -157,7 +188,7 @@ namespace FMC_BE.Controllers
                     return NotFound($"Conference with ID {id} not found.");
                 }
 
-                string bannerUrl = conferenceToUpdate.BannerUrl; // Giữ lại URL cũ làm mặc định
+                string bannerUrl = conferenceToUpdate.BannerUrl;
 
                 if (conferenceDto.BannerImage != null && conferenceDto.BannerImage.Length > 0)
                 {
@@ -173,19 +204,23 @@ namespace FMC_BE.Controllers
                     {
                         return StatusCode(500, "Banner storage container name is not configured.");
                     }
+
                     bannerUrl = await _azureBlobStorageService.UploadFileAsync(conferenceDto.BannerImage, bannerContainerName);
                 }
 
-                // 5. Ánh xạ các thuộc tính từ DTO vào đối tượng đã lấy từ DB
+                // Cập nhật các thuộc tính scalar
                 _mapper.Map(conferenceDto, conferenceToUpdate);
+                conferenceToUpdate.BannerUrl = bannerUrl;
 
-                // 6. Cập nhật các thuộc tính không có trong DTO một cách tường minh
-                //conferenceToUpdate.BannerUrl = bannerUrl; // Cập nhật URL banner (mới hoặc cũ)
+                // ✅ Lấy danh sách Topic mới từ TopicIds (nếu có)
+                if (conferenceDto.TopicIds != null && conferenceDto.TopicIds.Any())
+                {
+                    var topics = await _topicRepository.GetTopicsByIdsAsync(conferenceDto.TopicIds);
+                    conferenceToUpdate.Topics = topics.ToList(); // Gán trực tiếp
+                }
 
-                // 7. Lưu thay đổi vào database
                 await _conferenceRepository.Update(conferenceToUpdate);
 
-                // 8. Trả về một phản hồi chi tiết và hữu ích
                 return Ok(new
                 {
                     Message = "Conference updated successfully.",
@@ -193,14 +228,8 @@ namespace FMC_BE.Controllers
                     BannerUrl = conferenceToUpdate.BannerUrl
                 });
             }
-            catch (ArgumentException ex) // Bắt các lỗi cụ thể (nếu có)
+            catch (Exception ex)
             {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex) // Bắt các lỗi chung của máy chủ
-            {
-                // Ghi log lỗi ở đây (best practice)
-                // _logger.LogError(ex, "An error occurred while updating conference with ID {id}", id);
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }

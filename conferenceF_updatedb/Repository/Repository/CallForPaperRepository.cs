@@ -43,5 +43,11 @@ namespace Repository
         {
             await _callForPaperDAO.DeleteCallForPaper(id);
         }
+
+        public async Task<bool> HasActiveCallForPaper(int conferenceId)
+        {
+            return await _callForPaperDAO.HasActiveCallForPaper(conferenceId);
+        }
+
     }
 }

@@ -68,38 +68,45 @@ namespace ConferenceFWebAPI.Controllers
         /// <param name="createDto">Thông tin Timeline cần tạo.</param>
         /// <returns>Timeline đã được tạo.</returns>
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [Consumes("multipart/form-data")]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(TimelineResponseDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<TimelineResponseDto>> CreateTimeline([FromForm] TimeLineCreateDto createDto)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState); // Trả về lỗi validation từ DTO
+                return BadRequest(ModelState);
             }
 
-            // Chuyển đổi DTO sang Entity
-            var newTimeLine = new TimeLine
+            try
             {
-                ConferenceId = createDto.ConferenceId,
-                Date = createDto.Date.ToUniversalTime(), // Luôn dùng UTC cho server
-                Description = createDto.Description,
-                HangfireJobId = null // Job ID sẽ được gán bởi TimeLineManager
-            };
+                var newTimeLine = new TimeLine
+                {
+                    ConferenceId = createDto.ConferenceId,
+                    Date = createDto.Date.ToUniversalTime(),
+                    Description = createDto.Description
+                };
 
-            var createdTimeLine = await _timeLineManager.CreateTimelineWithReminderAsync(newTimeLine);
+                var createdTimeLine = await _timeLineRepository.CreateTimeLineAsync(newTimeLine);
 
-            // Chuyển đổi Entity sang Response DTO trước khi trả về
-            var responseDto = new TimelineResponseDto
+                var responseDto = new TimelineResponseDto
+                {
+                    TimeLineId = createdTimeLine.TimeLineId,
+                    ConferenceId = createdTimeLine.ConferenceId,
+                    Date = createdTimeLine.Date,
+                    Description = createdTimeLine.Description
+                };
+
+                return CreatedAtAction(nameof(GetTimeLinesByConference), new { conferenceId = responseDto.ConferenceId }, responseDto);
+            }
+            catch (Exception ex)
             {
-                TimeLineId = createdTimeLine.TimeLineId,
-                ConferenceId = createdTimeLine.ConferenceId,
-                Date = createdTimeLine.Date,
-                Description = createdTimeLine.Description
-            };
-
-            // Sử dụng GetTimeLinesByConference cho CreatedAtAction
-            return CreatedAtAction(nameof(GetTimeLinesByConference), new { conferenceId = responseDto.ConferenceId }, responseDto);
+                return StatusCode(500, $"Internal server error while creating timeline: {ex.Message}");
+            }
         }
+
+
 
         /// <summary>
         /// Cập nhật một Timeline hiện có và cập nhật nhắc nhở.
@@ -108,9 +115,11 @@ namespace ConferenceFWebAPI.Controllers
         /// <param name="updateDto">Thông tin cập nhật Timeline.</param>
         /// <returns>Không có nội dung nếu thành công.</returns>
         [HttpPut("{id}")]
+        [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateTimeline(int id, [FromForm] TimeLineUpdateDto updateDto)
         {
             if (!ModelState.IsValid)
@@ -118,24 +127,26 @@ namespace ConferenceFWebAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Tạo entity tạm thời với dữ liệu từ DTO và ID từ URL
-            var timelineToUpdate = new TimeLine
+            try
             {
-                TimeLineId = id, // ID từ URL
-                Date = updateDto.Date.ToUniversalTime(),
-                Description = updateDto.Description
-                // ConferenceId không được cập nhật qua UpdateDto này, nếu cần thì lấy từ existingTimeLine
-            };
+                var existing = await _timeLineRepository.GetTimeLineByIdAsync(id);
+                if (existing == null)
+                {
+                    return NotFound($"Timeline with ID {id} not found.");
+                }
 
-            var updatedTimelineEntity = await _timeLineManager.UpdateTimelineWithReminderAsync(id, timelineToUpdate);
+                existing.Date = updateDto.Date.ToUniversalTime();
+                existing.Description = updateDto.Description;
 
-            if (updatedTimelineEntity == null)
-            {
-                return NotFound();
+                await _timeLineRepository.UpdateTimeLineAsync(existing);
+                return NoContent();
             }
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error while updating timeline: {ex.Message}");
+            }
         }
+
 
         /// <summary>
         /// Xóa một Timeline và nhắc nhở liên quan.

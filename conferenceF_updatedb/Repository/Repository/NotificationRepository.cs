@@ -14,56 +14,15 @@ namespace Repository
             _notificationDAO = notificationDAO;
         }
 
-        public async Task<Notification> CreateNotificationForUserAsync(int userId, string title, string content)
+        public async Task AddNotificationAsync(Notification notification)
         {
-            var notification = new Notification
-            {
-                UserId = userId,
-                Title = title,
-                Content = content,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            // Thêm trạng thái "chưa đọc" cho người dùng
-            notification.NotificationStatuses.Add(new NotificationStatus
-            {
-                UserId = userId,
-                IsRead = false
-            });
-
-            return await _notificationDAO.AddNotificationAsync(notification);
+            await _notificationDAO.AddAsync(notification);
+            await _notificationDAO.SaveChangesAsync();
         }
 
-        public async Task<(Notification?, List<User>)> CreateNotificationForRoleAsync(int conferenceId, string roleName, string title, string content)
+        public async Task<List<Notification>> GetNotificationsByUserIdAsync(int userId)
         {
-            // 1. Tìm tất cả người dùng có vai trò đó
-            var usersInRole = await _notificationDAO.GetUsersInRoleAsync(conferenceId, roleName);
-            if (!usersInRole.Any())
-            {
-                return (null, new List<User>());
-            }
-
-            // 2. Tạo thông báo chung
-            var notification = new Notification
-            {
-                RoleTarget = roleName,
-                Title = title,
-                Content = content,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            // 3. Thêm trạng thái "chưa đọc" cho từng người dùng
-            foreach (var user in usersInRole)
-            {
-                notification.NotificationStatuses.Add(new NotificationStatus
-                {
-                    UserId = user.UserId,
-                    IsRead = false
-                });
-            }
-
-            var createdNotification = await _notificationDAO.AddNotificationAsync(notification);
-            return (createdNotification, usersInRole);
+            return await _notificationDAO.GetByUserIdAsync(userId);
         }
     }
 }

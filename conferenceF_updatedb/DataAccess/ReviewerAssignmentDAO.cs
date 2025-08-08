@@ -73,9 +73,23 @@ namespace DataAccess
             }
         }
 
-
-
-
+        public async Task<IEnumerable<ReviewerAssignment>> GetAllByPaperId(int paperId)
+        {
+            try
+            {
+                return await _context.ReviewerAssignments
+                    .Include(r => r.Paper)
+                        .ThenInclude(p => p.PaperRevisions)
+                    .Include(r => r.Paper.Topic)
+                    .Where(r => r.PaperId == paperId)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving all reviewer assignments for paper ID {paperId}.", ex);
+            }
+        }
 
         public async Task Add(ReviewerAssignment entity)
         {

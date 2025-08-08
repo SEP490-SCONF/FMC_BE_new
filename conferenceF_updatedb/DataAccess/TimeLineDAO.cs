@@ -1,9 +1,9 @@
-﻿using BussinessObject.Entity;
+﻿// DataAccess/TimeLineDAO.cs
+using BussinessObject.Entity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DataAccess
@@ -30,17 +30,41 @@ namespace DataAccess
                 .ToListAsync();
         }
 
-        public async Task<TimeLine> AddAsync(TimeLine timeLine)
+        public async Task AddAsync(TimeLine timeLine)
         {
             await _context.TimeLines.AddAsync(timeLine);
-            await _context.SaveChangesAsync();
-            return timeLine;
+            // Không gọi SaveChangesAsync ở đây. Repository sẽ gọi nó.
         }
 
-        public async Task UpdateAsync(TimeLine timeLine)
+        public void Update(TimeLine timeLine) // Đổi từ UpdateAsync sang Update (synchronous)
         {
             _context.Entry(timeLine).State = EntityState.Modified;
+            // Không gọi SaveChangesAsync ở đây. Repository sẽ gọi nó.
+        }
+
+        public void Delete(TimeLine timeLine)
+        {
+            _context.TimeLines.Remove(timeLine);
+            // Không gọi SaveChangesAsync ở đây. Repository sẽ gọi nó.
+        }
+
+        public async Task SaveChangesAsync()
+        {
             await _context.SaveChangesAsync();
         }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var timeLine = await _context.TimeLines.FindAsync(id);
+            if (timeLine == null)
+                return false;
+
+            _context.TimeLines.Remove(timeLine);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+
+
     }
 }

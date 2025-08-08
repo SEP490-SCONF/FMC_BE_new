@@ -7,14 +7,10 @@
         public int RevisionId { get; set; }
         public int? Score { get; set; }
         public string? Comments { get; set; }
+        public string? Quote { get; set; } // Thêm quote nếu cần
 
-        public int PageIndex { get; set; }  
-        public double Left { get; set; }    
-        public double Top { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
-        public string? TextHighlighted { get; set; }  
-
+        // Highlight areas (nhiều vùng)
+        public List<HighlightAreaDTO> HighlightAreas { get; set; }
 
         // Comment
         public int UserId { get; set; }

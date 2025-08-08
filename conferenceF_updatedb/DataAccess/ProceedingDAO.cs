@@ -108,6 +108,8 @@ namespace DataAccess
                 throw new Exception($"Error deleting proceeding with ID {id}.", ex);
             }
         }
+
+
     }
 
 }

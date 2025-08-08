@@ -8,7 +8,6 @@
         public string AvatarUrl { get; set; }
         //public int RoleId { get; set; }
         public string RoleName { get; set; } = null!;
-        public DateTime? CreatedAt { get; set; }
 
 
     }

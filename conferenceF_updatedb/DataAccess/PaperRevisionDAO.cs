@@ -61,6 +61,19 @@ namespace DataAccess
                                  .OrderByDescending(pr => pr.SubmittedAt)
                                  .ToListAsync();
         }
+
+        public async Task<string?> GetAcceptedFilePathByPaperIdAsync(int paperId)
+        {
+            var acceptedRevision = await _context.PaperRevisions
+                .Where(pr => pr.PaperId == paperId && pr.Status == "Accepted")
+                .OrderByDescending(pr => pr.SubmittedAt)
+                .FirstOrDefaultAsync();
+
+            return acceptedRevision?.FilePath;
+        }
+
     }
+
+
 
 }

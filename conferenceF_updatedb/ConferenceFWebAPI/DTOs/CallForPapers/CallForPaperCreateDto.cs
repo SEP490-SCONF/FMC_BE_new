@@ -11,6 +11,7 @@ namespace ConferenceFWebAPI.DTOs.CallForPapers
 
         public DateTime? Deadline { get; set; }
 
+
         public IFormFile? TemplateFile { get; set; } 
 
     }

@@ -20,7 +20,6 @@ using Microsoft.OData.ModelBuilder;
 
 var builder = WebApplication.CreateBuilder(args);
 // 1. Lấy chuỗi kết nối SignalR từ appsettings.json
-var signalRConnectionString = builder.Configuration.GetConnectionString("AzureSignalR");
 var modelBuilder = new ODataConventionModelBuilder();
 modelBuilder.EntitySet<Paper>("Papers"); // Register your Paper entity as an OData EntitySet
 modelBuilder.EntitySet<Review>("Reviews");
@@ -36,9 +35,7 @@ builder.Services.AddControllers().AddOData(
 );
 
 // 2. Thêm dịch vụ SignalR và kết nối với Azure SignalR Service
-builder.Services.AddSignalR().AddAzureSignalR(signalRConnectionString);
-builder.Services.AddSignalR()
-    .AddAzureSignalR(builder.Configuration["Azure:SignalR:ConnectionString"]);
+builder.Services.AddSignalR().AddAzureSignalR(builder.Configuration.GetConnectionString("AzureSignalR"));
 
 builder.Services.AddDbContext<ConferenceFTestContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -47,22 +44,54 @@ builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<ConferenceFWebAPI.Service.HangfireReminderService>();
 
-builder.Services.AddHangfire(configuration => configuration
-    .SetDataCompatibilityLevel(CompatibilityLevel.Version_170) // Hoặc phiên bản mới nhất
-    .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
-    .UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection"), new Hangfire.SqlServer.SqlServerStorageOptions
+// Cấu hình Hangfire với try-catch để tránh crash khi không có database
+try
+{
+    var hangfireConnectionString = builder.Configuration.GetConnectionString("HangfireConnection") 
+                                 ?? builder.Configuration.GetConnectionString("DefaultConnection");
+    
+    if (!string.IsNullOrEmpty(hangfireConnectionString))
     {
-        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
-        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
-        QueuePollInterval = TimeSpan.FromSeconds(15),
-        UseRecommendedIsolationLevel = true,
-        DisableGlobalLocks = true
-    }));
-builder.Services.AddHangfireServer();
+        builder.Services.AddHangfire(configuration => configuration
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseSqlServerStorage(hangfireConnectionString, new Hangfire.SqlServer.SqlServerStorageOptions
+            {
+                CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+                SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                QueuePollInterval = TimeSpan.FromSeconds(15),
+                UseRecommendedIsolationLevel = true,
+                DisableGlobalLocks = true,
+                PrepareSchemaIfNecessary = true
+            }));
+        builder.Services.AddHangfireServer();
+        Console.WriteLine("Hangfire configured successfully.");
+    }
+    else
+    {
+        Console.WriteLine("No Hangfire connection string found. Hangfire disabled.");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Hangfire configuration failed: {ex.Message}. Application will continue without background jobs.");
+}
 
 // Đăng ký các service
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ICertificateService, CertificateService>();
+
+// Conditional BackgroundCertificateService registration
+try
+{
+    builder.Services.AddScoped<BackgroundCertificateService>();
+    Console.WriteLine("BackgroundCertificateService registered successfully.");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"BackgroundCertificateService registration failed: {ex.Message}");
+}
 // DAO registrations
 builder.Services.AddScoped<UserDAO>();
 builder.Services.AddScoped<RoleDAO>();
@@ -88,7 +117,10 @@ builder.Services.AddScoped<ScheduleDAO>();
 builder.Services.AddScoped<TopicDAO>();
 builder.Services.AddScoped<UserConferenceRoleDAO>();
 builder.Services.AddScoped<TimeLineDAO>();
+builder.Services.AddScoped<CertificateDAO>();
+builder.Services.AddScoped<HighlightAreaDAO>();
 // Add Scoped services for each repository
+builder.Services.AddScoped<IHighlightAreaRepository, HighlightAreaRepository>();
 
 // User
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -212,7 +244,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                builder.Configuration["Jwt:Key"] ?? "default-secret-key-for-development-only-do-not-use-in-production"))
         };
     });
 
@@ -225,7 +258,8 @@ builder.Services.AddScoped<NotificationService>();
 
 builder.Services.AddScoped<IAzureBlobStorageService, AzureBlobStorageService>();
 builder.Services.AddScoped<HangfireReminderService>(); // Đăng ký service chứa logic job
-builder.Services.AddScoped<TimeLineManager>(); 
+builder.Services.AddScoped<TimeLineManager>();
+builder.Services.AddScoped<PaperDeadlineService>();
 
 
 // Add services to the container.
@@ -244,12 +278,25 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+
 app.UseCors("SpecificOrigin");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseHangfireDashboard();
+
+// Conditional Hangfire dashboard
+try
+{
+    app.UseHangfireDashboard();
+    Console.WriteLine("Hangfire dashboard enabled at /hangfire");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Hangfire dashboard disabled: {ex.Message}");
+}
 app.MapControllers();
+app.MapHub<NotificationHub>("/notificationHub");
 // 3. Map Hub của bạn tới một endpoint
 
 app.Run();

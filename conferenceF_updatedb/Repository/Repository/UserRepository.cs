@@ -62,5 +62,11 @@ namespace Repository
             return await _userDao.RoleExists(roleId);
         }
 
+        public async Task<IEnumerable<User>> GetUsersByRoleId(int roleId)
+        {
+            return await _userDao.GetUsersByRoleId(roleId);
+        }
+
+
     }
 }

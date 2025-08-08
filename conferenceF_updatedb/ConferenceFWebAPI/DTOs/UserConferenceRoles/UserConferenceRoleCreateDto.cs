@@ -2,7 +2,11 @@
 {
     public class UserConferenceRoleCreateDto
     {
-        public string Email { get; set; } // Thay UserId bằng Email
+        public int UserId { get; set; } // Thay UserId bằng Email
+        public int ConferenceRoleId { get; set; } 
+
+        
         public int ConferenceId { get; set; } // Giữ lại ConferenceId
+
     }
 }

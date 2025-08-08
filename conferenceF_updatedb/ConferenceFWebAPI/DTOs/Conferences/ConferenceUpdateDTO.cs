@@ -12,7 +12,10 @@
 
         public string? Location { get; set; }
 
-        public string? CallForPaper { get; set; }
+        public bool? Status { get; set; }
+        public List<int>? TopicIds { get; set; }  // ✅ Thêm dòng này
+
+
 
         // BannerImage là optional, chỉ cần gửi khi muốn thay đổi ảnh.
         public IFormFile? BannerImage { get; set; }
