@@ -26,6 +26,8 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IConferenceRoleRepository _conferenceRoleRepository;
         private readonly IEmailService _emailService;
         private readonly IWebHostEnvironment _env;
+        private readonly PaperDeadlineService _paperDeadlineService; // THÊM CÁI NÀY
+        private readonly ITimeLineRepository _timeLineRepository;
 
         public PapersController(
             IPaperRepository paperRepository,
@@ -38,7 +40,10 @@ namespace ConferenceFWebAPI.Controllers
             IConferenceRepository conferenceRepository,
             IConferenceRoleRepository conferenceRoleRepository,
             IEmailService emailService,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env,
+            PaperDeadlineService paperDeadlineService, // THÊM VÀO CONSTRUCTOR
+            ITimeLineRepository timeLineRepository)
+
         {
             _paperRepository = paperRepository;
             _azureBlobStorageService = azureBlobStorageService;
@@ -51,11 +56,12 @@ namespace ConferenceFWebAPI.Controllers
             _conferenceRoleRepository = conferenceRoleRepository;
             _emailService = emailService;
             _env = env;
+            _paperDeadlineService = paperDeadlineService; // GÁN
+            _timeLineRepository = timeLineRepository; // GÁN
+
         }
 
         [HttpGet("conference/{conferenceId}")]
-        [EnableQuery]
-
         [ProducesResponseType(typeof(List<PaperResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetPapersByConference(int conferenceId)
@@ -64,12 +70,9 @@ namespace ConferenceFWebAPI.Controllers
             if (papers == null || !papers.Any())
                 return NotFound($"No papers found for conference ID: {conferenceId}");
 
-            //var paperDto = _mapper.Map<List<PaperResponseDto>>(papers);
-            var paperDto = _mapper.Map<List<PaperResponseDto>>(papers).AsQueryable();
-
+            var paperDto = _mapper.Map<List<PaperResponseDto>>(papers);
             return Ok(paperDto);
         }
-        [EnableQuery]
         [HttpGet("conference/{conferenceId}/status/submitted")]
         [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -137,12 +140,17 @@ namespace ConferenceFWebAPI.Controllers
 
                 await _paperRepository.AddPaperAsync(paper);
 
+                // THÊM LỜI GỌI ĐẾN PAPERDEADLINESERVICE NGAY SAU KHI LƯU BÀI BÁO THÀNH CÔNG
+                // paper.PaperId đã có giá trị sau khi AddPaperAsync
+                await _paperDeadlineService.SchedulePaperReminders(paper.PaperId);
+
+
                 var initialRevision = new PaperRevision
                 {
                     PaperId = paper.PaperId,
                     FilePath = fileUrl,
                     Status = "Submitted",
-                    SubmittedAt = DateTime.UtcNow // Sử dụng DateTime.UtcNow thay vì DateTime.Now
+                    SubmittedAt = DateTime.UtcNow
                 };
                 await _paperRevisionRepository.AddPaperRevisionAsync(initialRevision);
 
@@ -153,7 +161,6 @@ namespace ConferenceFWebAPI.Controllers
                 var newRole = await _conferenceRoleRepository.GetById(newRoleId);
 
                 // --- Logic cập nhật vai trò và gửi email cho từng tác giả ---
-                // Chỉ thực hiện nếu các thông tin cơ bản (hội thảo, vai trò mới) tồn tại
                 if (conference != null && newRole != null)
                 {
                     foreach (var authorId in paperDto.AuthorIds.Distinct())
@@ -162,7 +169,7 @@ namespace ConferenceFWebAPI.Controllers
                         if (authorUser == null)
                         {
                             Console.WriteLine($"Warning: Author User ID {authorId} not found. Skipping role update and email for this author.");
-                            continue; // Bỏ qua tác giả này
+                            continue;
                         }
 
                         var updatedRoleAssignment = await _userConferenceRoleRepository
@@ -173,7 +180,6 @@ namespace ConferenceFWebAPI.Controllers
 
                         if (updatedRoleAssignment == null)
                         {
-                            // Tạo mới UserConferenceRole
                             var newAssignment = new UserConferenceRole
                             {
                                 UserId = authorId,
@@ -195,7 +201,6 @@ namespace ConferenceFWebAPI.Controllers
                         }
                         else if (updatedRoleAssignment.ConferenceRoleId != newRoleId)
                         {
-                            // Cập nhật vai trò
                             Console.WriteLine($"Updated UserConferenceRole for User {authorId} in Conference {conferenceId} to Role {newRole.RoleName}.");
 
                             emailSubject = $"Cập nhật vai trò của bạn trong hội thảo '{conference.Title}'";
@@ -209,12 +214,10 @@ namespace ConferenceFWebAPI.Controllers
                         }
                         else
                         {
-                            // Vai trò đã đúng, không cần gửi email
                             Console.WriteLine($"User {authorId} already has Role {newRole.RoleName} in Conference {conferenceId}. No email sent.");
-                            continue; // Bỏ qua gửi email nếu không có thay đổi
+                            continue;
                         }
 
-                        // Gửi email cho tác giả hiện tại
                         await _emailService.SendEmailAsync(authorUser.Email, emailSubject, emailBody);
                     }
                 }
@@ -223,10 +226,9 @@ namespace ConferenceFWebAPI.Controllers
                     Console.WriteLine($"Warning: Missing Conference ({conferenceId}) or New Role ({newRoleId}) details. Skipping role updates and emails for authors.");
                 }
 
-
                 return Ok(new
                 {
-                    Message = "File uploaded and paper + revision saved. Roles updated.",
+                    Message = "File uploaded and paper + revision saved. Roles updated and reminders scheduled.",
                     FileUrl = fileUrl,
                     PaperId = paper.PaperId,
                     RevisionId = initialRevision.RevisionId
@@ -238,6 +240,7 @@ namespace ConferenceFWebAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+    
 
         [HttpGet]
         [EnableQuery]
@@ -266,17 +269,35 @@ namespace ConferenceFWebAPI.Controllers
         [HttpPut("mark-as-deleted/{paperId}")]
         public async Task<IActionResult> MarkPaperAsDeleted(int paperId)
         {
-            var paper = await _paperRepository.GetPaperByIdAsync(paperId);
+            // Để hủy job Hangfire, chúng ta cần truy vấn Paper với thông tin Conference và TimeLines
+            // Điều này yêu cầu một phương thức repository mới nếu chưa có, ví dụ: GetPaperWithConferenceAndTimelinesAsync
+            var paper = await _paperRepository.GetPaperWithConferenceAndTimelinesAsync(paperId);
             if (paper == null) return NotFound("Paper not found.");
 
             try
             {
                 paper.Status = "Deleted";
                 await _paperRepository.UpdatePaperAsync(paper);
-                return Ok($"Paper with ID {paperId} marked as 'Deleted'.");
+
+                // THÊM: Hủy các job Hangfire liên quan đến các timeline của hội thảo này
+                // nếu bài báo bị xóa (hoặc "soft-deleted")
+                if (paper.Conference != null && paper.Conference.TimeLines != null)
+                {
+                    foreach (var timeline in paper.Conference.TimeLines)
+                    {
+                        if (!string.IsNullOrEmpty(timeline.HangfireJobId))
+                        {
+                            timeline.HangfireJobId = null;
+                            await _timeLineRepository.UpdateTimeLineAsync(timeline); // Cập nhật TimeLine trong DB
+                        }
+                    }
+                }
+
+                return Ok($"Paper with ID {paperId} marked as 'Deleted' and associated reminders cancelled.");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error marking paper as deleted: {ex.ToString()}");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
@@ -318,7 +339,7 @@ namespace ConferenceFWebAPI.Controllers
             return Ok(paperDtos);
         }
 
-        [HttpGet("conference/{conferenceId}/published")]
+         [HttpGet("conference/{conferenceId}/published")]
         [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetPublishedPapers(int conferenceId)
@@ -330,8 +351,5 @@ namespace ConferenceFWebAPI.Controllers
             var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
             return Ok(paperDtos);
         }
-
-
-
     }
 }

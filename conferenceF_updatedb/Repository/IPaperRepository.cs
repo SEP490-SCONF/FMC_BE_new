@@ -6,6 +6,8 @@ namespace Repository
 {
     public interface IPaperRepository
     {
+        Task<Paper?> GetPaperWithConferenceAndTimelinesAsync(int paperId);
+
         IQueryable<Paper> GetAllPapers();
         Task<Paper?> GetPaperByIdAsync(int paperId);
         Task<Paper?> GetPaperByIdWithIncludesAsync(int paperId);

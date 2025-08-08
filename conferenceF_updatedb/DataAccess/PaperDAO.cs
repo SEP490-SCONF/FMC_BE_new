@@ -16,7 +16,20 @@ namespace DataAccess
             _context = context;
         }
 
-        public List<Paper> GetPapersByConferenceId(int conferenceId)
+        public async Task<Paper?> GetPaperWithConferenceAndTimelinesAsync(int paperId)
+        {
+            return await _context.Papers
+                 .Include(p => p.Conference)
+                .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author)
+                        .ThenInclude(a => a.UserConferenceRoles) // Tải đến đây là đủ
+                                                                 // Nếu cần, bạn có thể thêm ThenInclude trên các nhánh khác
+                .Include(p => p.ReviewerAssignments)
+                    .ThenInclude(ra => ra.Reviewer)
+                        .ThenInclude(r => r.UserConferenceRoles) // Tải đến đây là đủ
+                .FirstOrDefaultAsync(p => p.PaperId == paperId);
+        }
+          public List<Paper> GetPapersByConferenceId(int conferenceId)
         {
             return _context.Papers
                            .Where(p => p.ConferenceId == conferenceId)
@@ -30,7 +43,7 @@ namespace DataAccess
             return _context.Papers.Where(p => p.Status != "Deleted").AsQueryable();
         }
 
-        public async Task<Paper?> GetByIdAsync(int id)
+       public async Task<Paper?> GetByIdAsync(int id)
         {
             return await _context.Papers
                 .Include(p => p.Topic)
@@ -83,7 +96,7 @@ namespace DataAccess
         public List<Paper> GetPapersByConferenceIdAndStatus(int conferenceId, string status)
         {
             return _context.Papers
-                .Where(p => p.ConferenceId == conferenceId)
+                .Where(p => p.ConferenceId == conferenceId && p.Status == status)
                 .Include(p => p.Topic)
                 .Include(p => p.PaperAuthors)
                     .ThenInclude(pa => pa.Author)
@@ -94,7 +107,7 @@ namespace DataAccess
                 .ToList();
         }
 
-        public List<Paper> GetPublishedPapersByConferenceId(int conferenceId)
+         public List<Paper> GetPublishedPapersByConferenceId(int conferenceId)
         {
             return _context.Papers
                 .Where(p => p.ConferenceId == conferenceId
@@ -120,8 +133,6 @@ namespace DataAccess
                 .Include(p => p.Conference)
                 .ToListAsync();
         }
-
-
 
 
     }
