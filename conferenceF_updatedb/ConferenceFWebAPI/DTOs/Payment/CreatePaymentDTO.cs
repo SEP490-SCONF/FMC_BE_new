@@ -7,7 +7,6 @@
         public int? PaperId { get; set; }
         public decimal Amount { get; set; }
         public string? Currency { get; set; }
-        public long OrderCode { get; set; }
         public string? Purpose { get; set; }
     }
 }
