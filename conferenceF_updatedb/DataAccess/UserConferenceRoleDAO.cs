@@ -187,6 +187,15 @@ namespace DataAccess
                     u.ConferenceRoleId == 3); // 3 là Reviewer
         }
 
+        public async Task<bool> HasUserAnyRoleInConference(int userId, int conferenceId, List<string> roles)
+        {
+            return await _context.UserConferenceRoles
+                .Include(x => x.ConferenceRole)
+                .AnyAsync(x => x.UserId == userId
+                            && x.ConferenceId == conferenceId
+                            && roles.Contains(x.ConferenceRole.RoleName));
+        }
+
 
     }
 

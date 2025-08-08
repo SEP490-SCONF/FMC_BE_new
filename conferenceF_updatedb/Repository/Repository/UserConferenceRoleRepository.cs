@@ -58,6 +58,10 @@ namespace Repository.Repository
         {
             return await _dao.GetReviewerByUserAndConference(userId, conferenceId);
         }
+        public async Task<bool> HasUserAnyRoleInConference(int userId, int conferenceId, List<string> roles)
+        {
+            return await _dao.HasUserAnyRoleInConference(userId, conferenceId, roles);
+        }
 
     }
 }

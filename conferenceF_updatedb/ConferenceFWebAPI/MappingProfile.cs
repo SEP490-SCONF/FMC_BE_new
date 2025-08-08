@@ -79,6 +79,8 @@ namespace ConferenceFWebAPI
 
 
             CreateMap<PaperRevision, PaperRevisionResponseDto>();
+            CreateMap<ConferenceFWebAPI.DTOs.Reviews.HighlightAreaDTO, BussinessObject.Entity.HighlightArea>()
+    .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<PaperRevision, PaperRevisionDTO>();
 
             CreateMap<AddPaperRevisionDTO, PaperRevision>();
@@ -187,5 +189,7 @@ namespace ConferenceFWebAPI
 
 
         }
+        
     }
+    
 }
