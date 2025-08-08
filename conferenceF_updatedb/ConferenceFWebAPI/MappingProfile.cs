@@ -57,6 +57,9 @@ namespace ConferenceFWebAPI
                            .ForMember(dest => dest.FilePath, opt => opt.Ignore()) // FilePath sẽ được xử lý riêng bởi Azure Blob Service
                            .ForMember(dest => dest.Status, opt => opt.Ignore()) // Status sẽ được gán trong controller
                            .ForMember(dest => dest.SubmittedAt, opt => opt.Ignore()); // SubmittedAt sẽ được gán trong controller
+            CreateMap<Notification, NotificationDto>();
+            CreateMap<NotificationDto, Notification>();
+
 
 
             CreateMap<PaperRevision, PaperRevisionResponseDto>();

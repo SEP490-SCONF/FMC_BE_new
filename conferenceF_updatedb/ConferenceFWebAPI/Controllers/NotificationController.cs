@@ -1,4 +1,6 @@
-﻿using BussinessObject.Entity;
+﻿using AutoMapper;
+using BussinessObject.Entity;
+using ConferenceFWebAPI.DTOs;
 using ConferenceFWebAPI.Service;
 using Microsoft.AspNetCore.Mvc;
 using Repository;
@@ -10,10 +12,12 @@ namespace ConferenceFWebAPI.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly INotificationRepository _notificationRepository;
+        private readonly IMapper _mapper;
 
-        public NotificationController(INotificationRepository notificationRepository)
+        public NotificationController(INotificationRepository notificationRepository, IMapper mapper)
         {
             _notificationRepository = notificationRepository;
+            _mapper = mapper;
         }
 
         [HttpPost("test")]
@@ -38,6 +42,22 @@ namespace ConferenceFWebAPI.Controllers
             {
                 return StatusCode(500, $"Có lỗi xảy ra: {ex.Message}");
             }
+        }
+        
+        [HttpGet("{userId}")]
+        public async Task<ActionResult<IEnumerable<NotificationDto>>> GetNotificationByUserId(int userId)
+        {
+            var notifications = await _notificationRepository.GetNotificationsByUserIdAsync(userId);
+
+            if (notifications == null || !notifications.Any())
+            {
+                return NotFound($"Không tìm thấy thông báo nào cho người dùng có ID: {userId}.");
+            }
+
+            // Sử dụng AutoMapper để chuyển đổi từ Notification sang NotificationDto
+            var notificationDtos = _mapper.Map<IEnumerable<NotificationDto>>(notifications);
+
+            return Ok(notificationDtos);
         }
     }
 }
