@@ -2,6 +2,7 @@
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.User;
 using Google.Apis.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -172,6 +173,39 @@ namespace ConferenceFWebAPI.Controllers.Authen
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+        
+        [HttpPost("Logout")]
+        public async Task<IActionResult> Logout()
+        {
+            // 1. Kiểm tra refreshToken trong cookie
+            if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
+            {
+                return BadRequest(new { success = false, message = "No refresh token found" });
+            }
+
+            // 2. Tìm user với refresh token
+            var user = await _userRepository.GetByRefreshToken(refreshToken);
+            if (user == null)
+            {
+                return Unauthorized(new { success = false, message = "Invalid refresh token" });
+            }
+
+            // 3. Xoá refresh token trong DB
+            user.RefreshToken = null;
+            user.TokenExpiry = null;
+            await _userRepository.Update(user);
+
+            // 4. Xoá cookie trên trình duyệt
+            Response.Cookies.Delete("refreshToken", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None
+            });
+
+            return Ok(new { success = true, message = "Logged out successfully" });
+        }
+
 
     }
 }

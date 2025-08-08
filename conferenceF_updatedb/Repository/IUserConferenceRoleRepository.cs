@@ -18,9 +18,7 @@ namespace Repository
         Task<IEnumerable<UserConferenceRole>> GetUsersByConferenceIdAndRolesAsync(int conferenceId, List<int> roleIds);
         Task<List<Conference>> GetConferencesByUserIdAndRoleAsync(int userId, string roleName);
         Task<UserConferenceRole?> GetByUserAndConference(int userId, int conferenceId);
-
-
-
+        Task<bool> HasUserAnyRoleInConference(int userId, int conferenceId, List<string> roles);
     }
 }
-﻿
+

@@ -4,17 +4,14 @@
     {
         public int? Score { get; set; }
         public string? Comments { get; set; }
-
         public int RevisionId { get; set; } // để truy lại PaperId
 
         // Highlight
-        public int HighlightId { get; set; }  
-        public int PageIndex { get; set; }   
-        public double Left { get; set; }     
-        public double Top { get; set; }     
-        public double Width { get; set; }     
-        public double Height { get; set; }    
-        public string? TextHighlighted { get; set; }  
+        public int HighlightId { get; set; }
+        public string? TextHighlighted { get; set; }
+
+        // Danh sách các vùng highlight (nhiều vùng)
+        public List<HighlightAreaDTO> HighlightAreas { get; set; } = new();
 
         // Comment
         public int CommentId { get; set; } // cần biết để update
