@@ -2,10 +2,12 @@
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.Papers;
+using ConferenceFWebAPI.Hubs;
 using ConferenceFWebAPI.Service;
 using DataAccess;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.SignalR;
 using Repository;
 using System.Security.Claims;
 
@@ -28,7 +30,9 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly PaperDeadlineService _paperDeadlineService; // THÊM CÁI NÀY
         private readonly ITimeLineRepository _timeLineRepository;
-
+        private readonly INotificationRepository _notificationRepository; // Add this repository
+                                                                          // If you are using SignalR, also inject the hub context:
+        private readonly IHubContext<NotificationHub> _hubContext;
         public PapersController(
             IPaperRepository paperRepository,
             IAzureBlobStorageService azureBlobStorageService,
@@ -42,7 +46,9 @@ namespace ConferenceFWebAPI.Controllers
             IEmailService emailService,
             IWebHostEnvironment env,
             PaperDeadlineService paperDeadlineService, // THÊM VÀO CONSTRUCTOR
-            ITimeLineRepository timeLineRepository)
+            ITimeLineRepository timeLineRepository,
+            INotificationRepository notificationRepository,
+             IHubContext<NotificationHub> hubContext)
 
         {
             _paperRepository = paperRepository;
@@ -58,7 +64,9 @@ namespace ConferenceFWebAPI.Controllers
             _env = env;
             _paperDeadlineService = paperDeadlineService; // GÁN
             _timeLineRepository = timeLineRepository; // GÁN
-
+            _notificationRepository = notificationRepository;
+            _hubContext = hubContext;
+            
         }
 
         [HttpGet("conference/{conferenceId}")]
@@ -160,6 +168,28 @@ namespace ConferenceFWebAPI.Controllers
                 var conference = await _conferenceRepository.GetById(conferenceId);
                 var newRole = await _conferenceRoleRepository.GetById(newRoleId);
 
+                // THÊM LƯU THÔNG BÁO CHO NGƯỜI NỘP BÀI THÀNH CÔNG
+                var uploaderUser = await _userRepository.GetById(uploaderUserId);
+                if (uploaderUser != null)
+                {
+                    string notificationTitle = "Nộp bài thành công!";
+                    string notificationContent = $"Bạn đã nộp bài báo '{paper.Title}' thành công cho hội thảo '{conference.Title}'.";
+
+                    // Tạo và lưu thông báo vào cơ sở dữ liệu
+                    var notification = new Notification
+                    {
+                        Title = notificationTitle,
+                        Content = notificationContent,
+                        UserId = uploaderUserId,
+                        RoleTarget = "Author",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _notificationRepository.AddNotificationAsync(notification);
+
+                    // Gửi thông báo real-time qua SignalR
+                    await _hubContext.Clients.User(uploaderUserId.ToString()).SendAsync("ReceiveNotification", notificationTitle, notificationContent);
+                }
+
                 // --- Logic cập nhật vai trò và gửi email cho từng tác giả ---
                 if (conference != null && newRole != null)
                 {
@@ -192,12 +222,12 @@ namespace ConferenceFWebAPI.Controllers
 
                             emailSubject = $"Vai trò mới của bạn trong hội thảo '{conference.Title}'";
                             emailBody = $@"
-                                <h3>Xin chào {authorUser.Name},</h3>
-                                <p>Bạn vừa được gán vai trò <strong>{newRole.RoleName}</strong> trong hội thảo <strong>{conference.Title}</strong> vì đã tải lên bài báo.</p>
-                                <p>Thời gian gán: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
-                                <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
-                                <br/>
-                                <p>Trân trọng,<br/>Ban tổ chức</p>";
+                        <h3>Xin chào {authorUser.Name},</h3>
+                        <p>Bạn vừa được gán vai trò <strong>{newRole.RoleName}</strong> trong hội thảo <strong>{conference.Title}</strong> vì đã tải lên bài báo.</p>
+                        <p>Thời gian gán: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
+                        <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
+                        <br/>
+                        <p>Trân trọng,<br/>Ban tổ chức</p>";
                         }
                         else if (updatedRoleAssignment.ConferenceRoleId != newRoleId)
                         {
@@ -205,12 +235,12 @@ namespace ConferenceFWebAPI.Controllers
 
                             emailSubject = $"Cập nhật vai trò của bạn trong hội thảo '{conference.Title}'";
                             emailBody = $@"
-                                <h3>Xin chào {authorUser.Name},</h3>
-                                <p>Vai trò của bạn trong hội thảo <strong>{conference.Title}</strong> đã được cập nhật thành <strong>{newRole.RoleName}</strong> do bạn đã tải lên bài báo.</p>
-                                <p>Thời gian cập nhật: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
-                                <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
-                                <br/>
-                                <p>Trân trọng,<br/>Ban tổ chức</p>";
+                        <h3>Xin chào {authorUser.Name},</h3>
+                        <p>Vai trò của bạn trong hội thảo <strong>{conference.Title}</strong> đã được cập nhật thành <strong>{newRole.RoleName}</strong> do bạn đã tải lên bài báo.</p>
+                        <p>Thời gian cập nhật: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
+                        <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
+                        <br/>
+                        <p>Trân trọng,<br/>Ban tổ chức</p>";
                         }
                         else
                         {
@@ -240,7 +270,6 @@ namespace ConferenceFWebAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-    
 
         [HttpGet]
         [EnableQuery]
