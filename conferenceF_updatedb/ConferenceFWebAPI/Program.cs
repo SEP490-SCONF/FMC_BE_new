@@ -20,7 +20,6 @@ using Microsoft.OData.ModelBuilder;
 
 var builder = WebApplication.CreateBuilder(args);
 // 1. Lấy chuỗi kết nối SignalR từ appsettings.json
-var signalRConnectionString = builder.Configuration.GetConnectionString("AzureSignalR");
 var modelBuilder = new ODataConventionModelBuilder();
 modelBuilder.EntitySet<Paper>("Papers"); // Register your Paper entity as an OData EntitySet
 modelBuilder.EntitySet<Review>("Reviews");
@@ -36,9 +35,7 @@ builder.Services.AddControllers().AddOData(
 );
 
 // 2. Thêm dịch vụ SignalR và kết nối với Azure SignalR Service
-builder.Services.AddSignalR().AddAzureSignalR(signalRConnectionString);
-builder.Services.AddSignalR()
-    .AddAzureSignalR(builder.Configuration["Azure:SignalR:ConnectionString"]);
+builder.Services.AddSignalR().AddAzureSignalR(builder.Configuration.GetConnectionString("AzureSignalR"));
 
 builder.Services.AddDbContext<ConferenceFTestContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -236,12 +233,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+
 app.UseCors("SpecificOrigin");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseHangfireDashboard();
 app.MapControllers();
+app.MapHub<NotificationHub>("/notificationHub");
 // 3. Map Hub của bạn tới một endpoint
 
 app.Run();

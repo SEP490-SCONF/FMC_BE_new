@@ -139,14 +139,18 @@ namespace ConferenceFWebAPI.Controllers
                     }).ToList();
 
                 await _paperRepository.AddPaperAsync(paper);
-                // THÊM LỜI GỌI ĐẾN PAPERDEADLINESERVICE
+
+                // THÊM LỜI GỌI ĐẾN PAPERDEADLINESERVICE NGAY SAU KHI LƯU BÀI BÁO THÀNH CÔNG
+                // paper.PaperId đã có giá trị sau khi AddPaperAsync
                 await _paperDeadlineService.SchedulePaperReminders(paper.PaperId);
+
+
                 var initialRevision = new PaperRevision
                 {
                     PaperId = paper.PaperId,
                     FilePath = fileUrl,
                     Status = "Submitted",
-                    SubmittedAt = DateTime.UtcNow // Sử dụng DateTime.UtcNow thay vì DateTime.Now
+                    SubmittedAt = DateTime.UtcNow
                 };
                 await _paperRevisionRepository.AddPaperRevisionAsync(initialRevision);
 
@@ -157,7 +161,6 @@ namespace ConferenceFWebAPI.Controllers
                 var newRole = await _conferenceRoleRepository.GetById(newRoleId);
 
                 // --- Logic cập nhật vai trò và gửi email cho từng tác giả ---
-                // Chỉ thực hiện nếu các thông tin cơ bản (hội thảo, vai trò mới) tồn tại
                 if (conference != null && newRole != null)
                 {
                     foreach (var authorId in paperDto.AuthorIds.Distinct())
@@ -166,7 +169,7 @@ namespace ConferenceFWebAPI.Controllers
                         if (authorUser == null)
                         {
                             Console.WriteLine($"Warning: Author User ID {authorId} not found. Skipping role update and email for this author.");
-                            continue; // Bỏ qua tác giả này
+                            continue;
                         }
 
                         var updatedRoleAssignment = await _userConferenceRoleRepository
@@ -177,7 +180,6 @@ namespace ConferenceFWebAPI.Controllers
 
                         if (updatedRoleAssignment == null)
                         {
-                            // Tạo mới UserConferenceRole
                             var newAssignment = new UserConferenceRole
                             {
                                 UserId = authorId,
@@ -199,7 +201,6 @@ namespace ConferenceFWebAPI.Controllers
                         }
                         else if (updatedRoleAssignment.ConferenceRoleId != newRoleId)
                         {
-                            // Cập nhật vai trò
                             Console.WriteLine($"Updated UserConferenceRole for User {authorId} in Conference {conferenceId} to Role {newRole.RoleName}.");
 
                             emailSubject = $"Cập nhật vai trò của bạn trong hội thảo '{conference.Title}'";
@@ -213,12 +214,10 @@ namespace ConferenceFWebAPI.Controllers
                         }
                         else
                         {
-                            // Vai trò đã đúng, không cần gửi email
                             Console.WriteLine($"User {authorId} already has Role {newRole.RoleName} in Conference {conferenceId}. No email sent.");
-                            continue; // Bỏ qua gửi email nếu không có thay đổi
+                            continue;
                         }
 
-                        // Gửi email cho tác giả hiện tại
                         await _emailService.SendEmailAsync(authorUser.Email, emailSubject, emailBody);
                     }
                 }
@@ -227,10 +226,9 @@ namespace ConferenceFWebAPI.Controllers
                     Console.WriteLine($"Warning: Missing Conference ({conferenceId}) or New Role ({newRoleId}) details. Skipping role updates and emails for authors.");
                 }
 
-
                 return Ok(new
                 {
-                    Message = "File uploaded and paper + revision saved. Roles updated.",
+                    Message = "File uploaded and paper + revision saved. Roles updated and reminders scheduled.",
                     FileUrl = fileUrl,
                     PaperId = paper.PaperId,
                     RevisionId = initialRevision.RevisionId
@@ -242,6 +240,7 @@ namespace ConferenceFWebAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+    
 
         [HttpGet]
         [EnableQuery]
@@ -288,8 +287,6 @@ namespace ConferenceFWebAPI.Controllers
                     {
                         if (!string.IsNullOrEmpty(timeline.HangfireJobId))
                         {
-                            _paperDeadlineService.CancelScheduledReminder(timeline.HangfireJobId);
-                            // Xóa HangfireJobId khỏi DB để tránh nhầm lẫn
                             timeline.HangfireJobId = null;
                             await _timeLineRepository.UpdateTimeLineAsync(timeline); // Cập nhật TimeLine trong DB
                         }

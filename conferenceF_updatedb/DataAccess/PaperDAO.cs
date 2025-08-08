@@ -19,9 +19,15 @@ namespace DataAccess
         public async Task<Paper?> GetPaperWithConferenceAndTimelinesAsync(int paperId)
         {
             return await _context.Papers
-                                 .Include(p => p.Conference)
-                                     .ThenInclude(c => c.TimeLines)
-                                 .FirstOrDefaultAsync(p => p.PaperId == paperId);
+                 .Include(p => p.Conference)
+                .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author)
+                        .ThenInclude(a => a.UserConferenceRoles) // Tải đến đây là đủ
+                                                                 // Nếu cần, bạn có thể thêm ThenInclude trên các nhánh khác
+                .Include(p => p.ReviewerAssignments)
+                    .ThenInclude(ra => ra.Reviewer)
+                        .ThenInclude(r => r.UserConferenceRoles) // Tải đến đây là đủ
+                .FirstOrDefaultAsync(p => p.PaperId == paperId);
         }
         public List<Paper> GetPapersByConferenceId(int conferenceId)
         {

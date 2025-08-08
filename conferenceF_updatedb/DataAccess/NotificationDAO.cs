@@ -16,21 +16,24 @@ namespace DataAccess
             _context = context;
         }
 
-        public async Task<Notification> AddNotificationAsync(Notification notification)
+        public async Task AddAsync(Notification entity)
         {
-            _context.Notifications.Add(notification);
+            await _context.Notifications.AddAsync(entity);
+        }
+
+        public async Task SaveChangesAsync()
+        {
             await _context.SaveChangesAsync();
-            return notification;
         }
 
-        public async Task<List<User>> GetUsersInRoleAsync(int conferenceId, string roleName)
+        // Thêm phương thức để lấy tất cả thông báo của một người dùng, sắp xếp theo thời gian mới nhất
+        public async Task<List<Notification>> GetByUserIdAsync(int userId)
         {
-            return await _context.UserConferenceRoles
-                .Where(ucr => ucr.ConferenceId == conferenceId && ucr.ConferenceRole.RoleName == roleName)
-                .Select(ucr => ucr.User)
-                .ToListAsync();
+            return await _context.Notifications
+                                 .Where(n => n.UserId == userId)
+                                 .OrderByDescending(n => n.CreatedAt)
+                                 .ToListAsync();
         }
-
 
     }
 }

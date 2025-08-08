@@ -6,7 +6,7 @@ namespace Repository
 {
     public interface INotificationRepository
     {
-        Task<Notification> CreateNotificationForUserAsync(int userId, string title, string content);
-        Task<(Notification?, List<User>)> CreateNotificationForRoleAsync(int conferenceId, string roleName, string title, string content);
+        Task AddNotificationAsync(Notification notification);
+        Task<List<Notification>> GetNotificationsByUserIdAsync(int userId);
     }
 }
