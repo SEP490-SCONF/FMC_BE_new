@@ -82,18 +82,26 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
 
             try
             {
+                
+                
+
+                // Nếu đã có CFP đang active thì từ chối tạo mới
+                bool hasActive = await _callForPaperRepository.HasActiveCallForPaper(createDto.ConferenceId);
+                if (hasActive)
+                {
+                    return BadRequest("Only one Call For Paper can be active at a time.");
+                }
+
                 string? templateUrl = null;
-                // ** [THAY ĐỔI] UPLOAD FILE LÊN AZURE STORAGE **
+
                 if (createDto.TemplateFile != null && createDto.TemplateFile.Length > 0)
                 {
-                    // Lấy tên container từ appsettings.json
                     var containerName = _configuration.GetValue<string>("BlobContainers:CallForPapers");
                     if (string.IsNullOrEmpty(containerName))
                     {
                         return StatusCode(500, "CallForPapers storage container name is not configured.");
                     }
 
-                    // Gọi service để upload và nhận lại URL
                     templateUrl = await _azureBlobStorageService.UploadFileAsync(createDto.TemplateFile, containerName);
                 }
 
@@ -102,9 +110,8 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
                     ConferenceId = createDto.ConferenceId,
                     Description = createDto.Description,
                     Deadline = createDto.Deadline,
-                    TemplatePath = templateUrl, // Lưu URL từ Azure
-                    Status = createDto.Status, 
-
+                    TemplatePath = templateUrl,
+                    Status = true, 
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -117,7 +124,9 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
                     Description = callForPaper.Description,
                     Deadline = callForPaper.Deadline,
                     TemplatePath = callForPaper.TemplatePath,
-                    CreatedAt = callForPaper.CreatedAt
+                    CreatedAt = callForPaper.CreatedAt,
+                    Status = callForPaper.Status
+
                 };
 
                 return CreatedAtAction(nameof(GetCallForPaper), new { id = callForPaper.Cfpid }, callForPaperDto);
@@ -127,6 +136,8 @@ namespace ConferenceFWebAPI.Controllers.CallForPaper
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+
 
         // PUT: api/CallForPaper/5
         [HttpPut("{id}")]

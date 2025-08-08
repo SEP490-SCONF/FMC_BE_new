@@ -12,5 +12,7 @@ namespace Repository
         Task AddCallForPaper(CallForPaper callForPaper);
         Task UpdateCallForPaper(CallForPaper callForPaper);
         Task DeleteCallForPaper(int id);
+        Task<bool> HasActiveCallForPaper(int conferenceId);
+
     }
 }

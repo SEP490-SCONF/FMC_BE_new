@@ -81,5 +81,11 @@ namespace DataAccess
                     await _dbContext.SaveChangesAsync();
                 }
             }
+
+        public async Task<bool> HasActiveCallForPaper(int conferenceId)
+        {
+            return await _dbContext.CallForPapers
+                .AnyAsync(cfp => cfp.ConferenceId == conferenceId && cfp.Status == true);
         }
+    }
 }
