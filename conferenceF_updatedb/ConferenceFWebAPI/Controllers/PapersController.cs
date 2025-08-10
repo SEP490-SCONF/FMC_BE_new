@@ -5,11 +5,14 @@ using ConferenceFWebAPI.DTOs.Papers;
 using ConferenceFWebAPI.Hubs;
 using ConferenceFWebAPI.Service;
 using DataAccess;
+using iText.Kernel.Pdf.Canvas.Parser;
+using iText.Kernel.Pdf;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.SignalR;
 using Repository;
 using System.Security.Claims;
+using System.Text;
 
 namespace ConferenceFWebAPI.Controllers
 {
@@ -33,6 +36,9 @@ namespace ConferenceFWebAPI.Controllers
         private readonly INotificationRepository _notificationRepository; // Add this repository
                                                                           // If you are using SignalR, also inject the hub context:
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly DeepLTranslationService _translationService;
+        private readonly PdfService _pdfService; // Tiêm PdfService vào đây
+
         public PapersController(
             IPaperRepository paperRepository,
             IAzureBlobStorageService azureBlobStorageService,
@@ -48,7 +54,9 @@ namespace ConferenceFWebAPI.Controllers
             PaperDeadlineService paperDeadlineService, // THÊM VÀO CONSTRUCTOR
             ITimeLineRepository timeLineRepository,
             INotificationRepository notificationRepository,
-             IHubContext<NotificationHub> hubContext)
+             IHubContext<NotificationHub> hubContext,
+             DeepLTranslationService translationService,
+             PdfService pdfService)
 
         {
             _paperRepository = paperRepository;
@@ -66,7 +74,8 @@ namespace ConferenceFWebAPI.Controllers
             _timeLineRepository = timeLineRepository; // GÁN
             _notificationRepository = notificationRepository;
             _hubContext = hubContext;
-            
+            _translationService = translationService;
+            _pdfService = pdfService;
         }
 
         [HttpGet("conference/{conferenceId}")]
@@ -379,6 +388,33 @@ namespace ConferenceFWebAPI.Controllers
 
             var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
             return Ok(paperDtos);
+        }
+
+
+
+        // ... Trong PaperController
+        [HttpGet("translate-pdf/{paperId}")]
+        public async Task<IActionResult> TranslatePaperPdf(int paperId, string targetLang)
+        {
+            var paper = await _paperRepository.GetPaperByIdAsync(paperId);
+            if (paper == null)
+            {
+                return NotFound("Paper not found.");
+            }
+
+            try
+            {
+                // Gọi một hàm duy nhất từ PdfService để vừa tải vừa trích xuất
+                var paperText = await _pdfService.ExtractTextFromPdfAsync(paper.FilePath);
+
+                var translatedText = await _translationService.TranslateAsync(paperText, targetLang);
+
+                return Ok(new { OriginalText = paperText, TranslatedText = translatedText });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
     }
 }
