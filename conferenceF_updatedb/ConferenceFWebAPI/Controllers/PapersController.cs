@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Repository;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace ConferenceFWebAPI.Controllers
 {
@@ -376,18 +377,26 @@ namespace ConferenceFWebAPI.Controllers
                 using var pdfReader = new PdfReader(pdfStream);
                 using var pdfDoc = new PdfDocument(pdfReader);
 
-                string text = "";
+                string rawText = "";
                 var strategy = new LocationTextExtractionStrategy();
                 for (int i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
-                    text += PdfTextExtractor.GetTextFromPage(pdfDoc.GetPage(i), strategy) + "\n";
+                {
+                    rawText += PdfTextExtractor.GetTextFromPage(pdfDoc.GetPage(i), strategy) + "\n";
+                }
 
-                // Gọi AI kiểm tra chính tả theo chunk để tránh lỗi do payload quá lớn
-                string aiResult = await RunSpellCheckInChunks(text);
+                string cleanText = CleanExtractedText(rawText);
+
+                // Lấy danh sách từ sai chính tả
+                List<string> misspelledWords = await _aiSpellCheckService.GetMisspelledWordsAsync(cleanText);
+
+                // Gọi AI kiểm tra chính tả theo chunk
+                string aiResult = await RunSpellCheckInChunks(cleanText);
 
                 return Ok(new
                 {
                     FileUrl = fileUrl,
-                    OriginalTextPreview = text.Substring(0, Math.Min(500, text.Length)),
+                    OriginalTextPreview = cleanText.Substring(0, Math.Min(500, cleanText.Length)),
+                    MisspelledWords = misspelledWords,
                     SpellingSuggestions = aiResult
                 });
             }
@@ -397,6 +406,23 @@ namespace ConferenceFWebAPI.Controllers
             }
         }
 
+
+        private string CleanExtractedText(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+
+            // 1. Thay thế xuống dòng, tab, carriage return thành khoảng trắng
+            string cleaned = Regex.Replace(text, @"[\r\n\t]+", " ");
+
+            // 2. Loại bỏ các ký tự không in được hoặc lạ (bạn có thể tùy chỉnh thêm)
+            cleaned = Regex.Replace(cleaned, @"[^\u0009\u000A\u000D\u0020-\u007E]", "");
+
+            // 3. Chuẩn hóa khoảng trắng nhiều thành 1 khoảng trắng
+            cleaned = Regex.Replace(cleaned, @"\s{2,}", " ");
+
+            // 4. Trim đầu cuối
+            return cleaned.Trim();
+        }
 
         private async Task<string> RunSpellCheckInChunks(string text, int chunkSize = 2000)
         {
@@ -411,6 +437,7 @@ namespace ConferenceFWebAPI.Controllers
             }
             return string.Join("\n", parts);
         }
+
 
 
     }
