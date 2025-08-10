@@ -66,8 +66,8 @@ namespace ConferenceFWebAPI.Controllers.Authen
                 {
                     // Update 3 trường nếu có giá trị mới
                     user.Email = payload.Email;
-                    user.Name = payload.Name;
-                    user.AvatarUrl = payload.Picture;
+                    if(user.Name == null) user.Name = payload.Name;
+                    if (user.AvatarUrl == null) user.AvatarUrl = payload.Picture;
                 }
                 // 3. Cập nhật refresh token
                 user.RefreshToken = GenerateRefreshToken();

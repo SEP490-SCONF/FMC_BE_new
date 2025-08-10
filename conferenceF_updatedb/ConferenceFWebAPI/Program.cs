@@ -17,6 +17,8 @@ using ConferenceFWebAPI.MappingProfiles;
 using System.Text.Json.Serialization;
 using ConferenceFWebAPI.Hubs;
 using Microsoft.OData.ModelBuilder;
+using ConferenceFWebAPI.Provider;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 // 1. Lấy chuỗi kết nối SignalR từ appsettings.json
@@ -194,6 +196,7 @@ builder.Services.AddScoped<ITimeLineRepository, TimeLineRepository>();
 
 // BIND cấu hình từ appsettings
 builder.Services.Configure<PayOSConfig>(builder.Configuration.GetSection("PayOS"));
+builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
 
 // Inject PayOS sử dụng cấu hình từ appsettings
 builder.Services.AddSingleton<PayOS>(sp =>
