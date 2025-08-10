@@ -24,17 +24,18 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build with dotnet
-        run: dotnet build ConferenceFWebAPI/ConferenceFWebAPI.csproj
+        run: dotnet build ConferenceFWebAPI.csproj
+        working-directory: ./ConferenceFWebAPI
 
       - name: dotnet publish
-        run: dotnet publish ConferenceFWebAPI/ConferenceFWebAPI.csproj -c Release -o myapp
-
+        run: dotnet publish ConferenceFWebAPI.csproj -c Release -o ./myapp
+        working-directory: ./ConferenceFWebAPI
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          path: ./myapp
 
   deploy:
     runs-on: windows-latest
@@ -63,6 +64,3 @@ jobs:
           app-name: 'fptfmc'
           slot-name: 'Production'
           package: .
-
-          
-
