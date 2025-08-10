@@ -24,7 +24,7 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build with dotnet
-        run: dotnet build --configuration Release
+        run: dotnet build ConferenceFWebAPI/ConferenceFWebAPI.csproj
 
       - name: dotnet publish
         run: dotnet publish ConferenceFWebAPI/ConferenceFWebAPI.csproj -c Release -o myapp
@@ -65,3 +65,4 @@ jobs:
           package: .
 
           
+
