@@ -24,8 +24,8 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build with dotnet
-        run: dotnet build ConferenceFWebAPI.csproj
-        working-directory: ./ConferenceFWebAPI
+        run: dotnet build ConferenceFWebAPI/ConferenceFWebAPI.csproj
+        
 
       - name: dotnet publish
         run: dotnet publish ConferenceFWebAPI.csproj -c Release -o ./myapp
@@ -64,3 +64,4 @@ jobs:
           app-name: 'fptfmc'
           slot-name: 'Production'
           package: .
+
