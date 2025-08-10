@@ -115,18 +115,10 @@ namespace ConferenceFWebAPI.Controllers.Proccedings
         public async Task<IActionResult> GetByConference(int conferenceId)
         {
             var proceedings = await _repo.GetByConferenceId(conferenceId);
-            var result = proceedings.Select(p => new ProceedingResponseDto
-            {
-                ProceedingId = p.ProceedingId,
-                Title = p.Title,
-                Description = p.Description,
-                FilePath = p.FilePath,
-                PublishedDate = p.PublishedDate,
-                PublishedByName = p.PublishedByNavigation?.Name
-            }).ToList();
-
+            var result = proceedings.Select(p => _mapper.Map<ProceedingResponseDto>(p)).ToList();
             return Ok(result);
         }
+
 
         [HttpGet]
         public async Task<IActionResult> GetAll()

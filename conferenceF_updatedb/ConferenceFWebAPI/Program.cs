@@ -81,6 +81,10 @@ catch (Exception ex)
 // Đăng ký các service
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ICertificateService, CertificateService>();
+builder.Services.AddHttpClient<IAiSpellCheckService, AiSpellCheckService>();
+builder.Services.AddHttpClient<IAiSpellCheckService, ColabSpellCheckService>();
+
+
 
 // Conditional BackgroundCertificateService registration
 try

@@ -4,6 +4,9 @@ using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.Papers;
 using ConferenceFWebAPI.Service;
 using DataAccess;
+using iText.Kernel.Pdf.Canvas.Parser.Listener;
+using iText.Kernel.Pdf.Canvas.Parser;
+using iText.Kernel.Pdf;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Repository;
@@ -28,6 +31,8 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly PaperDeadlineService _paperDeadlineService; // THÊM CÁI NÀY
         private readonly ITimeLineRepository _timeLineRepository;
+        private readonly IAiSpellCheckService _aiSpellCheckService;
+
 
         public PapersController(
             IPaperRepository paperRepository,
@@ -41,7 +46,8 @@ namespace ConferenceFWebAPI.Controllers
             IConferenceRoleRepository conferenceRoleRepository,
             IEmailService emailService,
             IWebHostEnvironment env,
-            PaperDeadlineService paperDeadlineService, // THÊM VÀO CONSTRUCTOR
+            PaperDeadlineService paperDeadlineService,
+            IAiSpellCheckService aiSpellCheckService,// THÊM VÀO CONSTRUCTOR
             ITimeLineRepository timeLineRepository)
 
         {
@@ -58,6 +64,7 @@ namespace ConferenceFWebAPI.Controllers
             _env = env;
             _paperDeadlineService = paperDeadlineService; // GÁN
             _timeLineRepository = timeLineRepository; // GÁN
+            _aiSpellCheckService = aiSpellCheckService;
 
         }
 
@@ -240,7 +247,7 @@ namespace ConferenceFWebAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-    
+
 
         [HttpGet]
         [EnableQuery]
@@ -339,7 +346,7 @@ namespace ConferenceFWebAPI.Controllers
             return Ok(paperDtos);
         }
 
-         [HttpGet("conference/{conferenceId}/published")]
+        [HttpGet("conference/{conferenceId}/published")]
         [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetPublishedPapers(int conferenceId)
@@ -351,5 +358,60 @@ namespace ConferenceFWebAPI.Controllers
             var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
             return Ok(paperDtos);
         }
+
+        [HttpPost("upload-and-spell-check")]
+        public async Task<IActionResult> UploadAndSpellCheck(IFormFile pdfFile)
+        {
+            if (pdfFile == null || pdfFile.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            try
+            {
+                // Upload PDF lên Azure Blob
+                string container = _configuration.GetValue<string>("BlobContainers:Papers");
+                string fileUrl = await _azureBlobStorageService.UploadFileAsync(pdfFile, container);
+
+                // Tải file PDF để đọc text
+                using var pdfStream = await _azureBlobStorageService.DownloadFileAsync(fileUrl);
+                using var pdfReader = new PdfReader(pdfStream);
+                using var pdfDoc = new PdfDocument(pdfReader);
+
+                string text = "";
+                var strategy = new LocationTextExtractionStrategy();
+                for (int i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
+                    text += PdfTextExtractor.GetTextFromPage(pdfDoc.GetPage(i), strategy) + "\n";
+
+                // Gọi AI kiểm tra chính tả theo chunk để tránh lỗi do payload quá lớn
+                string aiResult = await RunSpellCheckInChunks(text);
+
+                return Ok(new
+                {
+                    FileUrl = fileUrl,
+                    OriginalTextPreview = text.Substring(0, Math.Min(500, text.Length)),
+                    SpellingSuggestions = aiResult
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+
+        private async Task<string> RunSpellCheckInChunks(string text, int chunkSize = 2000)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
+            var parts = new List<string>();
+            for (int i = 0; i < text.Length; i += chunkSize)
+            {
+                var chunk = text.Substring(i, Math.Min(chunkSize, text.Length - i));
+                var res = await _aiSpellCheckService.CheckSpellingAsync(chunk);
+                parts.Add(res);
+            }
+            return string.Join("\n", parts);
+        }
+
+
     }
 }

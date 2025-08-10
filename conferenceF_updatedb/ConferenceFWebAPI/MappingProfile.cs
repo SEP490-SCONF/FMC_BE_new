@@ -182,6 +182,7 @@ namespace ConferenceFWebAPI
     .ForMember(dest => dest.Topics, opt => opt.MapFrom(src => src.Topics));
 
             CreateMap<Proceeding, ProceedingResponseDto>()
+                    .ForMember(dest => dest.ConferenceTitle, opt => opt.MapFrom(src => src.Conference.Title))
     .ForMember(dest => dest.PublishedByName, opt => opt.MapFrom(src => src.PublishedByNavigation.Name));
             CreateMap<ProceedingCreateDto, Proceeding>().ForMember(dest => dest.FilePath, opt => opt.Ignore());
 

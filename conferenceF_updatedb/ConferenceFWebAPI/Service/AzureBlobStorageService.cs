@@ -139,5 +139,25 @@ namespace ConferenceFWebAPI.Service
                 return false;
             }
         }
+
+        public async Task<Stream> DownloadFileAsync(string fileUrl)
+        {
+            if (string.IsNullOrEmpty(fileUrl))
+                throw new ArgumentException("File URL cannot be null or empty.");
+
+            Uri uri = new Uri(fileUrl);
+            string containerName = uri.Segments[1].TrimEnd('/');
+            string blobName = string.Join("", uri.Segments.Skip(2));
+
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            BlobClient blobClient = containerClient.GetBlobClient(blobName);
+
+            var downloadInfo = await blobClient.DownloadAsync();
+            MemoryStream ms = new MemoryStream();
+            await downloadInfo.Value.Content.CopyToAsync(ms);
+            ms.Position = 0; // reset về đầu stream
+            return ms;
+        }
+
     }
 }

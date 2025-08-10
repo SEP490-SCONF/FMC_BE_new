@@ -31,25 +31,23 @@ namespace DataAccess
 
         public async Task<Proceeding> GetById(int id)
         {
-            try
-            {
-                return await _context.Proceedings
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(p => p.ProceedingId == id);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error retrieving proceeding with ID {id}.", ex);
-            }
+            return await _context.Proceedings
+                .Include(p => p.Conference)
+                .Include(p => p.PublishedByNavigation)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ProceedingId == id);
         }
+
 
         public async Task<IEnumerable<Proceeding>> GetByConferenceId(int conferenceId)
         {
             try
             {
                 return await _context.Proceedings
-                    .Where(p => p.ConferenceId == conferenceId)
+                    .Include(p => p.Conference) // Lấy thêm thông tin conference
+                    .Include(p => p.PublishedByNavigation) // Lấy thông tin người publish
                     .AsNoTracking()
+                    .Where(p => p.ConferenceId == conferenceId)
                     .ToListAsync();
             }
             catch (Exception ex)
@@ -57,6 +55,7 @@ namespace DataAccess
                 throw new Exception($"Error retrieving proceedings for conference ID {conferenceId}.", ex);
             }
         }
+
 
         public async Task Add(Proceeding proceeding)
         {
