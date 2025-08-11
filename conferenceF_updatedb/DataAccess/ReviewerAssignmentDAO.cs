@@ -33,7 +33,13 @@ namespace DataAccess
             }
         }
 
-
+        public async Task<List<ReviewerAssignment>> GetReviewersByPaperIdAsync(int paperId)
+        {
+            return await _context.ReviewerAssignments
+                .Where(ra => ra.PaperId == paperId)
+                .Include(ra => ra.Reviewer)
+                .ToListAsync();
+        }
         public async Task<ReviewerAssignment> GetById(int id)
         {
             try

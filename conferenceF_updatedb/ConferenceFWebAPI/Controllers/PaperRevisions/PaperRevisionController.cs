@@ -25,6 +25,7 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
         private readonly IUserRepository _userRepository;
         private readonly INotificationRepository _notificationRepository;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IReviewerAssignmentRepository _reviewerAssignmentRepository;
 
         public PaperRevisionsController(IAzureBlobStorageService azureBlobStorageService,
                                         IPaperRevisionRepository paperRevisionRepository,
@@ -34,7 +35,8 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
                                         IReviewRepository reviewRepository,
                                         IUserRepository userRepository,
                                         INotificationRepository notificationRepository,
-                                        IHubContext<NotificationHub> hubContext)
+                                        IHubContext<NotificationHub> hubContext,
+                                        IReviewerAssignmentRepository reviewerAssignmentRepository)
         {
             _azureBlobStorageService = azureBlobStorageService;
             _paperRevisionRepository = paperRevisionRepository;
@@ -45,6 +47,7 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
             _hubContext = hubContext;
+            _reviewerAssignmentRepository = reviewerAssignmentRepository;
         }
 
 
@@ -92,19 +95,16 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
                 existingPaper.Status = "Under Review";
                 await _paperRepository.UpdatePaperAsync(existingPaper);
 
-                // Lấy danh sách tác giả của bài báo
+                // Send notifications to authors
                 var paperAuthors = await _paperRepository.GetAuthorsByPaperIdAsync(existingPaper.PaperId);
-
-                // Gửi thông báo cho từng tác giả
                 foreach (var pa in paperAuthors)
                 {
                     var authorUser = await _userRepository.GetById(pa.AuthorId);
                     if (authorUser != null)
                     {
                         string notificationTitle = "Paper Resubmission Successful!";
-                        string notificationContent = $"You have successfully resubmitted the revised version of your paper, '{existingPaper.Title}'.";
+                        string notificationContent = $"Your revised paper '{existingPaper.Title}' has been successfully submitted.";
 
-                        // Tạo và lưu thông báo vào cơ sở dữ liệu
                         var notification = new Notification
                         {
                             Title = notificationTitle,
@@ -114,8 +114,6 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
                             CreatedAt = DateTime.UtcNow
                         };
                         await _notificationRepository.AddNotificationAsync(notification);
-
-                        // Gửi thông báo real-time qua SignalR
                         await _hubContext.Clients.User(authorUser.UserId.ToString()).SendAsync("ReceiveNotification", notificationTitle, notificationContent);
                     }
                     else
@@ -124,9 +122,36 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
                     }
                 }
 
+                // Send notifications to reviewers
+                var reviewerAssignments = await _reviewerAssignmentRepository.GetReviewersByPaperIdAsync(existingPaper.PaperId);
+                foreach (var ra in reviewerAssignments)
+                {
+                    var reviewerUser = await _userRepository.GetById(ra.ReviewerId);
+                    if (reviewerUser != null)
+                    {
+                        string notificationTitle = "Paper Updated!";
+                        string notificationContent = $"The paper '{existingPaper.Title}' has been updated with a new revision by the author. Please check for changes.";
+
+                        var notification = new Notification
+                        {
+                            Title = notificationTitle,
+                            Content = notificationContent,
+                            UserId = ra.ReviewerId,
+                            RoleTarget = "Reviewer",
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await _notificationRepository.AddNotificationAsync(notification);
+                        await _hubContext.Clients.User(reviewerUser.UserId.ToString()).SendAsync("ReceiveNotification", notificationTitle, notificationContent);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Warning: Reviewer user with ID {ra.ReviewerId} not found for notification.");
+                    }
+                }
+
                 return Ok(new
                 {
-                    Message = "Paper revision uploaded and data saved successfully. Notifications sent to authors.",
+                    Message = "Paper revision uploaded and data saved successfully. Notifications sent to authors and reviewers.",
                     FileUrl = fileUrl,
                     RevisionId = paperRevision.RevisionId
                 });
@@ -141,8 +166,6 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
-
         // GET: api/PaperRevisions/{revisionId}
         [HttpGet("{revisionId}")]
         public async Task<IActionResult> GetRevisionById(int revisionId)
