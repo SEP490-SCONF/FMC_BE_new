@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
+using ConferenceFWebAPI.Hubs;
 using ConferenceFWebAPI.Service;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Repository;
 
 namespace ConferenceFWebAPI.Controllers
@@ -13,11 +15,12 @@ namespace ConferenceFWebAPI.Controllers
     {
         private readonly INotificationRepository _notificationRepository;
         private readonly IMapper _mapper;
-
-        public NotificationController(INotificationRepository notificationRepository, IMapper mapper)
+        private readonly IHubContext<NotificationHub> _hubContext;
+        public NotificationController(INotificationRepository notificationRepository, IMapper mapper, IHubContext<NotificationHub> hubContext)
         {
             _notificationRepository = notificationRepository;
             _mapper = mapper;
+            _hubContext = hubContext;
         }
 
         [HttpPost("test")]
@@ -43,7 +46,28 @@ namespace ConferenceFWebAPI.Controllers
                 return StatusCode(500, $"Có lỗi xảy ra: {ex.Message}");
             }
         }
-        
+        [HttpPost("signalr-test")]
+        public async Task<IActionResult> SendTestSignalR(int userId)
+        {
+            try
+            {
+                string title = "📡 Test SignalR";
+                string content = $"🔔 Gửi thông báo real-time lúc {DateTime.UtcNow:HH:mm:ss}";
+
+                await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", title, content);
+
+                return Ok(new
+                {
+                    Message = "✅ Đã gửi thông báo real-time SignalR thành công.",
+                    TargetUser = userId,
+                    SentAt = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"❌ Lỗi khi gửi SignalR: {ex.Message}");
+            }
+        }
         [HttpGet("{userId}")]
         public async Task<ActionResult<IEnumerable<NotificationDto>>> GetNotificationByUserId(int userId)
         {

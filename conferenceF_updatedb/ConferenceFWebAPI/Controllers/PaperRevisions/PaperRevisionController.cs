@@ -2,9 +2,11 @@
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.PaperRevisions;
 using ConferenceFWebAPI.DTOs.UserConferenceRoles;
+using ConferenceFWebAPI.Hubs;
 using ConferenceFWebAPI.Service;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Repository;
 using Repository.Repository;
 
@@ -20,13 +22,19 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
         private readonly IReviewRepository _reviewRepository;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
+        private readonly IUserRepository _userRepository;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
         public PaperRevisionsController(IAzureBlobStorageService azureBlobStorageService,
                                         IPaperRevisionRepository paperRevisionRepository,
                                         IPaperRepository paperRepository, // Inject PaperRepository
                                         IConfiguration configuration,
                                         IMapper mapper,
-                                        IReviewRepository reviewRepository)
+                                        IReviewRepository reviewRepository,
+                                        IUserRepository userRepository,
+                                        INotificationRepository notificationRepository,
+                                        IHubContext<NotificationHub> hubContext)
         {
             _azureBlobStorageService = azureBlobStorageService;
             _paperRevisionRepository = paperRevisionRepository;
@@ -34,6 +42,9 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
             _configuration = configuration;
             _mapper = mapper;
             _reviewRepository = reviewRepository;
+            _userRepository = userRepository;
+            _notificationRepository = notificationRepository;
+            _hubContext = hubContext;
         }
 
 
@@ -55,7 +66,6 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
                 return BadRequest("Only PDF files are allowed for revisions.");
             }
 
-            // Kiểm tra xem PaperId có tồn tại không
             var existingPaper = await _paperRepository.GetPaperByIdAsync(revisionDto.PaperId);
             if (existingPaper == null)
             {
@@ -70,25 +80,53 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
                     return StatusCode(500, "Blob storage container name for paper revisions is not configured.");
                 }
 
-                // Upload file lên Azure Blob Storage
                 string fileUrl = await _azureBlobStorageService.UploadFileAsync(revisionDto.PdfFile, revisionContainerName);
 
-                // Map DTO sang Entity và thiết lập các trường
                 var paperRevision = _mapper.Map<PaperRevision>(revisionDto);
                 paperRevision.FilePath = fileUrl;
-                paperRevision.Status = "Under Review"; // Trạng thái mặc định cho bản sửa đổi
+                paperRevision.Status = "Under Review";
                 paperRevision.SubmittedAt = DateTime.UtcNow;
 
-                // Lưu thông tin bản sửa đổi vào cơ sở dữ liệu
                 await _paperRevisionRepository.AddPaperRevisionAsync(paperRevision);
 
-                // Cập nhật trạng thái của bài báo thành "Under Review"
-                existingPaper.Status = "Under Review"; // Cập nhật trạng thái của Paper
-                await _paperRepository.UpdatePaperAsync(existingPaper); // Cập nhật vào cơ sở dữ liệu
+                existingPaper.Status = "Under Review";
+                await _paperRepository.UpdatePaperAsync(existingPaper);
+
+                // Lấy danh sách tác giả của bài báo
+                var paperAuthors = await _paperRepository.GetAuthorsByPaperIdAsync(existingPaper.PaperId);
+
+                // Gửi thông báo cho từng tác giả
+                foreach (var pa in paperAuthors)
+                {
+                    var authorUser = await _userRepository.GetById(pa.AuthorId);
+                    if (authorUser != null)
+                    {
+                        string notificationTitle = "Nộp lại bài báo thành công!";
+                        string notificationContent = $"Bạn đã nộp lại bản sửa đổi của bài báo '{existingPaper.Title}' thành công.";
+
+                        // Tạo và lưu thông báo vào cơ sở dữ liệu
+                        var notification = new Notification
+                        {
+                            Title = notificationTitle,
+                            Content = notificationContent,
+                            UserId = authorUser.UserId,
+                            RoleTarget = "Author",
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await _notificationRepository.AddNotificationAsync(notification);
+
+                        // Gửi thông báo real-time qua SignalR
+                        await _hubContext.Clients.User(authorUser.UserId.ToString()).SendAsync("ReceiveNotification", notificationTitle, notificationContent);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Warning: Author user with ID {pa.AuthorId} not found for notification.");
+                    }
+                }
 
                 return Ok(new
                 {
-                    Message = "Paper revision uploaded and data saved successfully.",
+                    Message = "Paper revision uploaded and data saved successfully. Notifications sent to authors.",
                     FileUrl = fileUrl,
                     RevisionId = paperRevision.RevisionId
                 });
@@ -99,7 +137,7 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
             }
             catch (Exception ex)
             {
-                // Nên ghi log lỗi chi tiết ở đây
+                Console.WriteLine($"Upload error: {ex.ToString()}");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }

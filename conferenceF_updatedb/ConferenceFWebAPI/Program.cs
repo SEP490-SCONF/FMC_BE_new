@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using DataAccess;
+using ConferenceFWebAPI.Configurations;
 using Hangfire; // Đảm bảo có using này
 using Hangfire.SqlServer;
-
 
 using BussinessObject.Entity;
 using ConferenceFWebAPI.Service;
@@ -17,6 +17,8 @@ using ConferenceFWebAPI.MappingProfiles;
 using System.Text.Json.Serialization;
 using ConferenceFWebAPI.Hubs;
 using Microsoft.OData.ModelBuilder;
+using ConferenceFWebAPI.Provider;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 // 1. Lấy chuỗi kết nối SignalR từ appsettings.json
@@ -85,6 +87,8 @@ builder.Services.AddScoped<ICertificateService, CertificateService>();
 builder.Services.AddHttpClient<IAiSpellCheckService, ColabSpellCheckService>();
 
 
+builder.Services.AddSingleton<DeepLTranslationService>();
+builder.Services.AddScoped<PdfService>();
 
 // Conditional BackgroundCertificateService registration
 try
@@ -192,13 +196,31 @@ builder.Services.AddScoped<IReviewerAssignmentRepository, ReviewerAssignmentRepo
 // UserConferenceRole
 builder.Services.AddScoped<IUserConferenceRoleRepository, UserConferenceRoleRepository>();
 
-builder.Services.AddScoped<ITimeLineRepository, TimeLineRepository>();
-
-// Certificate
 builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
 
-//PAYOS
-builder.Services.AddSingleton(new PayOS("295a3346-3eeb-449c-bb7b-cdbf495577ec", "a5e3d88f-3ae6-4235-b30e-e81c2b3686a2", "2a895d2b7938d4880973602f579a44043a2bc63183aa80e685ace2e9164cab5f"));
+builder.Services.AddScoped<ITimeLineRepository, TimeLineRepository>();
+
+// BIND cấu hình từ appsettings
+builder.Services.Configure<PayOSConfig>(builder.Configuration.GetSection("PayOS"));
+builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
+
+// Inject PayOS sử dụng cấu hình từ appsettings
+builder.Services.AddSingleton<PayOS>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>().GetSection("PayOS").Get<PayOSConfig>();
+    return new PayOS(config.ClientId, config.ApiKey, config.ChecksumKey);
+});
+
+// MemoryCache để cache kết quả phân tích AI
+builder.Services.AddMemoryCache();
+
+// HttpClient cho service gọi Hugging Face API
+builder.Services.AddHttpClient();
+
+// Đăng ký AI Detector Service
+builder.Services.AddScoped<IAiDetectorService, HuggingFaceDetectorService>();
+
+
 //AddCors
 builder.Services.AddCors(options =>
 {
@@ -210,7 +232,6 @@ builder.Services.AddCors(options =>
              .AllowCredentials();
     });
 });
-
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {

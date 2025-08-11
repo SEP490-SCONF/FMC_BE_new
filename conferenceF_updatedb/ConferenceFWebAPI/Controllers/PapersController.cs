@@ -34,6 +34,11 @@ namespace ConferenceFWebAPI.Controllers
         private readonly PaperDeadlineService _paperDeadlineService; // THÊM CÁI NÀY
         private readonly ITimeLineRepository _timeLineRepository;
         private readonly IAiSpellCheckService _aiSpellCheckService;
+        private readonly INotificationRepository _notificationRepository; // Add this repository
+                                                                          // If you are using SignalR, also inject the hub context:
+        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly DeepLTranslationService _translationService;
+        private readonly PdfService _pdfService; // Tiêm PdfService vào đây
 
 
         public PapersController(
@@ -50,7 +55,11 @@ namespace ConferenceFWebAPI.Controllers
             IWebHostEnvironment env,
             PaperDeadlineService paperDeadlineService,
             IAiSpellCheckService aiSpellCheckService,// THÊM VÀO CONSTRUCTOR
-            ITimeLineRepository timeLineRepository)
+            ITimeLineRepository timeLineRepository
+            INotificationRepository notificationRepository,
+             IHubContext<NotificationHub> hubContext,
+             DeepLTranslationService translationService,
+             PdfService pdfService)
 
         {
             _paperRepository = paperRepository;
@@ -67,6 +76,10 @@ namespace ConferenceFWebAPI.Controllers
             _paperDeadlineService = paperDeadlineService; // GÁN
             _timeLineRepository = timeLineRepository; // GÁN
             _aiSpellCheckService = aiSpellCheckService;
+             _notificationRepository = notificationRepository;
+            _hubContext = hubContext;
+            _translationService = translationService;
+            _pdfService = pdfService;
 
         }
 
@@ -168,6 +181,26 @@ namespace ConferenceFWebAPI.Controllers
 
                 var conference = await _conferenceRepository.GetById(conferenceId);
                 var newRole = await _conferenceRoleRepository.GetById(newRoleId);
+
+                 var uploaderUser = await _userRepository.GetById(uploaderUserId);
+                if (uploaderUser != null)
+                {
+                    string notificationTitle = "Nộp bài thành công!";
+                    string notificationContent = $"Bạn đã nộp bài báo '{paper.Title}' thành công cho hội thảo '{conference.Title}'.";
+
+                    // Tạo và lưu thông báo vào cơ sở dữ liệu
+                    var notification = new Notification
+                    {
+                        Title = notificationTitle,
+                        Content = notificationContent,
+                        UserId = uploaderUserId,
+                        RoleTarget = "Author",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _notificationRepository.AddNotificationAsync(notification);
+
+                    // Gửi thông báo real-time qua SignalR
+                    await _hubContext.Clients.User(uploaderUserId.ToString()).SendAsync("ReceiveNotification", notificationTitle, notificationContent);
 
                 // --- Logic cập nhật vai trò và gửi email cho từng tác giả ---
                 if (conference != null && newRole != null)
@@ -517,6 +550,32 @@ namespace ConferenceFWebAPI.Controllers
             return string.Join("\n", parts);
         }
 
+        // ... Trong PaperController
+        [HttpGet("translate-pdf/{paperId}")]
+        public async Task<IActionResult> TranslatePaperPdf(int paperId, string targetLang)
+        {
+            var paper = await _paperRepository.GetPaperByIdAsync(paperId);
+            if (paper == null)
+            {
+                return NotFound("Paper not found.");
+            }
+
+            try
+            {
+                // Gọi một hàm duy nhất từ PdfService để vừa tải vừa trích xuất
+                var paperText = await _pdfService.ExtractTextFromPdfAsync(paper.FilePath);
+
+                var translatedText = await _translationService.TranslateAsync(paperText, targetLang);
+
+                return Ok(new { OriginalText = paperText, TranslatedText = translatedText });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+        
+        }
 
 
     }

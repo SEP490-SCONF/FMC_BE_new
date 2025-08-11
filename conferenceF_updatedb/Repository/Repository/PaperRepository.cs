@@ -23,13 +23,19 @@ namespace Repository
         {
             return _paperDAO.GetAllPapers();
         }
-
+        public async Task<List<PaperAuthor>> GetAuthorsByPaperIdAsync(int paperId)
+        {
+            return await _paperDAO.GetAuthorsByPaperIdAsync(paperId);
+        }
         public async Task<Paper> GetPaperByIdAsync(int paperId)
         {
             return await _paperDAO.GetByIdAsync(paperId);
         }
-
-         public async Task<Paper?> GetPaperByIdWithIncludesAsync(int paperId)
+        public async Task<Paper> GetPaperWithAuthorsAsync(int paperId)
+        {
+            return await _paperDAO.GetPaperWithAuthorsAsync(paperId);
+        }
+        public async Task<Paper?> GetPaperByIdWithIncludesAsync(int paperId)
         {
             return await _paperDAO.GetByIdWithIncludesAsync(paperId);
         }
@@ -55,6 +61,7 @@ namespace Repository
                 await _paperDAO.SaveChangesAsync(); // Lưu thay đổi sau khi xóa
             }
         }
+        
         public List<Paper> GetPapersByConferenceId(int conferenceId)
         {
             return _paperDAO.GetPapersByConferenceId(conferenceId);

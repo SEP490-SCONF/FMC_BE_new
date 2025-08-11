@@ -52,6 +52,10 @@ namespace Repository
         {
             return await _conferenceDao.GetConferenceCount();
         }
+        public IQueryable<Conference> GetAllQueryable()
+{
+    return _conferenceDao.GetAllQueryable();
+}
 
     }
 }

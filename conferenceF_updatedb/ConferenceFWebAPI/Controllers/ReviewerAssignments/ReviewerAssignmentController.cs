@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.ReviewerAssignments;
+using ConferenceFWebAPI.Hubs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Repository;
 
 namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
@@ -15,16 +17,23 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
         private readonly IUserConferenceRoleRepository _userConferenceRoleRepository;
         private readonly IPaperRepository _paperRepository;
         private readonly IPaperRevisionRepository _revisionRepository;
-
         private readonly IMapper _mapper;
+        private readonly IUserRepository _userRepository;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public ReviewerAssignmentController(IReviewerAssignmentRepository repository, IMapper mapper, IUserConferenceRoleRepository userConferenceRoleRepository, IPaperRepository paperRepository, IPaperRevisionRepository paperRevisionRepository)
+        public ReviewerAssignmentController(IReviewerAssignmentRepository repository, IMapper mapper, IUserConferenceRoleRepository userConferenceRoleRepository, IPaperRepository paperRepository, IPaperRevisionRepository paperRevisionRepository,
+          IUserRepository userRepository, INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext)
         {
             _repository = repository;
             _mapper = mapper;
             _userConferenceRoleRepository = userConferenceRoleRepository;
             _paperRepository = paperRepository;
             _revisionRepository = paperRevisionRepository;
+            _userRepository = userRepository;
+            _notificationRepository = notificationRepository;
+            _hubContext = hubContext;
+
         }
 
         // GET: api/ReviewerAssignment
@@ -73,7 +82,7 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
             if (paper != null)
             {
                 paper.Status = "Under Review";
-                await _paperRepository.UpdatePaperAsync(paper); 
+                await _paperRepository.UpdatePaperAsync(paper);
             }
 
             var revisions = await _revisionRepository.GetRevisionsByPaperIdAsync(dto.PaperId);
@@ -83,12 +92,32 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
                 await _revisionRepository.UpdatePaperRevisionAsync(revision);
             }
 
+            // --- Thêm logic gửi thông báo cho reviewer ---
+            var reviewerUser = await _userRepository.GetById(dto.ReviewerId);
+            if (reviewerUser != null)
+            {
+                string notificationTitle = "Bài báo mới được gán!";
+                string notificationContent = $"Bạn vừa được gán đánh giá bài báo '{paper.Title}'. Vui lòng kiểm tra và thực hiện đánh giá.";
+
+                // Tạo và lưu thông báo vào cơ sở dữ liệu
+                var notification = new Notification
+                {
+                    Title = notificationTitle,
+                    Content = notificationContent,
+                    UserId = dto.ReviewerId,
+                    RoleTarget = "Reviewer",
+                    CreatedAt = DateTime.UtcNow,
+                };
+                await _notificationRepository.AddNotificationAsync(notification);
+
+                // Gửi thông báo real-time qua SignalR
+                await _hubContext.Clients.User(dto.ReviewerId.ToString()).SendAsync("ReceiveNotification", notificationTitle, notificationContent);
+            }
+            // --- Kết thúc logic gửi thông báo ---
 
             var result = _mapper.Map<ReviewerAssignmentDTO>(entity);
             return CreatedAtAction(nameof(GetById), new { id = entity.AssignmentId }, result);
         }
-
-
 
 
         // PUT: api/ReviewerAssignment/{id}

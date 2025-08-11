@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.Reviews;
+using ConferenceFWebAPI.Hubs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Repository;
 
 namespace ConferenceFWebAPI.Controllers.Reviews
@@ -17,8 +19,12 @@ namespace ConferenceFWebAPI.Controllers.Reviews
         private readonly IReviewHighlightRepository _highlightRepository;
         private readonly IPaperRevisionRepository _paperRevisionRepository;
         private readonly IHighlightAreaRepository _highlightAreaRepository;
-
-        public ReviewController(IReviewRepository reviewRepository, IMapper mapper, IReviewCommentRepository commentRepository, IReviewHighlightRepository highlightRepository, IPaperRevisionRepository paperRevisionRepository, IHighlightAreaRepository highlightAreaRepository)
+        private readonly IUserRepository _userRepository;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IPaperRepository _paperRepository;
+        public ReviewController(IReviewRepository reviewRepository, IMapper mapper, IReviewCommentRepository commentRepository, IReviewHighlightRepository highlightRepository, IPaperRevisionRepository paperRevisionRepository, IHighlightAreaRepository highlightAreaRepository, IPaperRepository paperRepository,
+            IUserRepository userRepository, INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext)
         {
             _reviewRepository = reviewRepository;
             _mapper = mapper;
@@ -26,6 +32,10 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             _highlightRepository = highlightRepository;
             _paperRevisionRepository = paperRevisionRepository;
             _highlightAreaRepository = highlightAreaRepository;
+            _paperRepository = paperRepository;
+            _userRepository = userRepository;
+            _notificationRepository = notificationRepository;
+            _hubContext = hubContext;
         }
 
         // GET: api/Review
@@ -351,8 +361,40 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             // 3. Cập nhật Paper và PaperRevision status dựa trên PaperStatus
             await _reviewRepository.UpdatePaperAndRevisionStatus(review.PaperId, paperStatus, review.RevisionId);
 
+            // --- Thêm logic gửi thông báo cho tác giả ---
+            var paper = await _paperRepository.GetPaperWithAuthorsAsync(review.PaperId);
+            if (paper != null && paper.PaperAuthors != null)
+            {
+                string notificationTitle = "Kết quả đánh giá bài báo đã có!";
+                string notificationContent = $"Bài báo '{paper.Title}' của bạn đã có kết quả đánh giá. Vui lòng kiểm tra để biết chi tiết.";
+                string roleTarget = "Author";
+
+                foreach (var pa in paper.PaperAuthors)
+                {
+                    // Lấy thông tin người dùng từ AuthorId
+                    var authorUser = await _userRepository.GetById(pa.AuthorId);
+                    if (authorUser != null)
+                    {
+                        // Tạo và lưu thông báo vào cơ sở dữ liệu
+                        var notification = new Notification
+                        {
+                            Title = notificationTitle,
+                            Content = notificationContent,
+                            UserId = pa.AuthorId,
+                            RoleTarget = roleTarget,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await _notificationRepository.AddNotificationAsync(notification);
+
+                        // Gửi thông báo real-time qua SignalR
+                        await _hubContext.Clients.User(pa.AuthorId.ToString()).SendAsync("ReceiveNotification", notificationTitle, notificationContent);
+                    }
+                }
+            }
+            // --- Kết thúc logic gửi thông báo ---
+
             // 4. Trả về thông báo thành công
-            return Ok("Feedback sent and statuses updated.");
+            return Ok("Feedback sent and statuses updated. Notifications sent to authors.");
         }
         [HttpDelete("DeletWithHighlightAndComment/{highlightId}")]
         public async Task<IActionResult> DeleteWithHighlightAndComment(int highlightId)
