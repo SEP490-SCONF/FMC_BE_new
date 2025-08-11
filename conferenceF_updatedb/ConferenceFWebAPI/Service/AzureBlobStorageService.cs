@@ -159,5 +159,25 @@ namespace ConferenceFWebAPI.Service
             return ms;
         }
 
+
+        public async Task<string> UploadStreamAsync(Stream stream, string fileName, string containerName, string contentType)
+        {
+            if (stream == null || stream.Length == 0)
+                throw new ArgumentException("Stream cannot be null or empty.");
+            if (string.IsNullOrEmpty(fileName))
+                throw new ArgumentException("File name cannot be null or empty.");
+
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
+
+            BlobClient blobClient = containerClient.GetBlobClient(fileName);
+
+            stream.Position = 0; // reset
+            await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = contentType });
+
+            return blobClient.Uri.ToString();
+        }
+
+
     }
 }

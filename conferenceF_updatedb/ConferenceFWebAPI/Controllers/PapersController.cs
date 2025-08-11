@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.OData.Query;
 using Repository;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using ConferenceFWebAPI.Services.PdfTextExtraction;
 
 namespace ConferenceFWebAPI.Controllers
 {
@@ -359,7 +360,6 @@ namespace ConferenceFWebAPI.Controllers
             var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
             return Ok(paperDtos);
         }
-
         [HttpPost("upload-and-spell-check")]
         public async Task<IActionResult> UploadAndSpellCheck(IFormFile pdfFile)
         {
@@ -372,32 +372,110 @@ namespace ConferenceFWebAPI.Controllers
                 string container = _configuration.GetValue<string>("BlobContainers:Papers");
                 string fileUrl = await _azureBlobStorageService.UploadFileAsync(pdfFile, container);
 
-                // Tải file PDF để đọc text
-                using var pdfStream = await _azureBlobStorageService.DownloadFileAsync(fileUrl);
-                using var pdfReader = new PdfReader(pdfStream);
+                // Tải file PDF để đọc text + vị trí
+                using var originalStream = await _azureBlobStorageService.DownloadFileAsync(fileUrl);
+                using var pdfReader = new PdfReader(originalStream);
                 using var pdfDoc = new PdfDocument(pdfReader);
 
+                var allWordsWithPositions = new List<WordPosition>();
                 string rawText = "";
-                var strategy = new LocationTextExtractionStrategy();
+
                 for (int i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
                 {
-                    rawText += PdfTextExtractor.GetTextFromPage(pdfDoc.GetPage(i), strategy) + "\n";
+                    var strategy = new LocationTextExtractionStrategyWithPosition();
+                    PdfTextExtractor.GetTextFromPage(pdfDoc.GetPage(i), strategy);
+
+                    foreach (var wp in strategy.WordsPositions)
+                    {
+                        wp.PageNumber = i;
+                        allWordsWithPositions.Add(wp);
+                    }
+
+                    rawText += strategy.GetResultantText() + "\n";
                 }
 
                 string cleanText = CleanExtractedText(rawText);
 
-                // Lấy danh sách từ sai chính tả
+                // 1. Lấy danh sách từ sai
                 List<string> misspelledWords = await _aiSpellCheckService.GetMisspelledWordsAsync(cleanText);
 
-                // Gọi AI kiểm tra chính tả theo chunk
-                string aiResult = await RunSpellCheckInChunks(cleanText);
+                // DEBUG: In danh sách từ sai chính tả từ AI
+                Console.WriteLine("=== Misspelled Words from AI ===");
+                foreach (var w in misspelledWords)
+                    Console.WriteLine(w);
+
+                // Hàm normalize: bỏ dấu câu, khoảng trắng thừa, lowercase
+                string Normalize(string s) =>
+                    Regex.Replace(s, @"[^\p{L}\p{N}]+", "") // chỉ giữ chữ cái & số
+                          .Trim()
+                          .ToLowerInvariant();
+
+                // Chuẩn hóa danh sách từ sai chính tả
+                var misspelledSet = new HashSet<string>(
+                    misspelledWords
+                        .Select(Normalize)
+                        .Where(s => !string.IsNullOrEmpty(s))
+                );
+
+                // 2. Map từ sai -> vị trí
+                var misspelledWordPositions = allWordsWithPositions
+                    .Where(wp => misspelledSet.Contains(Normalize(wp.Word)))
+                    .ToList();
+
+                // DEBUG: In danh sách từ khớp trong PDF
+                Console.WriteLine("=== Matched Misspelled Words in PDF ===");
+                foreach (var wp in misspelledWordPositions)
+                {
+                    Console.WriteLine($"{wp.Word} (Page {wp.PageNumber}) - " +
+                        $"X={wp.BoundingBox.GetX()}, Y={wp.BoundingBox.GetY()}, " +
+                        $"W={wp.BoundingBox.GetWidth()}, H={wp.BoundingBox.GetHeight()}");
+                }
+
+                // 3. Highlight từ sai trong PDF
+                var highlightedPdfPath = Path.Combine(Path.GetTempPath(), $"highlighted_{Guid.NewGuid()}.pdf");
+
+                using (var reader = new PdfReader(await _azureBlobStorageService.DownloadFileAsync(fileUrl)))
+                using (var writer = new PdfWriter(highlightedPdfPath))
+                using (var pdfHighlightDoc = new PdfDocument(reader, writer))
+                {
+                    foreach (var wp in misspelledWordPositions)
+                    {
+                        var page = pdfHighlightDoc.GetPage(wp.PageNumber);
+                        var canvas = new iText.Kernel.Pdf.Canvas.PdfCanvas(page);
+
+                        canvas.SaveState()
+                              .SetFillColor(new iText.Kernel.Colors.DeviceRgb(255, 0, 0)) // Màu đỏ
+                              .SetExtGState(new iText.Kernel.Pdf.Extgstate.PdfExtGState().SetFillOpacity(0.3f)) // Độ trong suốt 30%
+                              .Rectangle(wp.BoundingBox)
+                              .Fill()
+                              .RestoreState();
+                    }
+
+                }
+
+                // Upload file PDF highlight lên Azure Blob
+                await using var highlightStream = System.IO.File.OpenRead(highlightedPdfPath);
+                string highlightUrl = await _azureBlobStorageService
+                    .UploadStreamAsync(highlightStream, Path.GetFileName(highlightedPdfPath), container, "application/pdf");
 
                 return Ok(new
                 {
                     FileUrl = fileUrl,
+                    HighlightedFileUrl = highlightUrl,
                     OriginalTextPreview = cleanText.Substring(0, Math.Min(500, cleanText.Length)),
                     MisspelledWords = misspelledWords,
-                    SpellingSuggestions = aiResult
+                    MisspelledWordPositions = misspelledWordPositions.Select(wp => new
+                    {
+                        wp.Word,
+                        wp.PageNumber,
+                        BoundingBox = new
+                        {
+                            X = wp.BoundingBox.GetX(),
+                            Y = wp.BoundingBox.GetY(),
+                            Width = wp.BoundingBox.GetWidth(),
+                            Height = wp.BoundingBox.GetHeight()
+                        }
+                    })
                 });
             }
             catch (Exception ex)
@@ -405,6 +483,7 @@ namespace ConferenceFWebAPI.Controllers
                 return StatusCode(500, $"Error: {ex.Message}");
             }
         }
+
 
 
         private string CleanExtractedText(string text)
