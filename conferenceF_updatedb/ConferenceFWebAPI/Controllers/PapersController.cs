@@ -409,7 +409,8 @@ namespace ConferenceFWebAPI.Controllers
 
                 var translatedText = await _translationService.TranslateAsync(paperText, targetLang);
 
-                return Ok(new { OriginalText = paperText, TranslatedText = translatedText });
+                // Chỉ trả về translatedText thay vì cả OriginalText
+                return Ok(new { TranslatedText = translatedText });
             }
             catch (Exception ex)
             {
