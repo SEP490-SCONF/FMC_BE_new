@@ -42,8 +42,15 @@ namespace DataAccess
         {
             return _context.Papers.Where(p => p.Status != "Deleted").AsQueryable();
         }
-
-       public async Task<Paper?> GetByIdAsync(int id)
+        public async Task<List<PaperAuthor>> GetAuthorsByPaperIdAsync(int paperId)
+        {
+            return await _context.PaperAuthors
+                .Where(pa => pa.PaperId == paperId)
+                .Include(pa => pa.Author)
+                    .ThenInclude(a => a.UserConferenceRoles)
+                .ToListAsync();
+        }
+        public async Task<Paper?> GetByIdAsync(int id)
         {
             return await _context.Papers
                 .Include(p => p.Topic)
@@ -51,7 +58,13 @@ namespace DataAccess
                     .ThenInclude(pa => pa.Author) 
                 .FirstOrDefaultAsync(p => p.PaperId == id);
         }
-
+        public async Task<Paper> GetPaperWithAuthorsAsync(int paperId)
+        {
+            return await _context.Papers
+                .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author)
+                .FirstOrDefaultAsync(p => p.PaperId == paperId);
+        }
         public async Task<Paper?> GetByIdWithIncludesAsync(int id)
         {
             return await _context.Papers
@@ -96,7 +109,7 @@ namespace DataAccess
         public List<Paper> GetPapersByConferenceIdAndStatus(int conferenceId, string status)
         {
             return _context.Papers
-                .Where(p => p.ConferenceId == conferenceId && p.Status == status)
+                .Where(p => p.ConferenceId == conferenceId )
                 .Include(p => p.Topic)
                 .Include(p => p.PaperAuthors)
                     .ThenInclude(pa => pa.Author)

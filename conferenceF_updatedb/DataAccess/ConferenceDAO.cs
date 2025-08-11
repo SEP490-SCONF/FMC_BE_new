@@ -15,7 +15,11 @@ namespace DataAccess
         {
             _context = context;
         }
-
+public IQueryable<Conference> GetAllQueryable()
+{
+    // Bao gồm Topics nếu cần
+    return _context.Conferences.Include(c => c.Topics).AsQueryable();
+}
         // Get all conferences
         public async Task<IEnumerable<Conference>> GetAllConferences()
         {
