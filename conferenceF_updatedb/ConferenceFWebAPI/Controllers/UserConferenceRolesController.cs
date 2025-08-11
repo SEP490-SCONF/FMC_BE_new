@@ -161,15 +161,15 @@ namespace ConferenceFWebAPI.Controllers
             var link = $"{formBaseUrl}?eid={entity.Id}&token={token}&expires={expires:O}";
 
             // 7. Chuẩn bị nội dung email
-            string subject = $"Lời mời hoàn thiện hồ sơ '{entity.SpecificTitle}' cho hội thảo '{conference.Title}'";
+            string subject = $"Invitation to Complete Your '{entity.SpecificTitle}' Profile for the '{conference.Title}' Conference";
             string body = $@"
-        <h3>Xin chào {user.Name ?? user.Email},</h3>
-        <p>Bạn vừa được gán vai trò <strong>{entity.SpecificTitle}</strong> trong hội thảo <strong>{conference.Title}</strong> (thuộc {entity.GroupName}).</p>
-        <p>Vui lòng nhấn vào liên kết dưới đây để hoàn thiện thông tin cá nhân:</p>
-        <p><a href='{link}' target='_blank'>Hoàn thiện hồ sơ</a></p>
-        <p>Liên kết này sẽ hết hạn vào: {expires:dd/MM/yyyy HH:mm} (UTC)</p>
-        <br/>
-        <p>Trân trọng,<br/>Ban tổ chức</p>";
+       <h3>Dear {user.Name ?? user.Email},</h3>
+<p>You have been assigned the role of <strong>{entity.SpecificTitle}</strong> for the <strong>{conference.Title}</strong> conference (as part of the {entity.GroupName}).</p>
+<p>Please click the link below to complete your personal information:</p>
+<p><a href='{link}' target='_blank'>Complete Your Profile</a></p>
+<p>This link will expire on: {expires:dd/MM/yyyy HH:mm} (UTC)</p>
+<br/>
+<p>Sincerely,<br/>The Organizing Committee</p>";
 
             await _emailService.SendEmailAsync(user.Email, subject, body);
 
@@ -313,14 +313,14 @@ namespace ConferenceFWebAPI.Controllers
                     return NotFound($"Không tìm thấy bản ghi vai trò cho người dùng {dto.UserId} trong hội thảo {dto.ConferenceId} để cập nhật.");
                 }
 
-                string subject = $"Vai trò của bạn đã được cập nhật trong hội thảo '{conference.Title}'";
+                string subject = $"Your Role in the '{conference.Title}' Conference Has Been Updated";
                 string body = $@"
-                    <h3>Xin chào {user.Name},</h3>
-                    <p>Vai trò của bạn trong hội thảo <strong>{conference.Title}</strong> đã được cập nhật thành <strong>{newRole.RoleName}</strong>.</p>
-                    <p>Thời gian cập nhật: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
-                    <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
-                    <br/>
-                    <p>Trân trọng,<br/>Ban tổ chức</p>";
+                    <h3>Dear {user.Name},</h3>
+<p>Your role in the <strong>{conference.Title}</strong> conference has been updated to <strong>{newRole.RoleName}</strong>.</p>
+<p>Update Time: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
+<p>Please log in to the system to view more details.</p>
+<br/>
+<p>Sincerely,<br/>The Organizing Committee</p>";
 
                 // Gửi email
                 await _emailService.SendEmailAsync(user.Email, subject, body);
@@ -420,15 +420,15 @@ namespace ConferenceFWebAPI.Controllers
             var link = $"{formBaseUrl}?eid={entity.Id}&token={token}&expires={expires:O}";
 
             // 7. Email mời điền form
-            string subject = $"Lời mời hoàn thiện hồ sơ '{entity.SpecificTitle}' cho hội thảo '{conference.Title}'";
+            string subject = $"Invitation to Complete Your '{entity.SpecificTitle}' Profile for the '{conference.Title}' Conference'";
             string body = $@"
-<h3>Xin chào {foundUser.Name ?? foundUser.Email},</h3>
-<p>Bạn vừa được gán vai trò <strong>{entity.SpecificTitle}</strong> trong hội thảo <strong>{conference.Title}</strong>.</p>
-<p>Vui lòng nhấn vào liên kết dưới đây để hoàn thiện thông tin cá nhân:</p>
-<p><a href='{link}' target='_blank'>Điền thông tin</a></p>
-<p>Liên kết này sẽ hết hạn vào: {expires:dd/MM/yyyy HH:mm} (UTC)</p>
+<h3>Dear {foundUser.Name ?? foundUser.Email},</h3>
+<p>You have been assigned the role of <strong>{entity.SpecificTitle}</strong> for the <strong>{conference.Title}</strong> conference.</p>
+<p>Please click the link below to complete your personal information:</p>
+<p><a href='{link}' target='_blank'>Complete Your Profile</a></p>
+<p>This link will expire on: {expires:dd/MM/yyyy HH:mm} (UTC)</p>
 <br/>
-<p>Trân trọng,<br/>Ban tổ chức</p>";
+<p>Sincerely,<br/>The Organizing Committee</p>";
 
             await _emailService.SendEmailAsync(foundUser.Email, subject, body);
 

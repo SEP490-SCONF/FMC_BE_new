@@ -101,8 +101,8 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
                     var authorUser = await _userRepository.GetById(pa.AuthorId);
                     if (authorUser != null)
                     {
-                        string notificationTitle = "Nộp lại bài báo thành công!";
-                        string notificationContent = $"Bạn đã nộp lại bản sửa đổi của bài báo '{existingPaper.Title}' thành công.";
+                        string notificationTitle = "Paper Resubmission Successful!";
+                        string notificationContent = $"You have successfully resubmitted the revised version of your paper, '{existingPaper.Title}'.";
 
                         // Tạo và lưu thông báo vào cơ sở dữ liệu
                         var notification = new Notification

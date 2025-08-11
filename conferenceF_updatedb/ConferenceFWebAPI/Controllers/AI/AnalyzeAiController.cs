@@ -49,7 +49,7 @@ namespace ConferenceFWebAPI.Controllers.AI
         private AnalyzeAiResponseDTO CalculateAnalysisResult(List<ChunkResultDTO> chunkResults)
         {
             int totalTokens = chunkResults.Sum(r => r.TokenCount);
-            double weightedAiTokens = chunkResults.Sum(r => r.TokenCount * r.ScoreMachine);
+            double weightedAiTokens = chunkResults.Sum(r => r.TokenCount * (r.ScoreMachine / 100.0));
             double percentAi = totalTokens > 0
                 ? (weightedAiTokens / totalTokens) * 100.0
                 : 0.0;

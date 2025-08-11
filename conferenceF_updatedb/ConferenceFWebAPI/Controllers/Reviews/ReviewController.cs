@@ -365,8 +365,8 @@ namespace ConferenceFWebAPI.Controllers.Reviews
             var paper = await _paperRepository.GetPaperWithAuthorsAsync(review.PaperId);
             if (paper != null && paper.PaperAuthors != null)
             {
-                string notificationTitle = "Kết quả đánh giá bài báo đã có!";
-                string notificationContent = $"Bài báo '{paper.Title}' của bạn đã có kết quả đánh giá. Vui lòng kiểm tra để biết chi tiết.";
+                string notificationTitle = "Evaluation Results for Your Paper Are Available!";
+                string notificationContent = $"The evaluation results for your paper, '{paper.Title}', are now available. Please check for details..";
                 string roleTarget = "Author";
 
                 foreach (var pa in paper.PaperAuthors)

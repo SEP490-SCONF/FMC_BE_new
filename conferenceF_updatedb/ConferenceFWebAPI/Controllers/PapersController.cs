@@ -173,8 +173,8 @@ namespace ConferenceFWebAPI.Controllers
                 var uploaderUser = await _userRepository.GetById(uploaderUserId);
                 if (uploaderUser != null)
                 {
-                    string notificationTitle = "Nộp bài thành công!";
-                    string notificationContent = $"Bạn đã nộp bài báo '{paper.Title}' thành công cho hội thảo '{conference.Title}'.";
+                    string notificationTitle = "Paper Submission Successful!";
+                    string notificationContent = $"You have successfully submitted your paper, '{paper.Title}', to the '{conference.Title}' conference.";
 
                     // Tạo và lưu thông báo vào cơ sở dữ liệu
                     var notification = new Notification
@@ -221,27 +221,27 @@ namespace ConferenceFWebAPI.Controllers
                             await _userConferenceRoleRepository.Add(newAssignment);
                             Console.WriteLine($"Created new UserConferenceRole for User {authorId} in Conference {conferenceId} with Role {newRole.RoleName}.");
 
-                            emailSubject = $"Vai trò mới của bạn trong hội thảo '{conference.Title}'";
+                            emailSubject = $"Your New Role in the '{conference.Title}' Conference";
                             emailBody = $@"
-                        <h3>Xin chào {authorUser.Name},</h3>
-                        <p>Bạn vừa được gán vai trò <strong>{newRole.RoleName}</strong> trong hội thảo <strong>{conference.Title}</strong> vì đã tải lên bài báo.</p>
-                        <p>Thời gian gán: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
-                        <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
-                        <br/>
-                        <p>Trân trọng,<br/>Ban tổ chức</p>";
+                        <h3>Dear {authorUser.Name},</h3>
+<p>You have been assigned the role of <strong>{newRole.RoleName}</strong> for the <strong>{conference.Title}</strong> conference because you have uploaded a paper.</p>
+<p>Assignment Time: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
+<p>Please log in to the system to view more details.</p>
+<br/>
+<p>Sincerely,<br/>The Organizing Committee</p>";
                         }
                         else if (updatedRoleAssignment.ConferenceRoleId != newRoleId)
                         {
                             Console.WriteLine($"Updated UserConferenceRole for User {authorId} in Conference {conferenceId} to Role {newRole.RoleName}.");
 
-                            emailSubject = $"Cập nhật vai trò của bạn trong hội thảo '{conference.Title}'";
+                            emailSubject = $"Your Role in the '{conference.Title}' Conference Has Been Updated";
                             emailBody = $@"
-                        <h3>Xin chào {authorUser.Name},</h3>
-                        <p>Vai trò của bạn trong hội thảo <strong>{conference.Title}</strong> đã được cập nhật thành <strong>{newRole.RoleName}</strong> do bạn đã tải lên bài báo.</p>
-                        <p>Thời gian cập nhật: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
-                        <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
-                        <br/>
-                        <p>Trân trọng,<br/>Ban tổ chức</p>";
+                        <h3>Dear {authorUser.Name},</h3>
+<p>Your role in the <strong>{conference.Title}</strong> conference has been updated to <strong>{newRole.RoleName}</strong> because you have uploaded a paper.</p>
+<p>Update Time: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
+<p>Please log in to the system to view more details.</p>
+<br/>
+<p>Sincerely,<br/>The Organizing Committee</p>";
                         }
                         else
                         {
