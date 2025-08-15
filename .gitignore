@@ -101,6 +101,27 @@ StyleCopReport.xml
 # Chutzpah Test files
 _Chutzpah*
 
+
+# Build results
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.cache
+*.log
+
+# Debug/Release outputs
+*.pdb
+*.dll
+*.exe
+
+# Others
+DocumentLayout*.json
+*.v2
+
 # Visual C++ cache files
 ipch/
 *.aps

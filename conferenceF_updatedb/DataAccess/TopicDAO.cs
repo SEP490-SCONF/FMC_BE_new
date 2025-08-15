@@ -30,6 +30,14 @@ namespace DataAccess
                 throw new Exception("Error occurred while retrieving all topics.", ex);
             }
         }
+        public async Task<IEnumerable<Topic>> GetTopicsByConferenceId(int conferenceId)
+        {
+            // Truy vấn các Topic mà có ít nhất một Conference trong danh sách Conferences của nó
+            // có ConferenceId khớp với conferenceId được cung cấp.
+            return await _context.Topics
+                                   .Where(topic => topic.Conferences.Any(c => c.ConferenceId == conferenceId))
+                                   .ToListAsync();
+        }
 
         // Get topic by ID
         public async Task<Topic> GetTopicById(int topicId)
@@ -127,5 +135,20 @@ namespace DataAccess
                 throw new Exception($"Error occurred while deleting topic with ID {topicId}.", ex);
             }
         }
+
+        public async Task<IEnumerable<Topic>> GetTopicsByIdsAsync(List<int> topicIds)
+        {
+            try
+            {
+                return await _context.Topics
+                                     .Where(t => topicIds.Contains(t.TopicId))
+                                     .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error occurred while retrieving topics by IDs.", ex);
+            }
+        }
+
     }
 }

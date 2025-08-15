@@ -7,41 +7,22 @@ namespace Repository
 {
     public class NotificationRepository : INotificationRepository
     {
-        private readonly NotificationDAO _notificationDao;
+        private readonly NotificationDAO _notificationDAO;
 
-        public NotificationRepository(NotificationDAO notificationDao)
+        public NotificationRepository(NotificationDAO notificationDAO)
         {
-            _notificationDao = notificationDao;
+            _notificationDAO = notificationDAO;
         }
 
-        public async Task<IEnumerable<Notification>> GetAll()
+        public async Task AddNotificationAsync(Notification notification)
         {
-            return await _notificationDao.GetAll();
+            await _notificationDAO.AddAsync(notification);
+            await _notificationDAO.SaveChangesAsync();
         }
 
-        public async Task<Notification> GetById(int id)
+        public async Task<List<Notification>> GetNotificationsByUserIdAsync(int userId)
         {
-            return await _notificationDao.GetById(id);
-        }
-
-        public async Task Add(Notification entity)
-        {
-            await _notificationDao.Add(entity);
-        }
-
-        public async Task Update(Notification entity)
-        {
-            await _notificationDao.Update(entity);
-        }
-
-        public async Task Delete(int id)
-        {
-            await _notificationDao.Delete(id);
-        }
-
-        public async Task<IEnumerable<Notification>> GetByUserId(int userId)
-        {
-            return await _notificationDao.GetByUserId(userId);
+            return await _notificationDAO.GetByUserIdAsync(userId);
         }
     }
 }

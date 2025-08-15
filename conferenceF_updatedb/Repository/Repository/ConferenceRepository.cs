@@ -1,5 +1,6 @@
 ﻿using BussinessObject.Entity;
 using DataAccess;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace Repository
@@ -8,12 +9,17 @@ namespace Repository
     {
         private readonly ConferenceDAO _conferenceDao;
 
+        
         public ConferenceRepository(ConferenceDAO conferenceDao)
         {
             _conferenceDao = conferenceDao;
         }
-
         public async Task<IEnumerable<Conference>> GetAll()
+        {
+            return await _conferenceDao.GetAllConferences();
+        }
+
+        public async Task<IEnumerable<Conference>> GetAllConferencesFalse()
         {
             return await _conferenceDao.GetAllConferences();
         }
@@ -32,10 +38,10 @@ namespace Repository
         {
             await _conferenceDao.UpdateConference(entity);
         }
-        //public async Task UpdateConferenceStatus(int conferenceId, string newStatus)
-        //{
-        //    await _conferenceDao.UpdateConferenceStatus(conferenceId, newStatus);
-        //}
+        public async Task UpdateConferenceStatus(int conferenceId, bool newStatus)
+        {
+            await _conferenceDao.UpdateConferenceStatus(conferenceId, newStatus);
+        }
 
         public async Task Delete(int id)
         {
@@ -46,5 +52,10 @@ namespace Repository
         {
             return await _conferenceDao.GetConferenceCount();
         }
+        public IQueryable<Conference> GetAllQueryable()
+{
+    return _conferenceDao.GetAllQueryable();
+}
+
     }
 }

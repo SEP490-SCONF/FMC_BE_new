@@ -4,8 +4,9 @@ using System.Threading.Tasks;
 
 namespace Repository
 {
-    public interface INotificationRepository : IRepositoryBase<Notification>
+    public interface INotificationRepository
     {
-        Task<IEnumerable<Notification>> GetByUserId(int userId);
+        Task AddNotificationAsync(Notification notification);
+        Task<List<Notification>> GetNotificationsByUserIdAsync(int userId);
     }
 }

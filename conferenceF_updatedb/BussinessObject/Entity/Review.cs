@@ -11,14 +11,14 @@ public partial class Review
 
     public int ReviewerId { get; set; }
 
-    public int? RevisionId { get; set; }
+    public int RevisionId { get; set; }
 
     public int? Score { get; set; }
 
     public string? Comments { get; set; }
 
     public string? Status { get; set; }
-
+    public string? PaperStatus { get; set; }
     public DateTime? ReviewedAt { get; set; }
 
     public virtual Paper Paper { get; set; } = null!;

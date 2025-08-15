@@ -11,12 +11,14 @@ namespace FMC_BE.Controllers
     public class TopicsController : ControllerBase
     {
         private readonly ITopicRepository _topicRepository;
+        private readonly IConferenceRepository _conferenceRepository;
         private readonly IMapper _mapper;
 
-        public TopicsController(ITopicRepository topicRepository, IMapper mapper)
+        public TopicsController(ITopicRepository topicRepository, IMapper mapper, IConferenceRepository conferenceRepository)
         {
             _topicRepository = topicRepository;
             _mapper = mapper;
+            _conferenceRepository = conferenceRepository;
         }
 
         // GET: api/Topics
@@ -43,14 +45,15 @@ namespace FMC_BE.Controllers
 
         // POST: api/Topics
         [HttpPost]
-        public async Task<ActionResult> Create([FromBody] TopicDTO topicDto)
+        public async Task<ActionResult> Create([FromBody] AddOrUpdateTopicDTO topicDto)
         {
-            if (topicDto == null)
+            if (topicDto.TopicName == null)
             {
-                return BadRequest("Topic data is null.");
+                return BadRequest("Topic Name is requied.");
             }
 
             var topic = _mapper.Map<Topic>(topicDto);
+            topic.Status = true;
             await _topicRepository.Add(topic);
 
             return CreatedAtAction(nameof(GetById), new { id = topic.TopicId }, topicDto);
@@ -58,18 +61,24 @@ namespace FMC_BE.Controllers
 
         // PUT: api/Topics/5
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(int id, [FromBody] TopicDTO topicDto)
+        public async Task<ActionResult> Update(int id, [FromBody] AddOrUpdateTopicDTO topicDto)
         {
-            if (id != topicDto.TopicId)
-            {
-                return BadRequest("Topic ID mismatch.");
-            }
-
             try
             {
-                var topic = _mapper.Map<Topic>(topicDto);
-                await _topicRepository.Update(topic);
-                return NoContent();
+                if(id != null)
+                {
+                    var topic = await _topicRepository.GetById(id);
+                    if (topic == null)
+                        return BadRequest("Topic not exits");
+                    _mapper.Map(topicDto, topic);
+                    await _topicRepository.Update(topic);
+                    return Ok("Success");
+
+                }
+                else
+                {
+                    return BadRequest("Id is null");
+                }
             }
             catch (Exception ex)
             {

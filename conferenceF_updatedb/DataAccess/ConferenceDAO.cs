@@ -15,28 +15,50 @@ namespace DataAccess
         {
             _context = context;
         }
-
+public IQueryable<Conference> GetAllQueryable()
+{
+    // Bao gồm Topics nếu cần
+    return _context.Conferences.Include(c => c.Topics).AsQueryable();
+}
         // Get all conferences
         public async Task<IEnumerable<Conference>> GetAllConferences()
         {
             try
             {
                 return await _context.Conferences
+                                     //.Where(c => c.Status == true)
+                                     .Include(c => c.Topics)
                                      .AsNoTracking()
                                      .ToListAsync();
             }
             catch (Exception ex)
             {
-                throw new Exception("Error occurred while retrieving all conferences.", ex);
+                throw new Exception("Error occurred while retrieving all active conferences.", ex);
+            }
+        }
+        public async Task<IEnumerable<Conference>> GetAllConferencesFalse()
+        {
+            try
+            {
+                return await _context.Conferences
+                                     .Where(c => c.Status == false)
+                                     .AsNoTracking()
+                                     .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error occurred while retrieving all active conferences.", ex);
             }
         }
 
-        // Get conference by ID
+
+        // Get conference by ID (include Topics)
         public async Task<Conference> GetConferenceById(int id)
         {
             try
             {
                 return await _context.Conferences
+                                     .Include(c => c.Topics) 
                                      .AsNoTracking()
                                      .FirstOrDefaultAsync(c => c.ConferenceId == id);
             }
@@ -45,6 +67,7 @@ namespace DataAccess
                 throw new Exception($"Error occurred while retrieving conference with ID {id}.", ex);
             }
         }
+
 
         // Add a new conference
         public async Task AddConference(Conference conference)
@@ -65,26 +88,41 @@ namespace DataAccess
         }
 
         // Update existing conference
-        public async Task UpdateConference(Conference conference)
+        public async Task UpdateConference(Conference updatedConference)
         {
-            try
-            {
-                var existing = await GetConferenceById(conference.ConferenceId);
-                if (existing == null)
-                    throw new Exception($"Conference with ID {conference.ConferenceId} not found.");
+            var existingConference = await _context.Conferences
+                .Include(c => c.Topics) // ✅ Bao gồm danh sách topic hiện tại
+                .FirstOrDefaultAsync(c => c.ConferenceId == updatedConference.ConferenceId);
 
-                _context.Entry(existing).CurrentValues.SetValues(conference);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException dbEx)
+            if (existingConference == null)
             {
-                throw new Exception("Database error while updating the conference.", dbEx);
+                throw new Exception($"Conference with ID {updatedConference.ConferenceId} not found.");
             }
-            catch (Exception ex)
+
+            // ✅ Cập nhật các thuộc tính scalar
+            _context.Entry(existingConference).CurrentValues.SetValues(updatedConference);
+
+            // ✅ Cập nhật lại các Topic mới nếu có
+            if (updatedConference.Topics != null && updatedConference.Topics.Any())
             {
-                throw new Exception($"Error occurred while updating conference with ID {conference.ConferenceId}.", ex);
+                // Xóa liên kết cũ
+                existingConference.Topics.Clear();
+
+                // Gán lại danh sách Topic mới
+                foreach (var topic in updatedConference.Topics)
+                {
+                    var trackedTopic = await _context.Topics.FindAsync(topic.TopicId);
+                    if (trackedTopic != null)
+                    {
+                        existingConference.Topics.Add(trackedTopic);
+                    }
+                }
             }
+
+            await _context.SaveChangesAsync();
         }
+
+
 
         // Delete conference by ID
         public async Task DeleteConference(int id)
@@ -124,26 +162,26 @@ namespace DataAccess
                 throw new Exception("Error occurred while counting conferences.", ex);
             }
         }
-        //public async Task UpdateConferenceStatus(int conferenceId, string newStatus)
-        //{
-        //    try
-        //    {
-        //        var conference = await _context.Conferences.FirstOrDefaultAsync(c => c.ConferenceId == conferenceId);
-        //        if (conference == null)
-        //            throw new Exception($"Conference with ID {conferenceId} not found.");
+        public async Task UpdateConferenceStatus(int conferenceId, bool newStatus)
+        {
+            try
+            {
+                var conference = await _context.Conferences.FirstOrDefaultAsync(c => c.ConferenceId == conferenceId);
+                if (conference == null)
+                    throw new Exception($"Conference with ID {conferenceId} not found.");
 
-        //        conference.Status = newStatus;
-        //        _context.Conferences.Update(conference);
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateException dbEx)
-        //    {
-        //        throw new Exception("Database error while updating the conference status.", dbEx);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new Exception($"Error occurred while updating status for conference with ID {conferenceId}.", ex);
-        //    }
-        //}
+                conference.Status = newStatus;
+                _context.Conferences.Update(conference);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException dbEx)
+            {
+                throw new Exception("Database error while updating the conference status.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error occurred while updating status for conference with ID {conferenceId}.", ex);
+            }
+        }
     }
 }

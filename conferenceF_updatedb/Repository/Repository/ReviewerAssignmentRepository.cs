@@ -13,7 +13,10 @@ namespace Repository
         {
             _dao = dao;
         }
-
+        public async Task<List<ReviewerAssignment>> GetReviewersByPaperIdAsync(int paperId)
+        {
+            return await _dao.GetReviewersByPaperIdAsync(paperId);
+        }
         public async Task<IEnumerable<ReviewerAssignment>> GetAll()
         {
             return await _dao.GetAll();
@@ -43,5 +46,16 @@ namespace Repository
         {
             return await _dao.GetByPaperId(paperId);
         }
+
+        public async Task<IEnumerable<ReviewerAssignment>> GetByReviewerId(int reviewerId)
+        {
+            return await _dao.GetByReviewerId(reviewerId);
+        }
+
+        public async Task<IEnumerable<ReviewerAssignment>> GetAllByPaperId(int paperId)
+        {
+            return await _dao.GetAllByPaperId(paperId);
+        }
+
     }
 }

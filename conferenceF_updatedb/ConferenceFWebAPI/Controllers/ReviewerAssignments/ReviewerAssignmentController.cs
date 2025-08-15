@@ -1,0 +1,192 @@
+﻿using AutoMapper;
+using BussinessObject.Entity;
+using ConferenceFWebAPI.DTOs.ReviewerAssignments;
+using ConferenceFWebAPI.Hubs;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Repository;
+
+namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ReviewerAssignmentController : ControllerBase
+    {
+        private readonly IReviewerAssignmentRepository _repository;
+        private readonly IUserConferenceRoleRepository _userConferenceRoleRepository;
+        private readonly IPaperRepository _paperRepository;
+        private readonly IPaperRevisionRepository _revisionRepository;
+        private readonly IMapper _mapper;
+        private readonly IUserRepository _userRepository;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IHubContext<NotificationHub> _hubContext;
+
+        public ReviewerAssignmentController(IReviewerAssignmentRepository repository, IMapper mapper, IUserConferenceRoleRepository userConferenceRoleRepository, IPaperRepository paperRepository, IPaperRevisionRepository paperRevisionRepository,
+          IUserRepository userRepository, INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext)
+        {
+            _repository = repository;
+            _mapper = mapper;
+            _userConferenceRoleRepository = userConferenceRoleRepository;
+            _paperRepository = paperRepository;
+            _revisionRepository = paperRevisionRepository;
+            _userRepository = userRepository;
+            _notificationRepository = notificationRepository;
+            _hubContext = hubContext;
+
+        }
+
+        // GET: api/ReviewerAssignment
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var assignments = await _repository.GetAll();
+            var result = _mapper.Map<IEnumerable<ReviewerAssignmentDTO>>(assignments);
+            return Ok(result);
+        }
+
+        // GET: api/ReviewerAssignment/{id}
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var assignment = await _repository.GetById(id);
+            if (assignment == null)
+                return NotFound($"Assignment with ID {id} not found.");
+
+            return Ok(_mapper.Map<ReviewerAssignmentDTO>(assignment));
+        }
+
+        // GET: api/ReviewerAssignment/paper/{paperId}
+        [HttpGet("paper/{paperId}")]
+        public async Task<IActionResult> GetByPaperId(int paperId)
+        {
+            var assignments = await _repository.GetByPaperId(paperId);
+            var result = _mapper.Map<IEnumerable<ReviewerAssignmentDTO>>(assignments);
+            return Ok(result);
+        }
+
+        //POST: api/ReviewerAssignment
+        [HttpPost]
+        public async Task<IActionResult> Add([FromBody] AddReviewerAssignmentDTO dto)
+        {
+            var isReviewer = await _userConferenceRoleRepository.IsReviewer(dto.ReviewerId);
+            if (!isReviewer)
+            {
+                return BadRequest($"User with ID {dto.ReviewerId} is not a Reviewer (ConferenceRoleId = 1).");
+            }
+
+            var entity = _mapper.Map<ReviewerAssignment>(dto);
+            await _repository.Add(entity);
+
+            var paper = await _paperRepository.GetPaperByIdAsync(dto.PaperId);
+            if (paper != null)
+            {
+                paper.Status = "Under Review";
+                await _paperRepository.UpdatePaperAsync(paper);
+            }
+
+            var revisions = await _revisionRepository.GetRevisionsByPaperIdAsync(dto.PaperId);
+            foreach (var revision in revisions)
+            {
+                revision.Status = "Under Review";
+                await _revisionRepository.UpdatePaperRevisionAsync(revision);
+            }
+
+            // --- Thêm logic gửi thông báo cho reviewer ---
+            var reviewerUser = await _userRepository.GetById(dto.ReviewerId);
+            if (reviewerUser != null)
+            {
+                string notificationTitle = "Bài báo mới được gán!";
+                string notificationContent = $"Bạn vừa được gán đánh giá bài báo '{paper.Title}'. Vui lòng kiểm tra và thực hiện đánh giá.";
+
+                // Tạo và lưu thông báo vào cơ sở dữ liệu
+                var notification = new Notification
+                {
+                    Title = notificationTitle,
+                    Content = notificationContent,
+                    UserId = dto.ReviewerId,
+                    RoleTarget = "Reviewer",
+                    CreatedAt = DateTime.UtcNow,
+                };
+                await _notificationRepository.AddNotificationAsync(notification);
+
+                // Gửi thông báo real-time qua SignalR
+                await _hubContext.Clients.User(dto.ReviewerId.ToString()).SendAsync("ReceiveNotification", notificationTitle, notificationContent);
+            }
+            // --- Kết thúc logic gửi thông báo ---
+
+            var result = _mapper.Map<ReviewerAssignmentDTO>(entity);
+            return CreatedAtAction(nameof(GetById), new { id = entity.AssignmentId }, result);
+        }
+
+
+        // PUT: api/ReviewerAssignment/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateReviewerAssignmentDTO dto)
+        {
+            var existing = await _repository.GetById(id);
+            if (existing == null)
+                return NotFound($"Assignment with ID {id} not found.");
+
+            // ✅ Chỉ cập nhật nếu được truyền vào
+            if (dto.PaperId.HasValue)
+                existing.PaperId = dto.PaperId.Value;
+
+            if (dto.ReviewerId.HasValue)
+                existing.ReviewerId = dto.ReviewerId.Value;
+
+            await _repository.Update(existing);
+            return NoContent();
+        }
+
+
+        // DELETE: api/ReviewerAssignment/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            // 1. Kiểm tra assignment có tồn tại không
+            var existing = await _repository.GetById(id);
+            if (existing == null)
+                return NotFound($"Assignment with ID {id} not found.");
+
+            int paperId = existing.PaperId;
+
+            // 2. Xoá assignment
+            await _repository.Delete(id);
+
+            // 3. Kiểm tra còn reviewer nào khác cho bài báo này không
+            var remainingAssignments = await _repository.GetAllByPaperId(paperId);
+            if (remainingAssignments == null || !remainingAssignments.Any())
+            {
+                // 4. Nếu không còn ai: cập nhật lại status bài báo và các bản revision
+                var paper = await _paperRepository.GetPaperByIdAsync(paperId);
+                if (paper != null)
+                {
+                    paper.Status = "Submitted"; // hoặc "Awaiting Reviewer"
+                    await _paperRepository.UpdatePaperAsync(paper);
+                }
+
+                var revisions = await _revisionRepository.GetRevisionsByPaperIdAsync(paperId);
+                foreach (var revision in revisions)
+                {
+                    revision.Status = "Submitted"; // hoặc trạng thái khác
+                    await _revisionRepository.UpdatePaperRevisionAsync(revision);
+                }
+            }
+
+            return NoContent();
+        }
+
+
+        // GET: api/ReviewerAssignment/reviewer/{reviewerId}
+        [HttpGet("reviewer/{reviewerId}")]
+        public async Task<IActionResult> GetByReviewerId(int reviewerId)
+        {
+            var assignments = await _repository.GetByReviewerId(reviewerId);
+            var result = _mapper.Map<IEnumerable<ReviewerAssignmentDTO>>(assignments);
+            return Ok(result);
+        }
+
+    }
+}
+

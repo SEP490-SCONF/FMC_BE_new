@@ -4,8 +4,17 @@ using System.Threading.Tasks;
 
 namespace Repository
 {
-    public interface IPaperRevisionRepository : IRepositoryBase<PaperRevision>
+    public interface IPaperRevisionRepository
     {
-        Task<IEnumerable<PaperRevision>> GetByPaperId(int paperId);
+        Task<PaperRevision?> GetPaperRevisionByIdAsync(int revisionId);
+        Task<PaperRevision> AddPaperRevisionAsync(PaperRevision paperRevision);
+        Task UpdatePaperRevisionAsync(PaperRevision paperRevision);
+        Task DeletePaperRevisionAsync(int revisionId);
+        Task<IEnumerable<PaperRevision>> GetRevisionsByPaperIdAsync(int paperId);
+        List<PaperRevision> GetPaperRevisionsByPaperId(int paperId);
+        Task<string?> GetAcceptedFilePathByPaperIdAsync(int paperId);
+
+
     }
 }
+

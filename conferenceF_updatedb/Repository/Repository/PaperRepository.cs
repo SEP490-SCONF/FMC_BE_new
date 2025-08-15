@@ -1,5 +1,6 @@
 ﻿using BussinessObject.Entity;
 using DataAccess;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -7,20 +8,83 @@ namespace Repository
 {
     public class PaperRepository : IPaperRepository
     {
-        private readonly PaperDAO _dao;
+        private readonly PaperDAO _paperDAO; // Phụ thuộc trực tiếp vào PaperDAO
 
-        public PaperRepository(PaperDAO dao)
+        public PaperRepository(PaperDAO paperDAO) // Inject PaperDAO
         {
-            _dao = dao;
+            _paperDAO = paperDAO;
         }
 
-        public Task<List<Paper>> GetAllAsync() => _dao.GetAllAsync();
-        public Task<Paper?> GetByIdAsync(int id) => _dao.GetByIdAsync(id);
-        public Task AddAsync(Paper paper, List<int> authorIds)
+         public async Task<Paper?> GetPaperWithConferenceAndTimelinesAsync(int paperId)
         {
-            return _dao.AddAsync(paper, authorIds);
+            return await _paperDAO.GetPaperWithConferenceAndTimelinesAsync(paperId);
         }
-        public Task UpdateAsync(Paper paper) => _dao.UpdateSimpleAsync(paper);
-        public Task DeleteAsync(int id) => _dao.DeleteAsync(id);
+        public IQueryable<Paper> GetAllPapers()
+        {
+            return _paperDAO.GetAllPapers();
+        }
+        public async Task<List<PaperAuthor>> GetAuthorsByPaperIdAsync(int paperId)
+        {
+            return await _paperDAO.GetAuthorsByPaperIdAsync(paperId);
+        }
+        public async Task<Paper> GetPaperByIdAsync(int paperId)
+        {
+            return await _paperDAO.GetByIdAsync(paperId);
+        }
+        public async Task<Paper> GetPaperWithAuthorsAsync(int paperId)
+        {
+            return await _paperDAO.GetPaperWithAuthorsAsync(paperId);
+        }
+        public async Task<Paper?> GetPaperByIdWithIncludesAsync(int paperId)
+        {
+            return await _paperDAO.GetByIdWithIncludesAsync(paperId);
+        }
+
+        public async Task AddPaperAsync(Paper paper)
+        {
+            await _paperDAO.AddAsync(paper);
+            await _paperDAO.SaveChangesAsync(); // Lưu thay đổi sau khi thêm
+        }
+
+        public async Task UpdatePaperAsync(Paper paper)
+        {
+            _paperDAO.Update(paper);
+            await _paperDAO.SaveChangesAsync(); // Lưu thay đổi sau khi cập nhật
+        }
+
+        public async Task DeletePaperAsync(int paperId)
+        {
+            var paper = await _paperDAO.GetByIdAsync(paperId);
+            if (paper != null)
+            {
+                _paperDAO.Delete(paper);
+                await _paperDAO.SaveChangesAsync(); // Lưu thay đổi sau khi xóa
+            }
+        }
+        
+        public List<Paper> GetPapersByConferenceId(int conferenceId)
+        {
+            return _paperDAO.GetPapersByConferenceId(conferenceId);
+        }
+        public List<Paper> GetPapersByUserIdAndConferenceId(int userId, int conferenceId)
+        {
+            return _paperDAO.GetPapersByUserIdAndConferenceId(userId, conferenceId);
+        }
+        public List<Paper> GetPapersByConferenceIdAndStatus(int conferenceId, string status)
+        {
+            return _paperDAO.GetPapersByConferenceIdAndStatus(conferenceId, status);
+        }
+        public List<Paper> GetPublishedPapersByConferenceId(int conferenceId)
+        {
+            return _paperDAO.GetPublishedPapersByConferenceId(conferenceId);
+        }
+        public async Task<List<Paper>> GetAcceptedPapersWithRegistrationsByAuthor(int authorId)
+        {
+            return await _paperDAO.GetAcceptedPapersWithRegistrationsByAuthor(authorId);
+        }
+
+
+
+
     }
 }

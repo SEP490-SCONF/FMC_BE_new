@@ -53,5 +53,20 @@ namespace Repository
         {
             return await _userDao.GetOrganizers();
         }
+        public async Task<User?> GetByRefreshToken(string refreshToken)
+        {
+            return await _userDao.GetByRefreshToken(refreshToken);
+        }
+        public async Task<bool> RoleExists(int roleId)
+        {
+            return await _userDao.RoleExists(roleId);
+        }
+
+        public async Task<IEnumerable<User>> GetUsersByRoleId(int roleId)
+        {
+            return await _userDao.GetUsersByRoleId(roleId);
+        }
+
+
     }
 }

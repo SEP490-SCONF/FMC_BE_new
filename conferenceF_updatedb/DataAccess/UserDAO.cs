@@ -18,7 +18,10 @@ namespace DataAccess
         {
             try
             {
-                return await _context.Users.AsNoTracking().ToListAsync();
+                return await _context.Users
+                    .Include(u => u.Role) 
+                    .AsNoTracking()
+                    .ToListAsync();
             }
             catch (Exception ex)
             {
@@ -26,12 +29,14 @@ namespace DataAccess
             }
         }
 
+
         // Get user by ID
         public async Task<User> GetUserById(int id)
         {
             try
             {
                 return await _context.Users
+                                     .Include(u => u.Role) 
                                      .AsNoTracking()
                                      .FirstOrDefaultAsync(u => u.UserId == id);
             }
@@ -40,6 +45,25 @@ namespace DataAccess
                 throw new Exception($"Error occurred while retrieving user with ID {id}.", ex);
             }
         }
+
+        // Get users by RoleId
+        public async Task<IEnumerable<User>> GetUsersByRoleId(int roleId)
+        {
+            try
+            {
+                return await _context.Users
+                                     .Include(u => u.Role)
+                                     .AsNoTracking()
+                                     .Where(u => u.RoleId == roleId)
+                                     .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error occurred while retrieving users with RoleId {roleId}.", ex);
+            }
+        }
+
+
 
         // Add a new user
         public async Task AddUser(User user)
@@ -64,22 +88,19 @@ namespace DataAccess
         {
             try
             {
-                var existingUser = await GetUserById(user.UserId);
+                var existingUser = await _context.Users.FindAsync(user.UserId);
                 if (existingUser == null)
                     throw new Exception($"User with ID {user.UserId} not found.");
 
                 _context.Entry(existingUser).CurrentValues.SetValues(user);
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateException dbEx)
-            {
-                throw new Exception("Database error while updating user.", dbEx);
-            }
             catch (Exception ex)
             {
-                throw new Exception($"Error occurred while updating user with ID {user.UserId}.", ex);
+                throw new Exception("Error while updating user", ex);
             }
         }
+
 
         // Delete user by ID
         public async Task DeleteUser(int id)
@@ -112,7 +133,7 @@ namespace DataAccess
         {
             try
             {
-                return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                return await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == email);
             }
             catch (Exception ex)
             {
@@ -132,6 +153,13 @@ namespace DataAccess
                 throw new Exception("Error occurred while counting users.", ex);
             }
         }
+        public async Task<User?> GetByRefreshToken(string refreshToken)
+        {
+            // Tìm user theo RefreshToken, có thể thêm AsNoTracking() nếu chỉ đọc
+            return await _context.Users
+                                 .AsNoTracking()
+                                 .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+        }
         public async Task<IEnumerable<User>> GetOrganizers()
         {
             try
@@ -146,5 +174,18 @@ namespace DataAccess
                 throw new Exception("Error occurred while retrieving organizers.", ex);
             }
         }
+
+        public async Task<bool> RoleExists(int roleId)
+        {
+            try
+            {
+                return await _context.Roles.AnyAsync(r => r.RoleId == roleId);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error checking if Role exists", ex);
+            }
+        }
+
     }
 }

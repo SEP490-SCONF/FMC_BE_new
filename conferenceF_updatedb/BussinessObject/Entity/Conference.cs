@@ -46,4 +46,6 @@ public partial class Conference
     public virtual ICollection<UserConferenceRole> UserConferenceRoles { get; set; } = new List<UserConferenceRole>();
 
     public virtual ICollection<Topic> Topics { get; set; } = new List<Topic>();
+    public virtual ICollection<TimeLine> TimeLines { get; set; } = new List<TimeLine>();
+
 }

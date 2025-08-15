@@ -16,98 +16,24 @@ namespace DataAccess
             _context = context;
         }
 
-        public async Task<IEnumerable<Notification>> GetAll()
+        public async Task AddAsync(Notification entity)
         {
-            try
-            {
-                return await _context.Notifications
-                    .AsNoTracking()
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error retrieving all notifications.", ex);
-            }
+            await _context.Notifications.AddAsync(entity);
         }
 
-        public async Task<Notification> GetById(int id)
+        public async Task SaveChangesAsync()
         {
-            try
-            {
-                return await _context.Notifications
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(n => n.NotiId == id);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error retrieving notification with ID {id}.", ex);
-            }
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Notification>> GetByUserId(int userId)
+        // Thêm phương thức để lấy tất cả thông báo của một người dùng, sắp xếp theo thời gian mới nhất
+        public async Task<List<Notification>> GetByUserIdAsync(int userId)
         {
-            try
-            {
-                return await _context.Notifications
-                    .Where(n => n.UserId == userId)
-                    .AsNoTracking()
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error retrieving notifications for user ID {userId}.", ex);
-            }
+            return await _context.Notifications
+                                 .Where(n => n.UserId == userId)
+                                 .OrderByDescending(n => n.CreatedAt)
+                                 .ToListAsync();
         }
 
-        public async Task Add(Notification notification)
-        {
-            try
-            {
-                _context.Notifications.Add(notification);
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error adding new notification.", ex);
-            }
-        }
-
-        public async Task Update(Notification notification)
-        {
-            try
-            {
-                var existing = await _context.Notifications.FindAsync(notification.NotiId);
-                if (existing == null)
-                    throw new Exception($"Notification with ID {notification.NotiId} not found.");
-
-                _context.Entry(existing).CurrentValues.SetValues(notification);
-                await _context.SaveChangesAsync();
-            }   
-            catch (Exception ex)
-            {
-                throw new Exception($"Error updating notification with ID {notification.NotiId}.", ex);
-            }
-        }
-
-        public async Task Delete(int id)
-        {
-            try
-            {
-                var notification = await _context.Notifications.FindAsync(id);
-                if (notification != null)
-                {
-                    _context.Notifications.Remove(notification);
-                    await _context.SaveChangesAsync();
-                }
-                else
-                {
-                    throw new Exception($"Notification with ID {id} not found.");
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error deleting notification with ID {id}.", ex);
-            }
-        }
     }
 }

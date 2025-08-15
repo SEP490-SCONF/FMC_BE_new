@@ -8,5 +8,8 @@ namespace Repository
     {
         Task<IEnumerable<Review>> GetReviewsByPaperId(int paperId);
         Task<int> GetReviewCount();
+        Task<Review> GetByRevisionId(int revisionId);
+        Task<Review> GetReviewByAssignmentId(int assignmentId);
+        Task UpdatePaperAndRevisionStatus(int paperId, string paperStatus, int revisionId);
     }
 }

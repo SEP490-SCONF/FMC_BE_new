@@ -6,26 +6,98 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using DataAccess;
-
-
+using ConferenceFWebAPI.Configurations;
+using Hangfire; // Đảm bảo có using này
+using Hangfire.SqlServer;
 
 using BussinessObject.Entity;
 using ConferenceFWebAPI.Service;
 using Repository.Repository;
-using ConferenceFWebAPI;
+using ConferenceFWebAPI.MappingProfiles;
+using System.Text.Json.Serialization;
+using ConferenceFWebAPI.Hubs;
+using Microsoft.OData.ModelBuilder;
+using ConferenceFWebAPI.Provider;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
+// 1. Lấy chuỗi kết nối SignalR từ appsettings.json
+var modelBuilder = new ODataConventionModelBuilder();
+modelBuilder.EntitySet<Paper>("Papers"); // Register your Paper entity as an OData EntitySet
+modelBuilder.EntitySet<Review>("Reviews");
+
+builder.Services.AddControllers().AddOData(
+    options => options.Select() // Enable $select
+                      .Expand() // Enable $expand
+                      .Filter() // Enable $filter
+                      .OrderBy() // Enable $orderby
+                      .SetMaxTop(100) // Set max $top value (e.g., limit results to 100)
+    .Count() // Enable $count
+                      .AddRouteComponents("odata", modelBuilder.GetEdmModel()) // Define the OData route
+);
+
+// 2. Thêm dịch vụ SignalR và kết nối với Azure SignalR Service
+builder.Services.AddSignalR().AddAzureSignalR(builder.Configuration.GetConnectionString("AzureSignalR"));
 
 builder.Services.AddDbContext<ConferenceFTestContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 // Cấu hình EmailSettings từ appsettings.json
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddTransient<ConferenceFWebAPI.Service.HangfireReminderService>();
+
+// Cấu hình Hangfire với try-catch để tránh crash khi không có database
+try
+{
+    var hangfireConnectionString = builder.Configuration.GetConnectionString("HangfireConnection") 
+                                 ?? builder.Configuration.GetConnectionString("DefaultConnection");
+    
+    if (!string.IsNullOrEmpty(hangfireConnectionString))
+    {
+        builder.Services.AddHangfire(configuration => configuration
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseSqlServerStorage(hangfireConnectionString, new Hangfire.SqlServer.SqlServerStorageOptions
+            {
+                CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+                SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                QueuePollInterval = TimeSpan.FromSeconds(15),
+                UseRecommendedIsolationLevel = true,
+                DisableGlobalLocks = true,
+                PrepareSchemaIfNecessary = true
+            }));
+        builder.Services.AddHangfireServer();
+        Console.WriteLine("Hangfire configured successfully.");
+    }
+    else
+    {
+        Console.WriteLine("No Hangfire connection string found. Hangfire disabled.");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Hangfire configuration failed: {ex.Message}. Application will continue without background jobs.");
+}
 
 // Đăng ký các service
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ICertificateService, CertificateService>();
+
+// Conditional BackgroundCertificateService registration
+try
+{
+    builder.Services.AddScoped<BackgroundCertificateService>();
+    Console.WriteLine("BackgroundCertificateService registered successfully.");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"BackgroundCertificateService registration failed: {ex.Message}");
+}
 // DAO registrations
 builder.Services.AddScoped<UserDAO>();
+builder.Services.AddScoped<RoleDAO>();
+builder.Services.AddScoped<ConferenceRoleDAO>();
 builder.Services.AddScoped<AnswerLikeDAO>();
 builder.Services.AddScoped<AnswerQuestionDAO>();
 builder.Services.AddScoped<CallForPaperDAO>();
@@ -46,13 +118,20 @@ builder.Services.AddScoped<ReviewerAssignmentDAO>();
 builder.Services.AddScoped<ScheduleDAO>();
 builder.Services.AddScoped<TopicDAO>();
 builder.Services.AddScoped<UserConferenceRoleDAO>();
-
+builder.Services.AddScoped<TimeLineDAO>();
+builder.Services.AddScoped<CertificateDAO>();
+builder.Services.AddScoped<HighlightAreaDAO>();
 // Add Scoped services for each repository
+builder.Services.AddScoped<IHighlightAreaRepository, HighlightAreaRepository>();
+
 // User
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-
+// Role
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 // Conference
 builder.Services.AddScoped<IConferenceRepository, ConferenceRepository>();
+//
+builder.Services.AddScoped<IConferenceRoleRepository, ConferenceRoleRepository>();
 
 // Topic
 builder.Services.AddScoped<ITopicRepository, TopicRepository>();
@@ -111,20 +190,51 @@ builder.Services.AddScoped<IReviewerAssignmentRepository, ReviewerAssignmentRepo
 // UserConferenceRole
 builder.Services.AddScoped<IUserConferenceRoleRepository, UserConferenceRoleRepository>();
 
-//PAYOS
-builder.Services.AddSingleton(new PayOS("295a3346-3eeb-449c-bb7b-cdbf495577ec", "a5e3d88f-3ae6-4235-b30e-e81c2b3686a2", "2a895d2b7938d4880973602f579a44043a2bc63183aa80e685ace2e9164cab5f"));
+builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
+
+builder.Services.AddScoped<ITimeLineRepository, TimeLineRepository>();
+
+// BIND cấu hình từ appsettings
+builder.Services.Configure<PayOSConfig>(builder.Configuration.GetSection("PayOS"));
+builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
+
+// Inject PayOS sử dụng cấu hình từ appsettings
+builder.Services.AddSingleton<PayOS>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>().GetSection("PayOS").Get<PayOSConfig>();
+    return new PayOS(config.ClientId, config.ApiKey, config.ChecksumKey);
+});
+
+// MemoryCache để cache kết quả phân tích AI
+builder.Services.AddMemoryCache();
+
+// HttpClient cho service gọi Hugging Face API
+builder.Services.AddHttpClient();
+
+// Đăng ký AI Detector Service
+builder.Services.AddScoped<IAiDetectorService, HuggingFaceDetectorService>();
+
+
 //AddCors
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("SpecificOrigin", build =>
     {
-        build.WithOrigins("http://localhost:5173") // 👈 Chỉ định rõ origin
+        build.WithOrigins("http://localhost:5173", "http://localhost:5174", "https://conference-fe-iota.vercel.app", "https://conference-fe-admin.vercel.app")
              .AllowAnyMethod()
              .AllowAnyHeader()
-             .AllowCredentials(); // 👈 Bắt buộc khi dùng withCredentials
+             .AllowCredentials();
     });
 });
 
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.WriteIndented = true;
+
+    // Cấu hình định dạng DateTime
+    options.JsonSerializerOptions.Converters.Add(new CustomDateTimeConverter());
+    });
 
 //AddAuthentication
 
@@ -139,17 +249,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                builder.Configuration["Jwt:Key"] ?? "default-secret-key-for-development-only-do-not-use-in-production"))
         };
     });
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
 
-//Storage Google Drive
-builder.Services.AddSingleton<GoogleDriveService>();
+builder.Services.AddAutoMapper(typeof(PaperProfile).Assembly);
 
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddScoped<NotificationService>();
+
+builder.Services.AddScoped<IAzureBlobStorageService, AzureBlobStorageService>();
+builder.Services.AddScoped<HangfireReminderService>(); // Đăng ký service chứa logic job
+builder.Services.AddScoped<TimeLineManager>();
+builder.Services.AddScoped<PaperDeadlineService>();
 
 
 // Add services to the container.
@@ -164,14 +279,29 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage(); // Đảm bảo dòng này được gọi
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+
 app.UseCors("SpecificOrigin");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Conditional Hangfire dashboard
+try
+{
+    app.UseHangfireDashboard();
+    Console.WriteLine("Hangfire dashboard enabled at /hangfire");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Hangfire dashboard disabled: {ex.Message}");
+}
 app.MapControllers();
+app.MapHub<NotificationHub>("/notificationHub");
+// 3. Map Hub của bạn tới một endpoint
 
 app.Run();

@@ -109,5 +109,78 @@ namespace DataAccess
                 throw new Exception($"Error deleting payment with ID {id}.", ex);
             }
         }
+        public async Task<IEnumerable<Payment>> GetByConferenceId(int conferenceId)
+        {
+            try
+            {
+                return await _context.Payments
+                    .Where(p => p.ConferenceId == conferenceId)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving payments for conference ID {conferenceId}.", ex);
+            }
+        }
+
+        public async Task<IEnumerable<Payment>> GetByStatus(string status)
+        {
+            try
+            {
+                return await _context.Payments
+                    .Where(p => p.PayStatus == status)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving payments with status {status}.", ex);
+            }
+        }
+
+        public async Task<IEnumerable<Payment>> GetRecentPayments(DateTime fromDate)
+        {
+            try
+            {
+                return await _context.Payments
+                    .Where(p => p.CreatedAt >= fromDate)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving recent payments since {fromDate}.", ex);
+            }
+        }
+
+        public async Task<Payment?> GetByOrderCode(String orderCode)
+        {
+            try
+            {
+                return await _context.Payments
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.PayOsOrderCode == orderCode);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving payment with order code {orderCode}.", ex);
+            }
+        }
+        public async Task<Payment?> GetLatestPendingByUserId(int userId)
+        {
+            try
+            {
+                return await _context.Payments
+                    .Where(p => p.UserId == userId && p.PayStatus == "Pending")
+                    .OrderByDescending(p => p.CreatedAt)
+                    .FirstOrDefaultAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving latest pending payment for user ID {userId}.", ex);
+            }
+        }
+
     }
 }

@@ -9,11 +9,13 @@ public partial class ReviewHighlight
 
     public int ReviewId { get; set; }
 
-    public int? PageNumber { get; set; }
+    public int? PageIndex { get; set; }   
+    public double ?Left { get; set; }       
+    public double ?Top { get; set; }         
+    public double ?Width { get; set; }      
+    public double ?Height { get; set; }    
 
-    public int? OffsetStart { get; set; }
 
-    public int? OffsetEnd { get; set; }
 
     public string? TextHighlighted { get; set; }
 
@@ -22,4 +24,5 @@ public partial class ReviewHighlight
     public virtual Review Review { get; set; } = null!;
 
     public virtual ICollection<ReviewComment> ReviewComments { get; set; } = new List<ReviewComment>();
+    public virtual ICollection<HighlightArea> HighlightAreas { get; set; } = new List<HighlightArea>();
 }

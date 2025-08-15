@@ -162,8 +162,13 @@ namespace BussinessObject.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<int?>("UserConferenceRoleId")
+                        .HasColumnType("int");
+
                     b.HasKey("CertificateId")
                         .HasName("PK__Certific__BBF8A7C17F0C82A8");
+
+                    b.HasIndex("UserConferenceRoleId");
 
                     b.HasIndex(new[] { "RegId" }, "UQ_Certificate_Reg")
                         .IsUnique();
@@ -322,6 +327,42 @@ namespace BussinessObject.Migrations
                     b.ToTable("ForumQuestion", (string)null);
                 });
 
+            modelBuilder.Entity("BussinessObject.Entity.HighlightArea", b =>
+                {
+                    b.Property<int>("HighlightAreaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HighlightAreaId"));
+
+                    b.Property<double?>("Height")
+                        .HasColumnType("float");
+
+                    b.Property<int>("HighlightId")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("Left")
+                        .HasColumnType("float");
+
+                    b.Property<int?>("PageIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TextHighlighted")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double?>("Top")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Width")
+                        .HasColumnType("float");
+
+                    b.HasKey("HighlightAreaId");
+
+                    b.HasIndex("HighlightId");
+
+                    b.ToTable("HighlightArea", (string)null);
+                });
+
             modelBuilder.Entity("BussinessObject.Entity.Notification", b =>
                 {
                     b.Property<int>("NotiId")
@@ -346,11 +387,16 @@ namespace BussinessObject.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int?>("UserConferenceRoleId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("NotiId")
                         .HasName("PK__Notifica__EDC08E92567D61C6");
+
+                    b.HasIndex("UserConferenceRoleId");
 
                     b.HasIndex("UserId");
 
@@ -701,6 +747,9 @@ namespace BussinessObject.Migrations
                     b.Property<int>("PaperId")
                         .HasColumnType("int");
 
+                    b.Property<string>("PaperStatus")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("ReviewedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
@@ -709,7 +758,7 @@ namespace BussinessObject.Migrations
                     b.Property<int>("ReviewerId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("RevisionId")
+                    b.Property<int>("RevisionId")
                         .HasColumnType("int");
 
                     b.Property<int?>("Score")
@@ -788,13 +837,13 @@ namespace BussinessObject.Migrations
                         .HasColumnType("datetime")
                         .HasDefaultValueSql("(getdate())");
 
-                    b.Property<int?>("OffsetEnd")
-                        .HasColumnType("int");
+                    b.Property<double?>("Height")
+                        .HasColumnType("float");
 
-                    b.Property<int?>("OffsetStart")
-                        .HasColumnType("int");
+                    b.Property<double?>("Left")
+                        .HasColumnType("float");
 
-                    b.Property<int?>("PageNumber")
+                    b.Property<int?>("PageIndex")
                         .HasColumnType("int");
 
                     b.Property<int>("ReviewId")
@@ -802,6 +851,12 @@ namespace BussinessObject.Migrations
 
                     b.Property<string>("TextHighlighted")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<double?>("Top")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Width")
+                        .HasColumnType("float");
 
                     b.HasKey("HighlightId")
                         .HasName("PK__ReviewHi__B11CEDF058DDC475");
@@ -861,6 +916,18 @@ namespace BussinessObject.Migrations
                         .IsUnique();
 
                     b.ToTable("Role", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            RoleName = "Member"
+                        });
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.Schedule", b =>
@@ -897,6 +964,34 @@ namespace BussinessObject.Migrations
                     b.HasIndex("PresenterId");
 
                     b.ToTable("Schedule", (string)null);
+                });
+
+            modelBuilder.Entity("BussinessObject.Entity.TimeLine", b =>
+                {
+                    b.Property<int>("TimeLineId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TimeLineId"));
+
+                    b.Property<int>("ConferenceId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("HangfireJobId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TimeLineId");
+
+                    b.HasIndex("ConferenceId");
+
+                    b.ToTable("TimeLine", (string)null);
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.Topic", b =>
@@ -985,6 +1080,9 @@ namespace BussinessObject.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Affiliation")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("AssignedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
@@ -995,6 +1093,39 @@ namespace BussinessObject.Migrations
 
                     b.Property<int>("ConferenceRoleId")
                         .HasColumnType("int");
+
+                    b.Property<string>("ConfirmationToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DisplayNameOverride")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Expertise")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GroupName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SpecificTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -1108,7 +1239,14 @@ namespace BussinessObject.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Certificate_Registration");
 
+                    b.HasOne("BussinessObject.Entity.UserConferenceRole", "UserConferenceRole")
+                        .WithMany()
+                        .HasForeignKey("UserConferenceRoleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Reg");
+
+                    b.Navigation("UserConferenceRole");
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.Conference", b =>
@@ -1152,14 +1290,32 @@ namespace BussinessObject.Migrations
                     b.Navigation("Forum");
                 });
 
+            modelBuilder.Entity("BussinessObject.Entity.HighlightArea", b =>
+                {
+                    b.HasOne("BussinessObject.Entity.ReviewHighlight", "ReviewHighlight")
+                        .WithMany("HighlightAreas")
+                        .HasForeignKey("HighlightId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReviewHighlight");
+                });
+
             modelBuilder.Entity("BussinessObject.Entity.Notification", b =>
                 {
+                    b.HasOne("BussinessObject.Entity.UserConferenceRole", "UserConferenceRole")
+                        .WithMany()
+                        .HasForeignKey("UserConferenceRoleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("BussinessObject.Entity.User", "User")
                         .WithMany("Notifications")
                         .HasForeignKey("UserId")
                         .HasConstraintName("FK__Notificat__UserI__282DF8C2");
 
                     b.Navigation("User");
+
+                    b.Navigation("UserConferenceRole");
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.NotificationStatus", b =>
@@ -1342,6 +1498,8 @@ namespace BussinessObject.Migrations
                     b.HasOne("BussinessObject.Entity.PaperRevision", "Revision")
                         .WithMany("Reviews")
                         .HasForeignKey("RevisionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("FK__Review__Revision__245D67DE");
 
                     b.Navigation("Paper");
@@ -1430,6 +1588,17 @@ namespace BussinessObject.Migrations
                     b.Navigation("Paper");
 
                     b.Navigation("Presenter");
+                });
+
+            modelBuilder.Entity("BussinessObject.Entity.TimeLine", b =>
+                {
+                    b.HasOne("BussinessObject.Entity.Conference", "Conference")
+                        .WithMany("TimeLines")
+                        .HasForeignKey("ConferenceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conference");
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.User", b =>
@@ -1526,6 +1695,8 @@ namespace BussinessObject.Migrations
 
                     b.Navigation("Schedules");
 
+                    b.Navigation("TimeLines");
+
                     b.Navigation("UserConferenceRoles");
                 });
 
@@ -1592,6 +1763,8 @@ namespace BussinessObject.Migrations
 
             modelBuilder.Entity("BussinessObject.Entity.ReviewHighlight", b =>
                 {
+                    b.Navigation("HighlightAreas");
+
                     b.Navigation("ReviewComments");
                 });
 
