@@ -69,4 +69,43 @@ namespace ConferenceFWebAPI.DTOs.Forums
         public int TotalAnswers { get; set; }
         public int TotalLikes { get; set; }
     }
+
+    public class ForumQuestionWithAnswersDto
+    {
+        public int FqId { get; set; }
+        public int AskBy { get; set; }
+        public int ForumId { get; set; }
+        public string Title { get; set; } = null!;
+        public string Description { get; set; } = null!;
+        public string Question { get; set; } = null!;
+        public DateTime? CreatedAt { get; set; }
+        public string AskerName { get; set; } = null!;
+        public string? AskerEmail { get; set; }
+        public int TotalAnswers { get; set; }
+        public int TotalLikes { get; set; }
+        public List<AnswerQuestionDto> RecentAnswers { get; set; } = new List<AnswerQuestionDto>();
+    }
+
+    public class AnswerQuestionDto
+    {
+        public int AnswerId { get; set; }
+        public int AnswerBy { get; set; }
+        public string Answer { get; set; } = null!;
+        public DateTime? CreatedAt { get; set; }
+        public string AnswererName { get; set; } = null!;
+        public string? AnswererEmail { get; set; }
+        public int? ParentAnswerId { get; set; }
+    }
+
+    public class PaginatedForumQuestionsDto
+    {
+        public List<ForumQuestionWithAnswersDto> Questions { get; set; } = new List<ForumQuestionWithAnswersDto>();
+        public int TotalCount { get; set; }
+        public int CurrentPage { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages { get; set; }
+        public bool HasNextPage { get; set; }
+        public bool HasPreviousPage { get; set; }
+        public string? SearchTerm { get; set; }
+    }
 }

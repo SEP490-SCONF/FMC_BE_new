@@ -17,6 +17,7 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IAnswerQuestionRepository _answerQuestionRepository;
         private readonly IQuestionLikeRepository _questionLikeRepository;
         private readonly IMapper _mapper;
+        private readonly ConferenceFTestContext _context;
 
         public ForumQuestionsController(
             IForumQuestionRepository forumQuestionRepository,
@@ -24,7 +25,8 @@ namespace ConferenceFWebAPI.Controllers
             IUserRepository userRepository,
             IAnswerQuestionRepository answerQuestionRepository,
             IQuestionLikeRepository questionLikeRepository,
-            IMapper mapper)
+            IMapper mapper,
+            ConferenceFTestContext context)
         {
             _forumQuestionRepository = forumQuestionRepository;
             _forumRepository = forumRepository;
@@ -32,6 +34,7 @@ namespace ConferenceFWebAPI.Controllers
             _answerQuestionRepository = answerQuestionRepository;
             _questionLikeRepository = questionLikeRepository;
             _mapper = mapper;
+            _context = context;
         }
 
         // GET: api/ForumQuestions
@@ -371,6 +374,103 @@ namespace ConferenceFWebAPI.Controllers
                 TotalAnswers = answers.Count(),
                 TotalLikes = likes.Count()
             };
+        }
+
+        // GET: api/ForumQuestions/forum/{forumId}/paginated
+        [HttpGet("forum/{forumId}/paginated")]
+        public async Task<ActionResult<PaginatedForumQuestionsDto>> GetForumQuestionsPaginated(
+            int forumId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string search = "")
+        {
+            try
+            {
+                // Validate forum exists
+                var forum = await _context.Forums.FindAsync(forumId);
+                if (forum == null)
+                {
+                    return NotFound($"Forum with ID {forumId} not found.");
+                }
+
+                // Build query with search functionality
+                var query = _context.ForumQuestions
+                    .Include(fq => fq.AskByNavigation)
+                    .Include(fq => fq.AnswerQuestions)
+                        .ThenInclude(aq => aq.AnswerByNavigation)
+                    .Include(fq => fq.QuestionLikes)
+                    .Where(fq => fq.ForumId == forumId);
+
+                // Apply search filter if provided
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query = query.Where(fq => 
+                        fq.Title.Contains(search) || 
+                        fq.Description.Contains(search) || 
+                        fq.Question.Contains(search));
+                }
+
+                // Get total count for pagination
+                var totalItems = await query.CountAsync();
+
+                // Calculate pagination values
+                var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+                var skip = (page - 1) * pageSize;
+
+                // Get paginated results
+                var forumQuestions = await query
+                    .OrderByDescending(fq => fq.CreatedAt)
+                    .Skip(skip)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                // Map to DTOs with recent answers
+                var questionDtos = forumQuestions.Select(fq => new ForumQuestionWithAnswersDto
+                {
+                    FqId = fq.FqId,
+                    AskBy = fq.AskBy,
+                    ForumId = fq.ForumId,
+                    Title = fq.Title,
+                    Description = fq.Description,
+                    Question = fq.Question,
+                    AskerName = fq.AskByNavigation?.Name ?? "Unknown",
+                    AskerEmail = fq.AskByNavigation?.Email,
+                    CreatedAt = fq.CreatedAt,
+                    TotalAnswers = fq.AnswerQuestions?.Count ?? 0,
+                    TotalLikes = fq.QuestionLikes?.Count ?? 0,
+                    RecentAnswers = fq.AnswerQuestions?
+                        .OrderByDescending(aq => aq.CreatedAt)
+                        .Take(2)
+                        .Select(aq => new AnswerQuestionDto
+                        {
+                            AnswerId = aq.AnswerId,
+                            AnswerBy = aq.AnswerBy,
+                            Answer = aq.Answer,
+                            AnswererName = aq.AnswerByNavigation?.Name ?? "Unknown",
+                            AnswererEmail = aq.AnswerByNavigation?.Email,
+                            CreatedAt = aq.CreatedAt,
+                            ParentAnswerId = aq.ParentAnswerId
+                        }).ToList() ?? new List<AnswerQuestionDto>()
+                }).ToList();
+
+                var result = new PaginatedForumQuestionsDto
+                {
+                    Questions = questionDtos,
+                    TotalCount = totalItems,
+                    TotalPages = totalPages,
+                    CurrentPage = page,
+                    PageSize = pageSize,
+                    HasPreviousPage = page > 1,
+                    HasNextPage = page < totalPages,
+                    SearchTerm = search
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }
