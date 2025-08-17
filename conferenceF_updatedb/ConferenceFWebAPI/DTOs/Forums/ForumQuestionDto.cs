@@ -19,6 +19,9 @@ namespace ConferenceFWebAPI.DTOs.Forums
         public string? ForumTitle { get; set; }
         public int TotalAnswers { get; set; }
         public int TotalLikes { get; set; }
+        
+        // Current user like status
+        public bool IsLikedByCurrentUser { get; set; }
     }
     
     public class ForumQuestionCreateDto
@@ -84,6 +87,9 @@ namespace ConferenceFWebAPI.DTOs.Forums
         public int TotalAnswers { get; set; }
         public int TotalLikes { get; set; }
         public List<AnswerQuestionDto> RecentAnswers { get; set; } = new List<AnswerQuestionDto>();
+        
+        // Current user like status
+        public bool IsLikedByCurrentUser { get; set; }
     }
 
     public class AnswerQuestionDto
@@ -95,6 +101,7 @@ namespace ConferenceFWebAPI.DTOs.Forums
         public string AnswererName { get; set; } = null!;
         public string? AnswererEmail { get; set; }
         public int? ParentAnswerId { get; set; }
+        public bool IsLikedByCurrentUser { get; set; }
     }
 
     public class PaginatedForumQuestionsDto
@@ -107,5 +114,33 @@ namespace ConferenceFWebAPI.DTOs.Forums
         public bool HasNextPage { get; set; }
         public bool HasPreviousPage { get; set; }
         public string? SearchTerm { get; set; }
+    }
+
+    public class QuestionLikeDto
+    {
+        public int LikeId { get; set; }
+        public int FqId { get; set; }
+        public int LikedBy { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public string? LikerName { get; set; }
+        public string? LikerEmail { get; set; }
+        public string? QuestionTitle { get; set; }
+    }
+
+    public class QuestionLikeToggleDto
+    {
+        [Required]
+        public int FqId { get; set; }
+
+        [Required]
+        public int UserId { get; set; }
+    }
+
+    public class QuestionLikeStatsDto
+    {
+        public int FqId { get; set; }
+        public int TotalLikes { get; set; }
+        public bool IsLikedByCurrentUser { get; set; }
+        public List<QuestionLikeDto> RecentLikes { get; set; } = new List<QuestionLikeDto>();
     }
 }

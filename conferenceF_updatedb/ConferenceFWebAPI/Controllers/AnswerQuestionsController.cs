@@ -4,6 +4,7 @@ using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.AnswerQuestions;
 using AutoMapper;
 using Repository;
+using System.Security.Claims;
 
 namespace ConferenceFWebAPI.Controllers
 {
@@ -37,12 +38,15 @@ namespace ConferenceFWebAPI.Controllers
         {
             try
             {
+                // Get current user ID from claims
+                var currentUserId = GetCurrentUserId();
+                
                 var answers = await _answerQuestionRepository.GetAll();
                 var answerDtos = new List<AnswerQuestionDto>();
 
                 foreach (var answer in answers)
                 {
-                    var answerDto = await MapToAnswerDto(answer);
+                    var answerDto = await MapToAnswerDto(answer, currentUserId);
                     answerDtos.Add(answerDto);
                 }
 
@@ -60,13 +64,16 @@ namespace ConferenceFWebAPI.Controllers
         {
             try
             {
+                // Get current user ID from claims
+                var currentUserId = GetCurrentUserId();
+                
                 var answer = await _answerQuestionRepository.GetById(id);
                 if (answer == null)
                 {
                     return NotFound($"Answer question with ID {id} not found.");
                 }
 
-                var answerDto = await MapToAnswerDto(answer);
+                var answerDto = await MapToAnswerDto(answer, currentUserId);
                 return Ok(answerDto);
             }
             catch (Exception ex)
@@ -122,26 +129,42 @@ namespace ConferenceFWebAPI.Controllers
                     .Take(pageSize)
                     .ToListAsync();
 
+                // Get current user ID from claims
+                var currentUserId = GetCurrentUserId();
+
                 // Map to DTOs
-                var answerDtos = answerQuestions.Select(aq => new AnswerQuestionDto
+                var answerDtos = new List<AnswerQuestionDto>();
+                foreach (var aq in answerQuestions)
                 {
-                    AnswerId = aq.AnswerId,
-                    FqId = aq.FqId,
-                    AnswerBy = aq.AnswerBy,
-                    ParentAnswerId = aq.ParentAnswerId,
-                    Answer = aq.Answer,
-                    CreatedAt = aq.CreatedAt,
-                    AnswererName = aq.AnswerByNavigation?.Name ?? "Unknown",
-                    AnswererEmail = aq.AnswerByNavigation?.Email,
-                    ForumQuestionTitle = forumQuestion.Title,
-                    TotalLikes = aq.AnswerLikes?.Count ?? 0,
-                    HasReplies = aq.InverseParentAnswer?.Any() ?? false,
-                    TotalReplies = aq.InverseParentAnswer?.Count ?? 0,
-                    ParentAnswerText = aq.ParentAnswer?.Answer?.Length > 100 
-                        ? aq.ParentAnswer.Answer.Substring(0, 100) + "..." 
-                        : aq.ParentAnswer?.Answer,
-                    ParentAnswererName = aq.ParentAnswer?.AnswerByNavigation?.Name
-                }).ToList();
+                    // Check if current user liked this answer
+                    bool isLikedByCurrentUser = false;
+                    if (currentUserId.HasValue)
+                    {
+                        isLikedByCurrentUser = await _context.AnswerLikes
+                            .AnyAsync(al => al.AnswerId == aq.AnswerId && al.LikedBy == currentUserId.Value);
+                    }
+
+                    answerDtos.Add(new AnswerQuestionDto
+                    {
+                        AnswerId = aq.AnswerId,
+                        FqId = aq.FqId,
+                        AnswerBy = aq.AnswerBy,
+                        ParentAnswerId = aq.ParentAnswerId,
+                        Answer = aq.Answer,
+                        CreatedAt = aq.CreatedAt,
+                        AnswererName = aq.AnswerByNavigation?.Name ?? "Unknown",
+                        AnswererEmail = aq.AnswerByNavigation?.Email,
+                        ForumQuestionTitle = forumQuestion.Title,
+                        TotalLikes = aq.AnswerLikes?.Count ?? 0,
+                        HasReplies = aq.InverseParentAnswer?.Any() ?? false,
+                        TotalReplies = aq.InverseParentAnswer?.Count ?? 0,
+                        ParentAnswerText = aq.ParentAnswer?.Answer?.Length > 100 
+                            ? aq.ParentAnswer.Answer.Substring(0, 100) + "..." 
+                            : aq.ParentAnswer?.Answer,
+                        ParentAnswererName = aq.ParentAnswer?.AnswerByNavigation?.Name,
+                        IsLikedByCurrentUser = isLikedByCurrentUser
+                    });
+                }
 
                 var result = new PaginatedAnswerQuestionsDto
                 {
@@ -171,12 +194,15 @@ namespace ConferenceFWebAPI.Controllers
         {
             try
             {
+                // Get current user ID from claims
+                var currentUserId = GetCurrentUserId();
+                
                 var answers = await _answerQuestionRepository.GetByQuestionId(forumQuestionId);
                 var answerDtos = new List<AnswerQuestionDto>();
 
                 foreach (var answer in answers)
                 {
-                    var answerDto = await MapToAnswerDto(answer);
+                    var answerDto = await MapToAnswerDto(answer, currentUserId);
                     answerDtos.Add(answerDto);
                 }
 
@@ -195,13 +221,16 @@ namespace ConferenceFWebAPI.Controllers
         {
             try
             {
+                // Get current user ID from claims
+                var currentUserId = GetCurrentUserId();
+                
                 var allAnswers = await _answerQuestionRepository.GetAll();
                 var userAnswers = allAnswers.Where(a => a.AnswerBy == userId);
                 var answerDtos = new List<AnswerQuestionDto>();
 
                 foreach (var answer in userAnswers)
                 {
-                    var answerDto = await MapToAnswerDto(answer);
+                    var answerDto = await MapToAnswerDto(answer, currentUserId);
                     answerDtos.Add(answerDto);
                 }
 
@@ -263,7 +292,9 @@ namespace ConferenceFWebAPI.Controllers
 
                 await _answerQuestionRepository.Add(answerQuestion);
 
-                var answerDto = await MapToAnswerDto(answerQuestion);
+                // Get current user ID to include like status
+                var currentUserId = GetCurrentUserId();
+                var answerDto = await MapToAnswerDto(answerQuestion, currentUserId);
                 return CreatedAtAction(nameof(GetAnswerQuestion), new { id = answerQuestion.AnswerId }, answerDto);
             }
             catch (Exception ex)
@@ -346,6 +377,9 @@ namespace ConferenceFWebAPI.Controllers
         {
             try
             {
+                // Get current user ID from claims
+                var currentUserId = GetCurrentUserId();
+                
                 var answers = await _answerQuestionRepository.GetAll();
 
                 if (!string.IsNullOrEmpty(content))
@@ -370,6 +404,18 @@ namespace ConferenceFWebAPI.Controllers
                     var user = await _userRepository.GetById(answer.AnswerBy);
                     var allAnswers = await _answerQuestionRepository.GetAll();
                     var replies = allAnswers.Where(a => a.ParentAnswerId == answer.AnswerId);
+                    
+                    // Get likes count from database
+                    var likesCount = await _context.AnswerLikes
+                        .CountAsync(al => al.AnswerId == answer.AnswerId);
+
+                    // Check if current user has liked this answer
+                    var isLikedByCurrentUser = false;
+                    if (currentUserId.HasValue)
+                    {
+                        isLikedByCurrentUser = await _context.AnswerLikes
+                            .AnyAsync(al => al.AnswerId == answer.AnswerId && al.LikedBy == currentUserId.Value);
+                    }
 
                     answerSummaries.Add(new AnswerQuestionSummaryDto
                     {
@@ -377,9 +423,10 @@ namespace ConferenceFWebAPI.Controllers
                         Answer = answer.Answer.Length > 200 ? answer.Answer.Substring(0, 200) + "..." : answer.Answer,
                         AnswererName = user?.Name ?? "Unknown User",
                         CreatedAt = answer.CreatedAt,
-                        TotalLikes = 0, // You can implement this based on your AnswerLike logic
+                        TotalLikes = likesCount,
                         TotalReplies = replies.Count(),
-                        IsReply = answer.ParentAnswerId.HasValue
+                        IsReply = answer.ParentAnswerId.HasValue,
+                        IsLikedByCurrentUser = isLikedByCurrentUser
                     });
                 }
 
@@ -392,12 +439,24 @@ namespace ConferenceFWebAPI.Controllers
         }
 
         // Helper method to map AnswerQuestion to AnswerQuestionDto
-        private async Task<AnswerQuestionDto> MapToAnswerDto(AnswerQuestion answer)
+        private async Task<AnswerQuestionDto> MapToAnswerDto(AnswerQuestion answer, int? currentUserId = null)
         {
             var user = await _userRepository.GetById(answer.AnswerBy);
             var forumQuestion = await _forumQuestionRepository.GetById(answer.FqId);
             var allAnswers = await _answerQuestionRepository.GetAll();
             var replies = allAnswers.Where(a => a.ParentAnswerId == answer.AnswerId);
+            
+            // Get likes count from database
+            var likesCount = await _context.AnswerLikes
+                .CountAsync(al => al.AnswerId == answer.AnswerId);
+            
+            // Check if current user liked this answer
+            bool isLikedByCurrentUser = false;
+            if (currentUserId.HasValue)
+            {
+                isLikedByCurrentUser = await _context.AnswerLikes
+                    .AnyAsync(al => al.AnswerId == answer.AnswerId && al.LikedBy == currentUserId.Value);
+            }
             
             AnswerQuestion? parentAnswer = null;
             User? parentAnswerer = null;
@@ -421,14 +480,264 @@ namespace ConferenceFWebAPI.Controllers
                 AnswererName = user?.Name ?? "Unknown User",
                 AnswererEmail = user?.Email,
                 ForumQuestionTitle = forumQuestion?.Title ?? "Unknown Question",
-                TotalLikes = 0, // Implement based on your AnswerLike repository
+                TotalLikes = likesCount,
                 HasReplies = replies.Any(),
                 TotalReplies = replies.Count(),
                 ParentAnswerText = parentAnswer?.Answer?.Length > 100 
                     ? parentAnswer.Answer.Substring(0, 100) + "..." 
                     : parentAnswer?.Answer,
-                ParentAnswererName = parentAnswerer?.Name
+                ParentAnswererName = parentAnswerer?.Name,
+                IsLikedByCurrentUser = isLikedByCurrentUser
             };
+        }
+
+        // Helper method to get current user ID from claims
+        private int? GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+                return null;
+            return userId;
+        }
+
+        // POST: api/AnswerQuestions/like
+        [HttpPost("like")]
+        public async Task<ActionResult<object>> ToggleLike([FromBody] AnswerLikeToggleDto toggleDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Verify answer exists
+                var answer = await _answerQuestionRepository.GetById(toggleDto.AnswerId);
+                if (answer == null)
+                {
+                    return NotFound($"Answer with ID {toggleDto.AnswerId} not found.");
+                }
+
+                // Verify user exists
+                var user = await _userRepository.GetById(toggleDto.UserId);
+                if (user == null)
+                {
+                    return BadRequest($"User with ID {toggleDto.UserId} not found.");
+                }
+
+                // Check if user already liked this answer
+                var existingLike = await _context.AnswerLikes
+                    .FirstOrDefaultAsync(al => al.AnswerId == toggleDto.AnswerId && al.LikedBy == toggleDto.UserId);
+
+                bool isLiked;
+                if (existingLike != null)
+                {
+                    // Unlike - remove the like
+                    _context.AnswerLikes.Remove(existingLike);
+                    isLiked = false;
+                }
+                else
+                {
+                    // Like - add new like
+                    var newLike = new AnswerLike
+                    {
+                        AnswerId = toggleDto.AnswerId,
+                        LikedBy = toggleDto.UserId,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.AnswerLikes.Add(newLike);
+                    isLiked = true;
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Get updated like count
+                var totalLikes = await _context.AnswerLikes
+                    .CountAsync(al => al.AnswerId == toggleDto.AnswerId);
+
+                return Ok(new
+                {
+                    AnswerId = toggleDto.AnswerId,
+                    IsLiked = isLiked,
+                    TotalLikes = totalLikes,
+                    Message = isLiked ? "Answer liked successfully" : "Answer unliked successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // GET: api/AnswerQuestions/{answerId}/likes
+        [HttpGet("{answerId}/likes")]
+        public async Task<ActionResult<AnswerLikeStatsDto>> GetAnswerLikes(int answerId, [FromQuery] int? currentUserId = null)
+        {
+            try
+            {
+                // Verify answer exists
+                var answer = await _answerQuestionRepository.GetById(answerId);
+                if (answer == null)
+                {
+                    return NotFound($"Answer with ID {answerId} not found.");
+                }
+
+                // Get all likes for this answer
+                var likes = await _context.AnswerLikes
+                    .Include(al => al.LikedByNavigation)
+                    .Where(al => al.AnswerId == answerId)
+                    .OrderByDescending(al => al.CreatedAt)
+                    .ToListAsync();
+
+                // Check if current user liked this answer
+                bool isLikedByCurrentUser = false;
+                if (currentUserId.HasValue)
+                {
+                    isLikedByCurrentUser = likes.Any(l => l.LikedBy == currentUserId.Value);
+                }
+
+                // Map to DTOs
+                var likeDtos = likes.Take(10).Select(l => new AnswerLikeDto
+                {
+                    LikeId = l.LikeId,
+                    AnswerId = l.AnswerId,
+                    LikedBy = l.LikedBy,
+                    CreatedAt = l.CreatedAt,
+                    LikerName = l.LikedByNavigation?.Name ?? "Unknown User",
+                    LikerEmail = l.LikedByNavigation?.Email
+                }).ToList();
+
+                var result = new AnswerLikeStatsDto
+                {
+                    AnswerId = answerId,
+                    TotalLikes = likes.Count,
+                    IsLikedByCurrentUser = isLikedByCurrentUser,
+                    RecentLikes = likeDtos
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // GET: api/AnswerQuestions/user/{userId}/likes
+        [HttpGet("user/{userId}/likes")]
+        public async Task<ActionResult<IEnumerable<AnswerLikeDto>>> GetUserLikes(int userId)
+        {
+            try
+            {
+                // Verify user exists
+                var user = await _userRepository.GetById(userId);
+                if (user == null)
+                {
+                    return NotFound($"User with ID {userId} not found.");
+                }
+
+                // Get all likes by this user
+                var userLikes = await _context.AnswerLikes
+                    .Include(al => al.Answer)
+                    .Include(al => al.LikedByNavigation)
+                    .Where(al => al.LikedBy == userId)
+                    .OrderByDescending(al => al.CreatedAt)
+                    .ToListAsync();
+
+                var likeDtos = userLikes.Select(l => new AnswerLikeDto
+                {
+                    LikeId = l.LikeId,
+                    AnswerId = l.AnswerId,
+                    LikedBy = l.LikedBy,
+                    CreatedAt = l.CreatedAt,
+                    LikerName = l.LikedByNavigation?.Name ?? "Unknown User",
+                    LikerEmail = l.LikedByNavigation?.Email,
+                    AnswerContent = l.Answer?.Answer?.Length > 100 
+                        ? l.Answer.Answer.Substring(0, 100) + "..." 
+                        : l.Answer?.Answer
+                }).ToList();
+
+                return Ok(likeDtos);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // DELETE: api/AnswerQuestions/{answerId}/likes/{userId}
+        [HttpDelete("{answerId}/likes/{userId}")]
+        public async Task<IActionResult> RemoveLike(int answerId, int userId)
+        {
+            try
+            {
+                // Find the like
+                var like = await _context.AnswerLikes
+                    .FirstOrDefaultAsync(al => al.AnswerId == answerId && al.LikedBy == userId);
+
+                if (like == null)
+                {
+                    return NotFound("Like not found.");
+                }
+
+                _context.AnswerLikes.Remove(like);
+                await _context.SaveChangesAsync();
+
+                // Get updated like count
+                var totalLikes = await _context.AnswerLikes
+                    .CountAsync(al => al.AnswerId == answerId);
+
+                return Ok(new
+                {
+                    AnswerId = answerId,
+                    TotalLikes = totalLikes,
+                    Message = "Like removed successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // GET: api/AnswerQuestions/popular
+        [HttpGet("popular")]
+        public async Task<ActionResult<IEnumerable<object>>> GetPopularAnswers([FromQuery] int? forumQuestionId = null, [FromQuery] int limit = 10)
+        {
+            try
+            {
+                var query = _context.AnswerQuestions
+                    .Include(aq => aq.AnswerByNavigation)
+                    .Include(aq => aq.AnswerLikes)
+                    .AsQueryable();
+
+                if (forumQuestionId.HasValue)
+                {
+                    query = query.Where(aq => aq.FqId == forumQuestionId.Value);
+                }
+
+                var popularAnswers = await query
+                    .Where(aq => aq.AnswerLikes.Any()) // Only answers with likes
+                    .OrderByDescending(aq => aq.AnswerLikes.Count)
+                    .ThenByDescending(aq => aq.CreatedAt)
+                    .Take(limit)
+                    .Select(aq => new
+                    {
+                        aq.AnswerId,
+                        aq.Answer,
+                        AnswererName = aq.AnswerByNavigation!.Name,
+                        aq.CreatedAt,
+                        TotalLikes = aq.AnswerLikes.Count,
+                        aq.FqId
+                    })
+                    .ToListAsync();
+
+                return Ok(popularAnswers);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }

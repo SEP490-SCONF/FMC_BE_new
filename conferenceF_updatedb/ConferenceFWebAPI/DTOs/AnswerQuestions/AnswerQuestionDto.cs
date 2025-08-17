@@ -22,6 +22,9 @@ namespace ConferenceFWebAPI.DTOs.AnswerQuestions
         // Parent answer info if this is a reply
         public string? ParentAnswerText { get; set; }
         public string? ParentAnswererName { get; set; }
+        
+        // Current user like status
+        public bool IsLikedByCurrentUser { get; set; }
     }
 
     public class AnswerQuestionCreateDto
@@ -58,6 +61,7 @@ namespace ConferenceFWebAPI.DTOs.AnswerQuestions
         public int TotalLikes { get; set; }
         public int TotalReplies { get; set; }
         public bool IsReply { get; set; }
+        public bool IsLikedByCurrentUser { get; set; }
     }
 
     public class PaginatedAnswerQuestionsDto
@@ -72,5 +76,42 @@ namespace ConferenceFWebAPI.DTOs.AnswerQuestions
         public string? SearchTerm { get; set; }
         public int ForumQuestionId { get; set; }
         public string? ForumQuestionTitle { get; set; }
+    }
+
+    public class AnswerLikeDto
+    {
+        public int LikeId { get; set; }
+        public int AnswerId { get; set; }
+        public int LikedBy { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public string? LikerName { get; set; }
+        public string? LikerEmail { get; set; }
+        public string? AnswerContent { get; set; }
+    }
+
+    public class AnswerLikeCreateDto
+    {
+        [Required]
+        public int AnswerId { get; set; }
+
+        [Required]
+        public int LikedBy { get; set; }
+    }
+
+    public class AnswerLikeToggleDto
+    {
+        [Required]
+        public int AnswerId { get; set; }
+
+        [Required]
+        public int UserId { get; set; }
+    }
+
+    public class AnswerLikeStatsDto
+    {
+        public int AnswerId { get; set; }
+        public int TotalLikes { get; set; }
+        public bool IsLikedByCurrentUser { get; set; }
+        public List<AnswerLikeDto> RecentLikes { get; set; } = new List<AnswerLikeDto>();
     }
 }
