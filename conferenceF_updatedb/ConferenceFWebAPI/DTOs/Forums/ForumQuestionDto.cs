@@ -83,13 +83,13 @@ namespace ConferenceFWebAPI.DTOs.Forums
         public string? AskerEmail { get; set; }
         public int TotalAnswers { get; set; }
         public int TotalLikes { get; set; }
-        public List<AnswerQuestionDto> RecentAnswers { get; set; } = new List<AnswerQuestionDto>();
+        public List<ForumAnswerQuestionDto> RecentAnswers { get; set; } = new List<ForumAnswerQuestionDto>();
         
         // Current user like status
         public bool IsLikedByCurrentUser { get; set; }
     }
 
-    public class AnswerQuestionDto
+    public class ForumAnswerQuestionDto
     {
         public int AnswerId { get; set; }
         public int AnswerBy { get; set; }

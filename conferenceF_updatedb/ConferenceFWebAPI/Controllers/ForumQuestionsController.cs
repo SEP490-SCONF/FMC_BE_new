@@ -483,7 +483,7 @@ namespace ConferenceFWebAPI.Controllers
                     }
 
                     // Map recent answers with like status
-                    var recentAnswers = new List<ConferenceFWebAPI.DTOs.Forums.AnswerQuestionDto>();
+                    var recentAnswers = new List<ForumAnswerQuestionDto>();
                     if (fq.AnswerQuestions != null)
                     {
                         foreach (var aq in fq.AnswerQuestions.OrderByDescending(aq => aq.CreatedAt).Take(2))
@@ -496,7 +496,7 @@ namespace ConferenceFWebAPI.Controllers
                                     .AnyAsync(al => al.AnswerId == aq.AnswerId && al.LikedBy == currentUserId.Value);
                             }
 
-                            recentAnswers.Add(new ConferenceFWebAPI.DTOs.Forums.AnswerQuestionDto
+                            recentAnswers.Add(new ForumAnswerQuestionDto
                             {
                                 AnswerId = aq.AnswerId,
                                 AnswerBy = aq.AnswerBy,
