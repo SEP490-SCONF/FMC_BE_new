@@ -26,7 +26,7 @@ public partial class Paper
     public bool? IsPublished { get; set; }
 
     public decimal? PublicationFee { get; set; }
-
+    public bool? IsPresented { get; set; }
     public int? PaymentId { get; set; }
 
     public virtual Conference Conference { get; set; } = null!;

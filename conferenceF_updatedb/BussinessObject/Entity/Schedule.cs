@@ -1,4 +1,5 @@
-﻿using System;
+﻿// BussinessObject.Entity/Schedule.cs
+using System;
 using System.Collections.Generic;
 
 namespace BussinessObject.Entity;
@@ -13,9 +14,13 @@ public partial class Schedule
 
     public string? SessionTitle { get; set; }
 
+    public string? Location { get; set; } // Địa điểm thuyết trình
+
     public int? PresenterId { get; set; }
 
-    public DateTime? PresentationTime { get; set; }
+    public DateTime? PresentationStartTime { get; set; } // Thời gian bắt đầu
+
+    public DateTime? PresentationEndTime { get; set; } // Thời gian kết thúc
 
     public virtual Conference Conference { get; set; } = null!;
 
