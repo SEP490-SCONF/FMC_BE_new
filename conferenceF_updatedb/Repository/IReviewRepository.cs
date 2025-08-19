@@ -11,5 +11,7 @@ namespace Repository
         Task<Review> GetByRevisionId(int revisionId);
         Task<Review> GetReviewByAssignmentId(int assignmentId);
         Task UpdatePaperAndRevisionStatus(int paperId, string paperStatus, int revisionId);
+        Task<IEnumerable<Review>> GetCompletedReviewsByUserAndConference(int userId, int conferenceId);
+        Task<int> CountCompletedReviewsByUserAndConference(int userId, int conferenceId);
     }
 }

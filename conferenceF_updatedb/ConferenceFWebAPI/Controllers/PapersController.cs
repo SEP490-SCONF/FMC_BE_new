@@ -586,6 +586,18 @@ namespace ConferenceFWebAPI.Controllers
             }
         }
 
+        [HttpGet("user/{userId}")]
+        [ProducesResponseType(typeof(List<PaperResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetPapersByUser(int userId)
+        {
+            var papers = _paperRepository.GetPapersByUserId(userId);
+            if (papers == null || !papers.Any())
+                return NotFound($"No papers found for user ID: {userId}");
+
+            var paperDto = _mapper.Map<List<PaperResponseDto>>(papers);
+            return Ok(paperDto);
+        }
 
 
     }

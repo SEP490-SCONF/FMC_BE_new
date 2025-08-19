@@ -62,6 +62,11 @@ namespace Repository.Repository
         {
             return await _dao.HasUserAnyRoleInConference(userId, conferenceId, roles);
         }
+        public Task<IEnumerable<UserConferenceRole>> GetByUserId(int userId)
+        {
+            return _dao.GetByUserId(userId);
+        }
+
 
     }
 }

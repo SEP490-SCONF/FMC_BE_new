@@ -193,5 +193,46 @@ namespace DataAccess
             }
         }
 
+        // Lấy review Completed theo userId (ReviewerId) và conferenceId
+        public async Task<IEnumerable<Review>> GetCompletedReviewsByUserAndConference(int userId, int conferenceId)
+        {
+            try
+            {
+                return await _context.Reviews
+                    .Include(r => r.Revision) // include revision
+                    .Include(r => r.Paper)    // include paper
+                        .ThenInclude(p => p.PaperAuthors) // include authors
+                            .ThenInclude(pa => pa.Author) // include author details
+                    .Where(r => r.ReviewerId == userId
+                                && r.Status == "Completed"
+                                && r.Paper.ConferenceId == conferenceId)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error occurred while retrieving completed reviews for user {userId} in conference {conferenceId}.", ex);
+            }
+        }
+
+
+        // Count review Completed theo userId và conferenceId
+        public async Task<int> CountCompletedReviewsByUserAndConference(int userId, int conferenceId)
+        {
+            try
+            {
+                return await _context.Reviews
+                    .Where(r => r.ReviewerId == userId
+                                && r.Status == "Completed"
+                                && r.Paper.ConferenceId == conferenceId)
+                    .CountAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error occurred while counting completed reviews for user {userId} in conference {conferenceId}.", ex);
+            }
+        }
+
+
     }
 }

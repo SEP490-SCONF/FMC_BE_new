@@ -94,12 +94,12 @@ namespace DataAccess
         public List<Paper> GetPapersByUserIdAndConferenceId(int userId, int conferenceId)
         {
             return _context.Papers
-                           .Where(p => p.ConferenceId == conferenceId &&
-                                       p.PaperAuthors.Any(pa => pa.AuthorId == userId))
+                           .Where(p => p.Status == "Accepted"
+                                    && p.ConferenceId == conferenceId
+                                    && p.PaperAuthors.Any(pa => pa.AuthorId == userId))
                            .Include(p => p.Topic)
-                            .Include(p => p.PaperAuthors)
-                            .ThenInclude(pa => pa.Author)
-                            .Include(p => p.PaperRevisions)
+                           .Include(p => p.PaperAuthors)
+                               .ThenInclude(pa => pa.Author)
                            .ToList();
         }
         public async Task SaveChangesAsync()
@@ -146,6 +146,20 @@ namespace DataAccess
                 .Include(p => p.Conference)
                 .ToListAsync();
         }
+        public List<Paper> GetPapersByUserId(int userId)
+        {
+            return _context.Papers
+                           .Where(p => p.Status == "Accepted"
+                                    && p.PaperAuthors.Any(pa => pa.AuthorId == userId))
+                           .Include(p => p.Topic)
+                           .Include(p => p.PaperAuthors)
+                               .ThenInclude(pa => pa.Author)
+                           .ToList();
+        }
+
+      
+
+
 
 
     }

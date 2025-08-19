@@ -96,7 +96,13 @@ namespace ConferenceFWebAPI
 
             .ForMember(dest => dest.Paper, opt => opt.MapFrom(src => src.Paper));
 
-            CreateMap<Review, ReviewDTO>();
+            CreateMap<Review, ReviewDTO>()
+                .ForMember(dest => dest.PaperTitle, opt => opt.MapFrom(src => src.Paper.Title))
+                .ForMember(dest => dest.AuthorName, opt => opt.MapFrom(src =>
+                    src.Paper.PaperAuthors.FirstOrDefault() != null
+                    ? src.Paper.PaperAuthors.FirstOrDefault().Author.Name
+                    : "Unknown"
+                ));
             CreateMap<AddReviewDTO, Review>();
             CreateMap<AddReviewWithHighlightAndCommentDTO, Review>();
 

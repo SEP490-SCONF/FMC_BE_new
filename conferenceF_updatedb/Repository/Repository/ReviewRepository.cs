@@ -61,6 +61,16 @@ namespace Repository
         {
             await _reviewDao.UpdatePaperAndRevisionStatus(paperId, paperStatus, revisionId);
         }
+        public async Task<IEnumerable<Review>> GetCompletedReviewsByUserAndConference(int userId, int conferenceId)
+        {
+            return await _reviewDao.GetCompletedReviewsByUserAndConference(userId, conferenceId);
+        }
+
+        public async Task<int> CountCompletedReviewsByUserAndConference(int userId, int conferenceId)
+        {
+            return await _reviewDao.CountCompletedReviewsByUserAndConference(userId, conferenceId);
+        }
+
 
     }
 }

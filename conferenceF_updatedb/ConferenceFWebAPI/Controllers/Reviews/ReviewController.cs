@@ -439,8 +439,36 @@ namespace ConferenceFWebAPI.Controllers.Reviews
 
             var result = _mapper.Map<ReviewDTO>(review);
             return Ok(result);
-        }   
+        }
 
+        [HttpGet("completed/user/{userId}/conference/{conferenceId}")]
+        public async Task<IActionResult> GetCompletedReviewsByUserAndConference(int userId, int conferenceId)
+        {
+            try
+            {
+                var reviews = await _reviewRepository.GetCompletedReviewsByUserAndConference(userId, conferenceId);
+                var reviewsDto = reviews.Select(r => _mapper.Map<ReviewDTO>(r));
+                return Ok(reviewsDto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"❌ Error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("completed/count/user/{userId}/conference/{conferenceId}")]
+        public async Task<IActionResult> CountCompletedReviewsByUserAndConference(int userId, int conferenceId)
+        {
+            try
+            {
+                var count = await _reviewRepository.CountCompletedReviewsByUserAndConference(userId, conferenceId);
+                return Ok(new { UserId = userId, ConferenceId = conferenceId, CompletedReviewCount = count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"❌ Error: {ex.Message}");
+            }
+        }
 
 
     }

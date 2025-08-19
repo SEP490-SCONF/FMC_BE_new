@@ -195,6 +195,23 @@ namespace DataAccess
                             && x.ConferenceId == conferenceId
                             && roles.Contains(x.ConferenceRole.RoleName));
         }
+        public async Task<IEnumerable<UserConferenceRole>> GetByUserId(int userId)
+        {
+            try
+            {
+                return await _context.UserConferenceRoles
+                    .Where(u => u.UserId == userId)
+                    .Include(u => u.User)
+                    .Include(u => u.Conference)
+                    .Include(u => u.ConferenceRole)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving roles for user ID {userId}.", ex);
+            }
+        }
 
 
     }
