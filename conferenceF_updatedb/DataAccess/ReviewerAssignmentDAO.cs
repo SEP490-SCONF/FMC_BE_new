@@ -166,5 +166,35 @@ namespace DataAccess
                 throw new Exception($"Error retrieving reviewer assignments for reviewer ID {reviewerId}.", ex);
             }
         }
+        public async Task<int> GetAssignedPaperCountByReviewerIdAndConferenceId(int reviewerId, int conferenceId)
+        {
+            try
+            {
+                return await _context.ReviewerAssignments
+                    .Where(r => r.ReviewerId == reviewerId && r.Paper.ConferenceId == conferenceId)
+                    .Select(r => r.PaperId)
+                    .Distinct() // chỉ tính 1 lần mỗi paper
+                    .CountAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving assigned paper count for reviewer ID {reviewerId} in conference {conferenceId}.", ex);
+            }
+        }
+        public async Task<int> GetAssignmentCountByReviewerIdAndConferenceId(int reviewerId, int conferenceId)
+        {
+            try
+            {
+                return await _context.ReviewerAssignments
+                    .Where(r => r.ReviewerId == reviewerId && r.Paper.ConferenceId == conferenceId)
+                    .CountAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving assignment count for reviewer ID {reviewerId} in conference {conferenceId}.", ex);
+            }
+        }
+
+
     }
 }

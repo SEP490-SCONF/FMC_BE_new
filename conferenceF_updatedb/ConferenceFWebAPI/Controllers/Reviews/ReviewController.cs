@@ -357,7 +357,8 @@ namespace ConferenceFWebAPI.Controllers.Reviews
 
             // 2. Lấy PaperStatus trực tiếp từ Review (không cần truyền nữa)
             string paperStatus = review.PaperStatus;
-
+            review.Status = "Completed";
+            await _reviewRepository.Update(review);
             // 3. Cập nhật Paper và PaperRevision status dựa trên PaperStatus
             await _reviewRepository.UpdatePaperAndRevisionStatus(review.PaperId, paperStatus, review.RevisionId);
 

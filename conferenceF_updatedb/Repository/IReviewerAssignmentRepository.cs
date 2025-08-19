@@ -10,6 +10,8 @@ namespace Repository
         Task<IEnumerable<ReviewerAssignment>> GetByReviewerId(int reviewerId);
         Task<IEnumerable<ReviewerAssignment>> GetAllByPaperId(int paperId);
         Task<List<ReviewerAssignment>> GetReviewersByPaperIdAsync(int paperId);
+        Task<int> GetAssignedPaperCountByReviewerIdAndConferenceId(int reviewerId, int conferenceId);
+        Task<int> GetAssignmentCountByReviewerIdAndConferenceId(int reviewerId, int conferenceId);
 
     }
 }

@@ -25,6 +25,7 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IConferenceRoleRepository _conferenceRoleRepository;
         private readonly AutoMapper.IMapper _mapper; // Cần inject AutoMapper nếu bạn muốn map User entity sang UserDto
         private readonly IConfiguration _configuration;
+        private readonly IReviewerAssignmentRepository _reviewerAssignmentRepository;
 
 
         public UserConferenceRolesController(
@@ -34,7 +35,8 @@ namespace ConferenceFWebAPI.Controllers
             IConferenceRepository conferenceRepository,
             IConferenceRoleRepository conferenceRoleRepository,
             AutoMapper.IMapper mapper,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IReviewerAssignmentRepository reviewerAssignmentRepository)
         {
             _repo = repo;
             _userRepository = userRepository;
@@ -43,6 +45,7 @@ namespace ConferenceFWebAPI.Controllers
             _conferenceRoleRepository = conferenceRoleRepository;
             _mapper = mapper;
             _configuration = configuration;
+            _reviewerAssignmentRepository = reviewerAssignmentRepository;
         }
 
 
@@ -522,6 +525,21 @@ namespace ConferenceFWebAPI.Controllers
             };
 
             return Ok(result);
+        }
+        [HttpGet("reviewers/{reviewerId}/assigned-paper-count")]
+        public async Task<IActionResult> GetReviewerAssignedPaperCount(int conferenceId, int reviewerId)
+        {
+            try
+            {
+                var count = await _reviewerAssignmentRepository
+                    .GetAssignedPaperCountByReviewerIdAndConferenceId(reviewerId, conferenceId);
+
+                return Ok(new { ReviewerId = reviewerId, ConferenceId = conferenceId, AssignedPaperCount = count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
 
