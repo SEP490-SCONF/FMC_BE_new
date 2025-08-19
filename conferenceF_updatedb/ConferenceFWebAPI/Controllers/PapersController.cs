@@ -599,6 +599,33 @@ namespace ConferenceFWebAPI.Controllers
             return Ok(paperDto);
         }
 
+         [HttpPut("set-presented/{paperId}")]
+        public async Task<IActionResult> SetPaperIsPresented(int paperId, [FromBody] IsPresentedRequestDto request)
+        {
+            var paper = await _paperRepository.GetPaperByIdAsync(paperId);
+            if (paper == null)
+            {
+                return NotFound($"Paper with ID {paperId} not found.");
+            }
+
+            // Cập nhật trạng thái IsPresented
+            paper.IsPresented = request.IsPresented;
+
+            try
+            {
+                await _paperRepository.UpdatePaperAsync(paper);
+                return Ok(new
+                {
+                    Message = $"Paper '{paper.Title}' IsPresented status updated successfully.",
+                    IsPresented = paper.IsPresented
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
 
     }
 }

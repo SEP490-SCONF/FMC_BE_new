@@ -13,7 +13,10 @@ namespace Repository
         {
             _dao = dao;
         }
-
+        public async Task<List<ReviewerAssignment>> GetReviewersByPaperIdAsync(int paperId)
+        {
+            return await _dao.GetReviewersByPaperIdAsync(paperId);
+        }
         public async Task<IEnumerable<ReviewerAssignment>> GetAll()
         {
             return await _dao.GetAll();

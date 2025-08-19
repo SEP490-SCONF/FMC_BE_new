@@ -15,6 +15,7 @@ using ConferenceFWebAPI.DTOs.Reviews;
 using ConferenceFWebAPI.DTOs.User;
 using ConferenceFWebAPI.DTOs.UserProfile;
 using ConferenceFWebAPI.DTOs.Payment;
+using ConferenceFWebAPI.DTOs.Schedules;
 
 namespace ConferenceFWebAPI
 {
@@ -49,6 +50,10 @@ namespace ConferenceFWebAPI
                         .Select(ra => (int?)ra.AssignmentId)
                         .FirstOrDefault()
                 ));
+            CreateMap<Schedule, ScheduleRequestDto>();
+            CreateMap<ScheduleRequestDto, Schedule>();
+            CreateMap<Schedule, ScheduleUpdateDto>();
+            CreateMap<ScheduleUpdateDto, Schedule>();
 
 
             CreateMap<User, UserInfomation>();
