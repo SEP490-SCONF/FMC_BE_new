@@ -33,15 +33,12 @@ namespace ConferenceFWebAPI.DTOs.Forums
         public int ForumId { get; set; }
         
         [Required]
-        [StringLength(200, MinimumLength = 5)]
         public string Title { get; set; } = null!;
         
         [Required]
-        [StringLength(1000, MinimumLength = 10)]
         public string Description { get; set; } = null!;
         
         [Required]
-        [StringLength(2000, MinimumLength = 10)]
         public string Question { get; set; } = null!;
     }
     
