@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
-using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.Papers;
 using ConferenceFWebAPI.Service;
 using DataAccess;

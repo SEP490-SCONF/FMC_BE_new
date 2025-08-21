@@ -4,9 +4,8 @@ using ConferenceFWebAPI.DTOs;
 using ConferenceFWebAPI.DTOs.CallForPapers;
 using ConferenceFWebAPI.DTOs.Conferences;
 using ConferenceFWebAPI.DTOs.ConferenceTopics;
-using ConferenceFWebAPI.DTOs.Paper;
-using ConferenceFWebAPI.DTOs.PaperRevisions;
 using ConferenceFWebAPI.DTOs.Papers;
+using ConferenceFWebAPI.DTOs.PaperRevisions;
 using ConferenceFWebAPI.DTOs.Proccedings;
 using ConferenceFWebAPI.DTOs.ReviewComments;
 using ConferenceFWebAPI.DTOs.ReviewerAssignments;
@@ -51,9 +50,15 @@ namespace ConferenceFWebAPI
                         .FirstOrDefault()
                 ));
             CreateMap<Schedule, ScheduleRequestDto>();
-            CreateMap<ScheduleRequestDto, Schedule>();
+            CreateMap<ScheduleRequestDto, Schedule>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<Schedule, ScheduleUpdateDto>();
             CreateMap<ScheduleUpdateDto, Schedule>();
+
+            CreateMap<Schedule, ScheduleResponseDto>();
+            CreateMap<ScheduleResponseDto, Schedule>();
+
+
 
 
             CreateMap<User, UserInfomation>();
@@ -199,9 +204,7 @@ namespace ConferenceFWebAPI
             CreateMap<Conference, ConferenceResponseDTO>()
     .ForMember(dest => dest.Topics, opt => opt.MapFrom(src => src.Topics));
 
-            CreateMap<Proceeding, ProceedingResponseDto>()
-                    .ForMember(dest => dest.ConferenceTitle, opt => opt.MapFrom(src => src.Conference.Title))
-    .ForMember(dest => dest.PublishedByName, opt => opt.MapFrom(src => src.PublishedByNavigation.Name));
+            CreateMap<Proceeding, ProceedingResponseDto>();
             CreateMap<ProceedingCreateDto, Proceeding>().ForMember(dest => dest.FilePath, opt => opt.Ignore());
 
             CreateMap<CallForPaper, CallForPaperDto>();

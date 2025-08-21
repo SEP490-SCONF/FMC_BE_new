@@ -21,32 +21,35 @@ namespace ConferenceFWebAPI.Controllers
             _paperRepository = paperRepository;
             _userRepository = userRepository;
             _mapper = mapper;
-
         }
 
         // POST: api/Schedule/add
         [HttpPost("add")]
-        public async Task<IActionResult> AddSchedule([FromBody] ScheduleRequestDto request)
+        public async Task<IActionResult> AddSchedule([FromForm] ScheduleRequestDto request)
         {
-            // Kiểm tra tính hợp lệ của request
-            if (request.PaperId <= 0 || request.PresenterId <= 0 || request.ConferenceId <= 0)
+            // Kiểm tra null trước khi so sánh
+            if (request.ConferenceId <= 0 || !request.PresentationStartTime.HasValue || !request.PresentationEndTime.HasValue)
             {
-                return BadRequest("Invalid data provided.");
+                return BadRequest("ConferenceId and time range are required.");
             }
 
-            // Kiểm tra xem bài báo đã được chấp nhận và chọn thuyết trình chưa
-            var paper = await _paperRepository.GetPaperByIdAsync(request.PaperId);
-            if (paper == null || paper.Status != "Accepted" || paper.IsPresented == false)
+
+            Paper? paper = null;
+            if (request.PaperId.HasValue)
             {
-                return BadRequest("The paper is not ready to be scheduled for presentation.");
+                paper = await _paperRepository.GetPaperByIdAsync(request.PaperId.Value);
+                if (paper == null || paper.Status != "Accepted" || paper.IsPresented == false)
+                    return BadRequest("The paper is not ready to be scheduled for presentation.");
             }
 
-            // Kiểm tra xem người thuyết trình có tồn tại không
-            var presenter = await _userRepository.GetById(request.PresenterId);
-            if (presenter == null)
+            User? presenter = null;
+            if (request.PresenterId.HasValue)
             {
-                return NotFound("Presenter not found.");
+                presenter = await _userRepository.GetById(request.PresenterId.Value);
+                if (presenter == null)
+                    return NotFound("Presenter not found.");
             }
+
 
             var newSchedule = new Schedule
             {
@@ -62,7 +65,10 @@ namespace ConferenceFWebAPI.Controllers
             try
             {
                 var addedSchedule = await _scheduleRepository.AddScheduleAsync(newSchedule);
-                return Ok(addedSchedule);
+                // Lấy lại đầy đủ thông tin để trả về DTO
+                var fullSchedule = await _scheduleRepository.GetScheduleByIdAsync(addedSchedule.ScheduleId);
+                var scheduleDto = _mapper.Map<ScheduleRequestDto>(fullSchedule);
+                return Ok(scheduleDto);
             }
             catch (Exception ex)
             {
@@ -70,41 +76,62 @@ namespace ConferenceFWebAPI.Controllers
             }
         }
 
+        // GET: api/Schedule/{scheduleId}
+        [HttpGet("{scheduleId}")]
+        public async Task<IActionResult> GetScheduleById(int scheduleId)
+        {
+            var schedule = await _scheduleRepository.GetScheduleByIdAsync(scheduleId);
+            if (schedule == null)
+                return NotFound($"Schedule with ID {scheduleId} not found.");
+
+            var scheduleDto = _mapper.Map<ScheduleRequestDto>(schedule);
+            return Ok(scheduleDto);
+        }
+
+        // GET: api/Schedule/conference/{conferenceId}
         [HttpGet("conference/{conferenceId}")]
         public async Task<IActionResult> GetSchedulesByConference(int conferenceId)
         {
             var schedules = await _scheduleRepository.GetSchedulesByConferenceIdAsync(conferenceId);
-
             if (schedules == null || !schedules.Any())
-            {
                 return NotFound("No schedules found for this conference.");
-            }
 
-            // Ánh xạ danh sách entity sang danh sách DTO
             var scheduleDtos = _mapper.Map<List<ScheduleRequestDto>>(schedules);
-
             return Ok(scheduleDtos);
         }
 
-        // PUT: api/Schedule/edit/1
+        // PUT: api/Schedule/edit/{scheduleId}
         [HttpPut("edit/{scheduleId}")]
-        public async Task<IActionResult> UpdateSchedule(int scheduleId, [FromBody] ScheduleUpdateDto request)
+        public async Task<IActionResult> UpdateSchedule(int scheduleId, [FromForm] ScheduleRequestDto request)
         {
-            var existingSchedule = await _scheduleRepository.GetScheduleByIdAsync(scheduleId);
-            if (existingSchedule == null)
+            Paper? paper = null;
+            if (request.PaperId.HasValue)
             {
-                return NotFound($"Schedule with ID {scheduleId} not found.");
+                paper = await _paperRepository.GetPaperByIdAsync(request.PaperId.Value);
+                if (paper == null || paper.Status != "Accepted" || paper.IsPresented == false)
+                    return BadRequest("The paper is not ready to be scheduled for presentation.");
             }
 
-            existingSchedule.SessionTitle = request.SessionTitle;
-            existingSchedule.Location = request.Location;
-            existingSchedule.PresentationStartTime = request.PresentationStartTime;
-            existingSchedule.PresentationEndTime = request.PresentationEndTime;
+            User? presenter = null;
+            if (request.PresenterId.HasValue)
+            {
+                presenter = await _userRepository.GetById(request.PresenterId.Value);
+                if (presenter == null)
+                    return NotFound("Presenter not found.");
+            }
+
+            var existingSchedule = await _scheduleRepository.GetScheduleByIdAsync(scheduleId);
+            if (existingSchedule == null)
+                return NotFound($"Schedule with ID {scheduleId} not found.");
+
+            // Map chỉ các trường có giá trị không null
+            _mapper.Map(request, existingSchedule);
 
             try
             {
                 await _scheduleRepository.UpdateScheduleAsync(existingSchedule);
-                return Ok(new { Message = "Schedule updated successfully." });
+                var updatedDto = _mapper.Map<ScheduleRequestDto>(existingSchedule);
+                return Ok(updatedDto);
             }
             catch (Exception ex)
             {
@@ -112,7 +139,8 @@ namespace ConferenceFWebAPI.Controllers
             }
         }
 
-        // DELETE: api/Schedule/delete/1
+
+        // DELETE: api/Schedule/delete/{scheduleId}
         [HttpDelete("delete/{scheduleId}")]
         public async Task<IActionResult> DeleteSchedule(int scheduleId)
         {

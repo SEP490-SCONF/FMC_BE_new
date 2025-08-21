@@ -19,7 +19,11 @@ namespace DataAccess
         // Get all schedules (basic)
         public async Task<Schedule?> GetScheduleByIdAsync(int scheduleId)
         {
-            return await _context.Schedules.FindAsync(scheduleId);
+            return await _context.Schedules
+                .Include(s => s.Paper)         
+                .Include(s => s.Conference)     
+                .Include(s => s.Presenter)      
+                .FirstOrDefaultAsync(s => s.ScheduleId == scheduleId);
         }
 
         // Hàm lấy tất cả lịch của một hội thảo
@@ -27,8 +31,9 @@ namespace DataAccess
         {
             return await _context.Schedules
                 .Where(s => s.ConferenceId == conferenceId)
-                .Include(s => s.Paper)
-                .Include(s => s.Presenter)
+                .Include(s => s.Paper)         
+                .Include(s => s.Conference)     
+                .Include(s => s.Presenter)     
                 .OrderBy(s => s.PresentationStartTime)
                 .ToListAsync();
         }

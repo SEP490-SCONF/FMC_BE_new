@@ -7,7 +7,7 @@ using AutoMapper.Internal.Mappers;
 using ConferenceFWebAPI.Service;
 using Google.Apis.Drive.v3.Data;
 using DataAccess;
-using ConferenceFWebAPI.DTOs.Paper;
+using ConferenceFWebAPI.DTOs.Papers;
 using ConferenceFWebAPI.DTOs.Conferences;
 using Microsoft.AspNetCore.OData.Query;
 

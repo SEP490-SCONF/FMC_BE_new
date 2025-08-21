@@ -158,41 +158,7 @@ namespace ConferenceFWebAPI.Controllers.Proccedings
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
-         [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            var existingProceeding = await _proceedingRepository.GetProceedingByIdAsync(proceedingId);
-            if (existingProceeding == null)
-            {
-                return NotFound("Proceeding not found.");
-            }
-
-            existingProceeding.Title = dto.Title ?? existingProceeding.Title;
-            existingProceeding.Description = dto.Description ?? existingProceeding.Description;
-            existingProceeding.FilePath = dto.FilePath ?? existingProceeding.FilePath;
-            existingProceeding.UpdatedAt = DateTime.UtcNow;
-            existingProceeding.Status = dto.Status ?? existingProceeding.Status;
-            existingProceeding.Version = dto.Version ?? existingProceeding.Version;
-            existingProceeding.Doi = dto.Doi ?? existingProceeding.Doi;
-
-            try
-            {
-                await _proceedingRepository.UpdateProceedingAsync(existingProceeding);
-                return Ok(existingProceeding);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An error occurred: {ex.Message}");
-            }
-        }
-
-         [HttpGet("conference/{conferenceId}")]
-        public async Task<IActionResult> GetByConference(int conferenceId)
-        {
-            var proceedings = await _repo.GetByConferenceId(conferenceId);
-            var result = proceedings.Select(p => _mapper.Map<ProceedingResponseDto>(p)).ToList();
-            return Ok(result);
-        }
+        
 
     }
 }
