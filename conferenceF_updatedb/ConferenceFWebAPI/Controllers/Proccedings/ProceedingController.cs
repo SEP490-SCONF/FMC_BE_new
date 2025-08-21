@@ -8,134 +8,155 @@ using Repository;
 
 namespace ConferenceFWebAPI.Controllers.Proccedings
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class ProceedingsController : ControllerBase
+    [Route("api/[controller]")]
+    public class ProceedingController : ControllerBase
     {
-        private readonly IProceedingRepository _repo;
-        private readonly IAzureBlobStorageService _blobService;
-        private readonly IMapper _mapper;
-        private readonly IConfiguration _config;
-        private readonly IPaperRevisionRepository _paperRevisionRepo;
+        private readonly IProceedingRepository _proceedingRepository;
+        private readonly IPaperRepository _paperRepository;
+        private readonly IUserRepository _userRepository;
 
-
-        public ProceedingsController(IProceedingRepository repo, IAzureBlobStorageService blobService, IMapper mapper, IConfiguration config, IPaperRevisionRepository revisionRepo)
+        public ProceedingController(IProceedingRepository proceedingRepository, IPaperRepository paperRepository, IUserRepository userRepository)
         {
-            _repo = repo;
-            _blobService = blobService;
-            _mapper = mapper;
-            _config = config;
-            _paperRevisionRepo = revisionRepo;
+            _proceedingRepository = proceedingRepository;
+            _paperRepository = paperRepository;
+            _userRepository = userRepository;
         }
 
-        //[HttpPost]
-        //public async Task<IActionResult> Create([FromForm] ProceedingCreateDto dto)
-        //{
-        //    if (dto.File == null || dto.File.Length == 0)
-        //        return BadRequest("PDF file is required.");
-
-        //    var container = _config["BlobContainers:Proceedings"];
-        //    var fileUrl = await _blobService.UploadFileAsync(dto.File, container);
-
-        //    var proceeding = new Proceeding
-        //    {
-        //        ConferenceId = dto.ConferenceId,
-        //        Title = dto.Title,
-        //        Description = dto.Description,
-        //        FilePath = fileUrl,
-        //        PublishedDate = DateTime.UtcNow,
-        //        CreatedAt = DateTime.UtcNow,
-        //        UpdatedAt = DateTime.UtcNow,
-        //        PublishedBy = 1
-        //    };
-
-        //    await _repo.Add(proceeding);
-        //    return Ok(new { message = "Proceeding created", proceedingId = proceeding.ProceedingId });
-        //}
-
-        [HttpPost("from-paper")]
-        public async Task<IActionResult> CreateFromPaper([FromBody] ProceedingCreateFromPaperDto dto)
+        // POST: api/Proceeding/create
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateProceeding([FromBody] ProceedingCreateDto dto)
         {
-            var filePath = await _paperRevisionRepo.GetAcceptedFilePathByPaperIdAsync(dto.PaperId);
-            if (filePath == null)
-                return NotFound("Không tìm thấy revision nào đã được accepted cho Paper này.");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            var proceeding = new Proceeding
+            var existingProceeding = await _proceedingRepository.GetProceedingByConferenceIdAsync(dto.ConferenceId);
+            if (existingProceeding != null)
+            {
+                return BadRequest("A proceeding for this conference already exists.");
+            }
+
+            var newProceeding = new Proceeding
             {
                 ConferenceId = dto.ConferenceId,
                 Title = dto.Title,
                 Description = dto.Description,
-                FilePath = filePath,
+                PublishedBy = dto.PublishedBy,
                 PublishedDate = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                PublishedBy = 1 
+                Status = "Published",
+                FilePath = dto.FilePath,
+                Doi = dto.Doi,
+                Version = "1.0"
             };
 
-            await _repo.Add(proceeding);
-            return Ok(new { message = "Proceeding created from PaperRevision", proceedingId = proceeding.ProceedingId });
-        }
-
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] ProceedingUpdateDto dto)
-        {
-            var proceeding = await _repo.GetById(dto.ProceedingId);
-            if (proceeding == null)
-                return NotFound();
-
-            proceeding.Title = dto.Title;
-            proceeding.Description = dto.Description;
-            proceeding.UpdatedAt = DateTime.UtcNow;
-
-            await _repo.Update(proceeding);
-            return Ok("Proceeding updated.");
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var proceeding = await _repo.GetById(id);
-            if (proceeding == null) return NotFound();
-
-            await _repo.Delete(id);
-            return Ok("Proceeding deleted.");
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
-        {
-            var proceeding = await _repo.GetById(id);
-            if (proceeding == null) return NotFound();
-
-            var dto = _mapper.Map<ProceedingResponseDto>(proceeding);
-            return Ok(dto);
-        }
-
-        [HttpGet("conference/{conferenceId}")]
-        public async Task<IActionResult> GetByConference(int conferenceId)
-        {
-            var proceedings = await _repo.GetByConferenceId(conferenceId);
-            var result = proceedings.Select(p => new ProceedingResponseDto
+            try
             {
-                ProceedingId = p.ProceedingId,
-                Title = p.Title,
-                Description = p.Description,
-                FilePath = p.FilePath,
-                PublishedDate = p.PublishedDate,
-                PublishedByName = p.PublishedByNavigation?.Name
+                var createdProceeding = await _proceedingRepository.CreateProceedingAsync(newProceeding);
+
+                if (dto.PaperIds != null && dto.PaperIds.Any())
+                {
+                    foreach (var paperId in dto.PaperIds)
+                    {
+                        var paper = await _paperRepository.GetPaperByIdAsync(paperId);
+                        if (paper != null)
+                        {
+                            paper.IsPublished = true;
+                            await _paperRepository.UpdatePaperAsync(paper);
+                        }
+                    }
+                }
+
+                return CreatedAtAction(nameof(GetProceeding), new { proceedingId = createdProceeding.ProceedingId }, createdProceeding);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        // GET: api/Proceeding/5
+        [HttpGet("{proceedingId}")]
+        public async Task<IActionResult> GetProceeding(int proceedingId)
+        {
+            var proceeding = await _proceedingRepository.GetProceedingByIdAsync(proceedingId);
+            if (proceeding == null)
+            {
+                return NotFound("Proceeding not found.");
+            }
+
+            var responseDto = new ProceedingResponseDto
+            {
+                ProceedingId = proceeding.ProceedingId,
+                Title = proceeding.Title,
+                Description = proceeding.Description,
+                FilePath = proceeding.FilePath,
+                Doi = proceeding.Doi,
+                Status = proceeding.Status,
+                Version = proceeding.Version,
+                PublishedDate = proceeding.PublishedDate,
+                PublishedBy = proceeding.PublishedByNavigation != null ? new UserInfoDto
+                {
+                    UserId = proceeding.PublishedByNavigation.UserId,
+                    FullName = proceeding.PublishedByNavigation.Name
+                } : null,
+                Papers = proceeding.Papers?.Select(p => new PaperInfoDto
+                {
+                    PaperId = p.PaperId,
+                    Title = p.Title
+                }).ToList()
+            };
+
+            return Ok(responseDto);
+        }
+
+        // GET: api/Proceeding/papers/10
+        [HttpGet("papers/{conferenceId}")]
+        public async Task<IActionResult> GetPublishedPapers(int conferenceId)
+        {
+            var papers = await _proceedingRepository.GetPublishedPapersByConferenceAsync(conferenceId);
+            if (papers == null || !papers.Any())
+            {
+                return NotFound("No published papers found for this conference.");
+            }
+
+            var paperDtos = papers.Select(p => new PaperInfoDto
+            {
+                PaperId = p.PaperId,
+                Title = p.Title
             }).ToList();
 
-            return Ok(result);
+            return Ok(paperDtos);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        // PUT: api/Proceeding/update/5
+        [HttpPut("update/{proceedingId}")]
+        public async Task<IActionResult> UpdateProceeding(int proceedingId, [FromBody] ProceedingUpdateDto dto)
         {
-            var proceedings = await _repo.GetAll();
-            var result = proceedings.Select(p => _mapper.Map<ProceedingResponseDto>(p));
-            return Ok(result);
+            var existingProceeding = await _proceedingRepository.GetProceedingByIdAsync(proceedingId);
+            if (existingProceeding == null)
+            {
+                return NotFound("Proceeding not found.");
+            }
+
+            existingProceeding.Title = dto.Title ?? existingProceeding.Title;
+            existingProceeding.Description = dto.Description ?? existingProceeding.Description;
+            existingProceeding.FilePath = dto.FilePath ?? existingProceeding.FilePath;
+            existingProceeding.UpdatedAt = DateTime.UtcNow;
+            existingProceeding.Status = dto.Status ?? existingProceeding.Status;
+            existingProceeding.Version = dto.Version ?? existingProceeding.Version;
+            existingProceeding.Doi = dto.Doi ?? existingProceeding.Doi;
+
+            try
+            {
+                await _proceedingRepository.UpdateProceedingAsync(existingProceeding);
+                return Ok(existingProceeding);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
-
-
     }
 }

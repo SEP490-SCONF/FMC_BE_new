@@ -17,98 +17,40 @@ namespace DataAccess
             _context = context;
         }
 
-        public async Task<IEnumerable<Proceeding>> GetAll()
+        public async Task<Proceeding> CreateProceedingAsync(Proceeding proceeding)
         {
-            try
-            {
-                return await _context.Proceedings.AsNoTracking().ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error retrieving all proceedings.", ex);
-            }
+            _context.Proceedings.Add(proceeding);
+            await _context.SaveChangesAsync();
+            return proceeding;
         }
 
-        public async Task<Proceeding> GetById(int id)
+        public async Task<Proceeding?> GetProceedingByIdAsync(int proceedingId)
         {
-            try
-            {
-                return await _context.Proceedings
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(p => p.ProceedingId == id);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error retrieving proceeding with ID {id}.", ex);
-            }
+            return await _context.Proceedings
+                                 .Include(p => p.Papers)
+                                 .FirstOrDefaultAsync(p => p.ProceedingId == proceedingId);
         }
 
-        public async Task<IEnumerable<Proceeding>> GetByConferenceId(int conferenceId)
+        public async Task<Proceeding?> GetProceedingByConferenceIdAsync(int conferenceId)
         {
-            try
-            {
-                return await _context.Proceedings
-                    .Where(p => p.ConferenceId == conferenceId)
-                    .AsNoTracking()
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error retrieving proceedings for conference ID {conferenceId}.", ex);
-            }
+            return await _context.Proceedings
+                                 .Include(p => p.Papers)
+                                 .FirstOrDefaultAsync(p => p.ConferenceId == conferenceId);
         }
 
-        public async Task Add(Proceeding proceeding)
+        public async Task UpdateProceedingAsync(Proceeding proceeding)
         {
-            try
-            {
-                _context.Proceedings.Add(proceeding);
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error adding proceeding.", ex);
-            }
+            _context.Proceedings.Update(proceeding);
+            await _context.SaveChangesAsync();
         }
 
-        public async Task Update(Proceeding proceeding)
+        // Lấy danh sách các bài báo đã được chấp nhận và xuất bản
+        public async Task<List<Paper>> GetPublishedPapersByConferenceAsync(int conferenceId)
         {
-            try
-            {
-                var existing = await _context.Proceedings.FindAsync(proceeding.ProceedingId);
-                if (existing == null)
-                    throw new Exception($"Proceeding with ID {proceeding.ProceedingId} not found.");
-
-                _context.Entry(existing).CurrentValues.SetValues(proceeding);
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error updating proceeding with ID {proceeding.ProceedingId}.", ex);
-            }
+            return await _context.Papers
+                                 .Where(p => p.ConferenceId == conferenceId && p.Status == "Accepted" && p.IsPublished == true)
+                                 .ToListAsync();
         }
-
-        public async Task Delete(int id)
-        {
-            try
-            {
-                var proceeding = await _context.Proceedings.FindAsync(id);
-                if (proceeding != null)
-                {
-                    _context.Proceedings.Remove(proceeding);
-                    await _context.SaveChangesAsync();  
-                }
-                else
-                {
-                    throw new Exception($"Proceeding with ID {id} not found.");
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error deleting proceeding with ID {id}.", ex);
-            }
-        }
-
 
     }
 
