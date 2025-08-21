@@ -2,7 +2,9 @@
 {
     public class ScheduleRequestDto
     {
-        public int ConferenceId { get; set; }
+        public int TimelineId { get; set; }
+
+        public int? ConferenceId { get; set; }
         public int? PaperId { get; set; }
         public int? PresenterId { get; set; }
         public string? SessionTitle { get; set; }

@@ -61,5 +61,16 @@ namespace DataAccess
             await _context.SaveChangesAsync();
             return schedule;
         }
+
+        public async Task<List<Schedule>> GetSchedulesByTimelineIdAsync(int timelineId)
+        {
+            return await _context.Schedules
+                .Where(s => s.TimeLineId == timelineId)
+                .Include(s => s.Paper)
+                .Include(s => s.Conference)
+                .Include(s => s.Presenter)
+                .OrderBy(s => s.PresentationStartTime)
+                .ToListAsync();
+        }
     }
 }

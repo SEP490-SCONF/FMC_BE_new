@@ -20,5 +20,7 @@ namespace Repository
 
         // Xóa lịch
         Task DeleteScheduleAsync(int scheduleId);
+        Task<List<Schedule>> GetSchedulesByTimelineIdAsync(int timelineId);
+
     }
 }

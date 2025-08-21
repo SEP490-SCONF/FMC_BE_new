@@ -28,9 +28,9 @@ namespace ConferenceFWebAPI.Controllers
         public async Task<IActionResult> AddSchedule([FromForm] ScheduleRequestDto request)
         {
             // Kiểm tra null trước khi so sánh
-            if (request.ConferenceId <= 0 || !request.PresentationStartTime.HasValue || !request.PresentationEndTime.HasValue)
+            if (request.TimelineId <= 0 ||  !request.PresentationStartTime.HasValue || !request.PresentationEndTime.HasValue)
             {
-                return BadRequest("ConferenceId and time range are required.");
+                return BadRequest("Timeline, and time range are required.");
             }
 
 
@@ -53,6 +53,7 @@ namespace ConferenceFWebAPI.Controllers
 
             var newSchedule = new Schedule
             {
+                TimeLineId = request.TimelineId,
                 ConferenceId = request.ConferenceId,
                 PaperId = request.PaperId,
                 PresenterId = request.PresenterId,
@@ -84,7 +85,7 @@ namespace ConferenceFWebAPI.Controllers
             if (schedule == null)
                 return NotFound($"Schedule with ID {scheduleId} not found.");
 
-            var scheduleDto = _mapper.Map<ScheduleRequestDto>(schedule);
+            var scheduleDto = _mapper.Map<ScheduleResponseDto>(schedule);
             return Ok(scheduleDto);
         }
 
@@ -96,13 +97,13 @@ namespace ConferenceFWebAPI.Controllers
             if (schedules == null || !schedules.Any())
                 return NotFound("No schedules found for this conference.");
 
-            var scheduleDtos = _mapper.Map<List<ScheduleRequestDto>>(schedules);
+            var scheduleDtos = _mapper.Map<List<ScheduleResponseDto>>(schedules);
             return Ok(scheduleDtos);
         }
 
         // PUT: api/Schedule/edit/{scheduleId}
         [HttpPut("edit/{scheduleId}")]
-        public async Task<IActionResult> UpdateSchedule(int scheduleId, [FromForm] ScheduleRequestDto request)
+        public async Task<IActionResult> UpdateSchedule(int scheduleId, [FromForm] ScheduleUpdateDto request)
         {
             Paper? paper = null;
             if (request.PaperId.HasValue)
@@ -130,13 +131,16 @@ namespace ConferenceFWebAPI.Controllers
             try
             {
                 await _scheduleRepository.UpdateScheduleAsync(existingSchedule);
-                var updatedDto = _mapper.Map<ScheduleRequestDto>(existingSchedule);
+                var updatedDto = _mapper.Map<ScheduleUpdateDto>(existingSchedule);
                 return Ok(updatedDto);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                // In ra cả message và inner exception để debug
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : "";
+                return StatusCode(500, $"Internal server error: {ex.Message} | Inner: {innerMessage}");
             }
+
         }
 
 
@@ -153,6 +157,17 @@ namespace ConferenceFWebAPI.Controllers
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+        }
+
+        [HttpGet("timeline/{timelineId}")]
+        public async Task<IActionResult> GetSchedulesByTimeline(int timelineId)
+        {
+            var schedules = await _scheduleRepository.GetSchedulesByTimelineIdAsync(timelineId);
+            if (schedules == null || !schedules.Any())
+                return NotFound($"No schedules found for timeline ID {timelineId}.");
+
+            var scheduleDtos = _mapper.Map<List<ScheduleResponseDto>>(schedules);
+            return Ok(scheduleDtos);
         }
     }
 }

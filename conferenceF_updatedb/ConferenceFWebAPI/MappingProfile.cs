@@ -53,7 +53,8 @@ namespace ConferenceFWebAPI
             CreateMap<ScheduleRequestDto, Schedule>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<Schedule, ScheduleUpdateDto>();
-            CreateMap<ScheduleUpdateDto, Schedule>();
+            CreateMap<ScheduleUpdateDto, Schedule>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            ;
 
             CreateMap<Schedule, ScheduleResponseDto>();
             CreateMap<ScheduleResponseDto, Schedule>();

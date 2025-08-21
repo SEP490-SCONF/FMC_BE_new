@@ -12,6 +12,8 @@ namespace ConferenceFWebAPI.DTOs.Schedules
 
         // Lấy nguyên đối tượng Paper
         public Paper? Paper { get; set; }
+        public TimeLine? Timeline { get; set; }
+
 
         // Lấy nguyên đối tượng Conference
         public Conference? Conference { get; set; }

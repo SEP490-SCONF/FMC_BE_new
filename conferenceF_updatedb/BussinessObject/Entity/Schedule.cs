@@ -7,8 +7,10 @@ namespace BussinessObject.Entity;
 public partial class Schedule
 {
     public int ScheduleId { get; set; }
+    public int TimeLineId { get; set; } 
 
-    public int ConferenceId { get; set; }
+
+    public int? ConferenceId { get; set; }
 
     public int? PaperId { get; set; }
 
@@ -17,17 +19,16 @@ public partial class Schedule
     public string? Location { get; set; } // Địa điểm thuyết trình
 
     public int? PresenterId { get; set; }
-    public int? TimeLineId { get; set; } // Thêm khóa ngoại
 
     public DateTime? PresentationStartTime { get; set; } // Thời gian bắt đầu
 
     public DateTime? PresentationEndTime { get; set; } // Thời gian kết thúc
 
-    public virtual Conference Conference { get; set; } = null!;
+    public virtual Conference? Conference { get; set; } = null!;
 
     public virtual Paper? Paper { get; set; }
 
     public virtual User? Presenter { get; set; }
-    public virtual TimeLine? TimeLine { get; set; } // Thêm thuộc tính điều hướng
+    public virtual TimeLine TimeLine { get; set; } // Thêm thuộc tính điều hướng
 
 }

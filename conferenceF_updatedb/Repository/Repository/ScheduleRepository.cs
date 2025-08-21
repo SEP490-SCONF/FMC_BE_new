@@ -38,5 +38,10 @@ namespace Repository
         {
             await _dao.DeleteScheduleAsync(scheduleId);
         }
+        public async Task<List<Schedule>> GetSchedulesByTimelineIdAsync(int timelineId)
+        {
+            return await _dao.GetSchedulesByTimelineIdAsync(timelineId);
+        }
+
     }
 }
