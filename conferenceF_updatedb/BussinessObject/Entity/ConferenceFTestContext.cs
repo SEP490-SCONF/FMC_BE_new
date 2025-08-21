@@ -687,6 +687,11 @@ modelBuilder.Entity<TimeLine>(entity =>
             entity.HasOne(d => d.Presenter)
                 .WithMany(p => p.Schedules)
                 .HasForeignKey(d => d.PresenterId);
+
+            entity.HasOne(d => d.TimeLine)
+          .WithMany(p => p.Schedules)
+          .HasForeignKey(d => d.TimeLineId)
+          .HasConstraintName("FK_Schedule_TimeLine");
         });
 
         modelBuilder.Entity<Topic>(entity =>

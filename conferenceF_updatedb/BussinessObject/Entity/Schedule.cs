@@ -17,6 +17,7 @@ public partial class Schedule
     public string? Location { get; set; } // Địa điểm thuyết trình
 
     public int? PresenterId { get; set; }
+    public int? TimeLineId { get; set; } // Thêm khóa ngoại
 
     public DateTime? PresentationStartTime { get; set; } // Thời gian bắt đầu
 
@@ -27,4 +28,6 @@ public partial class Schedule
     public virtual Paper? Paper { get; set; }
 
     public virtual User? Presenter { get; set; }
+    public virtual TimeLine? TimeLine { get; set; } // Thêm thuộc tính điều hướng
+
 }
