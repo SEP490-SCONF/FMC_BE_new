@@ -1,6 +1,7 @@
 ﻿using ConferenceFWebAPI.DTOs.AICheckDTO;
 using ConferenceFWebAPI.Service;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.RegularExpressions;
 
 namespace ConferenceFWebAPI.Controllers.AI
 {
@@ -16,59 +17,33 @@ namespace ConferenceFWebAPI.Controllers.AI
         }
 
         [HttpPost("translate-highlight")]
-        public async Task<IActionResult> TranslateHighlightedText([FromForm] TranslationRequestDto request)
+        public async Task<IActionResult> TranslateHighlightedText([FromBody] TranslationRequestDto request)
         {
             if (string.IsNullOrWhiteSpace(request.Text))
                 return BadRequest("Text to translate cannot be empty.");
 
             try
             {
-                string text = request.Text.Replace("\r\n", "\n"); // normalize newline
-                var lines = text.Split('\n', StringSplitOptions.None);
-                var translatedLines = new List<string>();
+                // Chuẩn hóa newline
+                string text = request.Text.Replace("\r\n", "\n");
 
-                foreach (var line in lines)
-                {
-                    if (string.IsNullOrWhiteSpace(line))
-                    {
-                        translatedLines.Add(""); // giữ dòng trống
-                        continue;
-                    }
+                // Dịch nguyên cả block text, không tách câu
+                string translated = await _translationService.TranslateAsync(
+                    text,
+                    request.TargetLanguage ?? "en-US"
+                );
 
-                    // Chia line dài thành chunk nhỏ (ví dụ 200 ký tự) để dịch
-                    var chunks = SplitIntoChunks(line, 200);
-                    var translatedChunks = new List<string>();
-                    foreach (var chunk in chunks)
-                    {
-                        var translated = await _translationService.TranslateAsync(chunk, request.TargetLanguage ?? "en-US");
-                        translatedChunks.Add(translated.Trim());
-                    }
+                // Loại bỏ thẻ HTML nếu có
+                translated = Regex.Replace(translated, @"<br\s*/?>", " ").Trim();
 
-                    translatedLines.Add(string.Join(" ", translatedChunks));
-                }
-
-                var translatedText = string.Join("\n", translatedLines);
-
-                return Ok(new { TranslatedText = translatedText });
+                // Giữ nguyên newline gốc
+                // Trả về JSON, FE sẽ nhận dạng \n đúng
+                return new JsonResult(new { translatedText = translated });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { Error = ex.Message });
             }
         }
-
-        // Hàm chia chunk
-        private List<string> SplitIntoChunks(string text, int maxLength)
-        {
-            var result = new List<string>();
-            for (int i = 0; i < text.Length; i += maxLength)
-            {
-                result.Add(text.Substring(i, Math.Min(maxLength, text.Length - i)));
-            }
-            return result;
-        }
-
-
-
     }
 }
