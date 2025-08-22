@@ -3,7 +3,7 @@
     public class AnalyzeAiRequestDTO
     {
         public int? ReviewId { get; set; } // ID của review, có thể null
-        public List<ChunkPayloadDTO> Chunks { get; set; } = new(); // Danh sách chunk để phân tích
+        public string RawText { get; set; } = string.Empty; // Văn bản thô từ FE
     }
 
     public class ChunkPayloadDTO
