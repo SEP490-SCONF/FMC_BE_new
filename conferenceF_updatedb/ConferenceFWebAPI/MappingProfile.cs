@@ -179,7 +179,9 @@ namespace ConferenceFWebAPI
     .ForMember(dest => dest.CreatedAt,
         opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt ?? DateTime.MinValue, DateTimeKind.Unspecified)));
 
-            CreateMap<Payment, PaymentDTO>();
+            CreateMap<Payment, PaymentDTO>()
+.ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User == null ? null : src.User.Name))
+.ForMember(dest => dest.ConferenceName, opt => opt.MapFrom(src => src.Conference == null ? null : src.Conference.Title));
             CreateMap<CreatePaymentDTO, Payment>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.PaperId, opt => opt.MapFrom(src => src.PaperId));
