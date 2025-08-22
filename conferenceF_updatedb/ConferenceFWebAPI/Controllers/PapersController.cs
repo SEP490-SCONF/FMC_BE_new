@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
-using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.Papers;
 using ConferenceFWebAPI.Hubs;
 using ConferenceFWebAPI.Service;
@@ -15,8 +14,6 @@ using iText.Kernel.Pdf.Canvas.Parser;
 using iText.Kernel.Pdf;
 using System.Text.RegularExpressions;
 using ConferenceFWebAPI.Services.PdfTextExtraction;
-using ConferenceFWebAPI.Hubs;
-using Microsoft.AspNetCore.SignalR;
 
 namespace ConferenceFWebAPI.Controllers
 {
