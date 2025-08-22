@@ -23,7 +23,10 @@ namespace Repository
         {
             return await _dao.GetProceedingByIdAsync(proceedingId);
         }
-
+        public async Task<string?> GetFilePathByConferenceIdAsync(int conferenceId)
+        {
+            return await _dao.GetFilePathByConferenceIdAsync(conferenceId);
+        }
         public async Task<Proceeding?> GetProceedingByConferenceIdAsync(int conferenceId)
         {
             return await _dao.GetProceedingByConferenceIdAsync(conferenceId);

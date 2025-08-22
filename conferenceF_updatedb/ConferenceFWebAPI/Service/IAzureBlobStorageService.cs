@@ -9,6 +9,7 @@
         // Task<byte[]> DownloadFileAsync(string filePath); // Có thể thêm nếu cần
         Task<Stream> DownloadFileAsync(string fileUrl);
         Task<string> UploadStreamAsync(Stream stream, string fileName, string containerName, string contentType);
+        Task<string> UploadProceedingAsync(Stream fileStream, string fileName);
 
     }
 }

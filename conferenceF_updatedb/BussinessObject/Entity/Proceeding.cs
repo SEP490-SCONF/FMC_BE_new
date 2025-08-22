@@ -29,6 +29,7 @@ public partial class Proceeding
     public string? Version { get; set; }
 
     public string? Doi { get; set; }
+    public string? CoverPageUrl { get; set; } // Thêm thuộc tính này để lưu URL của ảnh bìa
 
     public virtual Conference Conference { get; set; } = null!;
 

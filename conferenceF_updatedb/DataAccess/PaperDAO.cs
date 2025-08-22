@@ -15,7 +15,12 @@ namespace DataAccess
         {
             _context = context;
         }
-
+        public async Task<List<Paper>> GetPapersByIdsAsync(List<int> paperIds)
+        {
+            return await _context.Set<Paper>()
+                                 .Where(p => paperIds.Contains(p.PaperId))
+                                 .ToListAsync();
+        }
         public async Task<Paper?> GetPaperWithConferenceAndTimelinesAsync(int paperId)
         {
             return await _context.Papers

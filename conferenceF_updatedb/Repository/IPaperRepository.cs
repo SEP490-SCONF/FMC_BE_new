@@ -23,6 +23,7 @@ namespace Repository
         Task<Paper> GetPaperWithAuthorsAsync(int paperId);
         List<Paper> GetPapersByUserId(int userId);
 
+        Task<List<Paper>> GetPapersByIdsAsync(List<int> paperIds);
 
 
 
