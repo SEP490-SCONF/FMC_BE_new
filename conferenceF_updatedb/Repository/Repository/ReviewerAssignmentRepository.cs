@@ -56,6 +56,13 @@ namespace Repository
         {
             return await _dao.GetAllByPaperId(paperId);
         }
-
+        public async Task<int> GetAssignedPaperCountByReviewerIdAndConferenceId(int reviewerId, int conferenceId)
+        {
+            return await _dao.GetAssignedPaperCountByReviewerIdAndConferenceId(reviewerId, conferenceId);
+        }
+        public async Task<int> GetAssignmentCountByReviewerIdAndConferenceId(int reviewerId, int conferenceId)
+        {
+            return await _dao.GetAssignmentCountByReviewerIdAndConferenceId(reviewerId, conferenceId);
+        }
     }
 }

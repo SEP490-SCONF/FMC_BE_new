@@ -1,15 +1,18 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
+using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.Papers;
+using ConferenceFWebAPI.Hubs;
 using ConferenceFWebAPI.Service;
 using DataAccess;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.SignalR;
+using Repository;
+using System.Security.Claims;
 using iText.Kernel.Pdf.Canvas.Parser.Listener;
 using iText.Kernel.Pdf.Canvas.Parser;
 using iText.Kernel.Pdf;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.OData.Query;
-using Repository;
-using System.Security.Claims;
 using System.Text.RegularExpressions;
 using ConferenceFWebAPI.Services.PdfTextExtraction;
 using ConferenceFWebAPI.Hubs;
@@ -31,17 +34,15 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IConferenceRepository _conferenceRepository;
         private readonly IConferenceRoleRepository _conferenceRoleRepository;
         private readonly IEmailService _emailService;
+        private readonly IAiSpellCheckService _aiSpellCheckService;
+        private readonly DeepLTranslationService _translationService;
+        private readonly PdfService _pdfService; // Tiêm PdfService vào đây
         private readonly IWebHostEnvironment _env;
         private readonly PaperDeadlineService _paperDeadlineService; // THÊM CÁI NÀY
         private readonly ITimeLineRepository _timeLineRepository;
-        private readonly IAiSpellCheckService _aiSpellCheckService;
         private readonly INotificationRepository _notificationRepository; // Add this repository
                                                                           // If you are using SignalR, also inject the hub context:
         private readonly IHubContext<NotificationHub> _hubContext;
-        private readonly DeepLTranslationService _translationService;
-        private readonly PdfService _pdfService; // Tiêm PdfService vào đây
-
-
         public PapersController(
             IPaperRepository paperRepository,
             IAzureBlobStorageService azureBlobStorageService,
@@ -53,14 +54,14 @@ namespace ConferenceFWebAPI.Controllers
             IConferenceRepository conferenceRepository,
             IConferenceRoleRepository conferenceRoleRepository,
             IEmailService emailService,
-            IWebHostEnvironment env,
             PaperDeadlineService paperDeadlineService,
-            IAiSpellCheckService aiSpellCheckService,// THÊM VÀO CONSTRUCTOR
+            IAiSpellCheckService aiSpellCheckService,
+            IWebHostEnvironment env,
             ITimeLineRepository timeLineRepository,
             INotificationRepository notificationRepository,
-             IHubContext<NotificationHub> hubContext,
-             DeepLTranslationService translationService,
-             PdfService pdfService)
+            DeepLTranslationService translationService,
+             PdfService pdfService,
+             IHubContext<NotificationHub> hubContext)
 
         {
             _paperRepository = paperRepository;
@@ -74,14 +75,15 @@ namespace ConferenceFWebAPI.Controllers
             _conferenceRoleRepository = conferenceRoleRepository;
             _emailService = emailService;
             _env = env;
+             _aiSpellCheckService = aiSpellCheckService;
+
             _paperDeadlineService = paperDeadlineService; // GÁN
             _timeLineRepository = timeLineRepository; // GÁN
-            _aiSpellCheckService = aiSpellCheckService;
             _notificationRepository = notificationRepository;
             _hubContext = hubContext;
             _translationService = translationService;
             _pdfService = pdfService;
-
+            
         }
 
         [HttpGet("conference/{conferenceId}")]
@@ -96,6 +98,7 @@ namespace ConferenceFWebAPI.Controllers
             var paperDto = _mapper.Map<List<PaperResponseDto>>(papers);
             return Ok(paperDto);
         }
+        [EnableQuery]
         [HttpGet("conference/{conferenceId}/status/submitted")]
         [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -187,8 +190,8 @@ namespace ConferenceFWebAPI.Controllers
                 var uploaderUser = await _userRepository.GetById(uploaderUserId);
                 if (uploaderUser != null)
                 {
-                    string notificationTitle = "Nộp bài thành công!";
-                    string notificationContent = $"Bạn đã nộp bài báo '{paper.Title}' thành công cho hội thảo '{conference.Title}'.";
+                    string notificationTitle = "Paper Submission Successful!";
+                    string notificationContent = $"You have successfully submitted your paper, '{paper.Title}', to the '{conference.Title}' conference.";
 
                     // Tạo và lưu thông báo vào cơ sở dữ liệu
                     var notification = new Notification
@@ -235,27 +238,27 @@ namespace ConferenceFWebAPI.Controllers
                             await _userConferenceRoleRepository.Add(newAssignment);
                             Console.WriteLine($"Created new UserConferenceRole for User {authorId} in Conference {conferenceId} with Role {newRole.RoleName}.");
 
-                            emailSubject = $"Vai trò mới của bạn trong hội thảo '{conference.Title}'";
+                            emailSubject = $"Your New Role in the '{conference.Title}' Conference";
                             emailBody = $@"
-                 <h3>Xin chào {authorUser.Name},</h3>
-                 <p>Bạn vừa được gán vai trò <strong>{newRole.RoleName}</strong> trong hội thảo <strong>{conference.Title}</strong> vì đã tải lên bài báo.</p>
-                 <p>Thời gian gán: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
-                 <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
-                 <br/>
-                 <p>Trân trọng,<br/>Ban tổ chức</p>";
+                        <h3>Dear {authorUser.Name},</h3>
+<p>You have been assigned the role of <strong>{newRole.RoleName}</strong> for the <strong>{conference.Title}</strong> conference because you have uploaded a paper.</p>
+<p>Assignment Time: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
+<p>Please log in to the system to view more details.</p>
+<br/>
+<p>Sincerely,<br/>The Organizing Committee</p>";
                         }
                         else if (updatedRoleAssignment.ConferenceRoleId != newRoleId)
                         {
                             Console.WriteLine($"Updated UserConferenceRole for User {authorId} in Conference {conferenceId} to Role {newRole.RoleName}.");
 
-                            emailSubject = $"Cập nhật vai trò của bạn trong hội thảo '{conference.Title}'";
+                            emailSubject = $"Your Role in the '{conference.Title}' Conference Has Been Updated";
                             emailBody = $@"
-                 <h3>Xin chào {authorUser.Name},</h3>
-                 <p>Vai trò của bạn trong hội thảo <strong>{conference.Title}</strong> đã được cập nhật thành <strong>{newRole.RoleName}</strong> do bạn đã tải lên bài báo.</p>
-                 <p>Thời gian cập nhật: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
-                 <p>Vui lòng đăng nhập hệ thống để theo dõi thông tin chi tiết.</p>
-                 <br/>
-                 <p>Trân trọng,<br/>Ban tổ chức</p>";
+                        <h3>Dear {authorUser.Name},</h3>
+<p>Your role in the <strong>{conference.Title}</strong> conference has been updated to <strong>{newRole.RoleName}</strong> because you have uploaded a paper.</p>
+<p>Update Time: {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm")} UTC</p>
+<p>Please log in to the system to view more details.</p>
+<br/>
+<p>Sincerely,<br/>The Organizing Committee</p>";
                         }
                         else
                         {
@@ -285,8 +288,6 @@ namespace ConferenceFWebAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
-
 
         [HttpGet]
         [EnableQuery]
@@ -385,7 +386,7 @@ namespace ConferenceFWebAPI.Controllers
             return Ok(paperDtos);
         }
 
-        [HttpGet("conference/{conferenceId}/published")]
+         [HttpGet("conference/{conferenceId}/published")]
         [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetPublishedPapers(int conferenceId)
@@ -397,6 +398,7 @@ namespace ConferenceFWebAPI.Controllers
             var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
             return Ok(paperDtos);
         }
+
         [HttpPost("upload-and-spell-check")]
         public async Task<IActionResult> UploadAndSpellCheck(IFormFile pdfFile)
         {
@@ -637,8 +639,5 @@ namespace ConferenceFWebAPI.Controllers
             var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
             return Ok(paperDtos);
         }
-
-
-
     }
 }

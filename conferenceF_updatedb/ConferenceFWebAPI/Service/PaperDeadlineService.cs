@@ -81,8 +81,8 @@ namespace ConferenceFWebAPI.Service
                     var reviewerUser = assignment.Reviewer?.UserConferenceRoles.FirstOrDefault()?.User;
                     if (reviewerUser != null)
                     {
-                        string title = "Nhắc nhở: Hạn chót đánh giá bài báo sắp đến";
-                        string content = $"Bài báo '{paper.Title}' cần bạn đánh giá. Hạn chót sắp đến!";
+                        string title = "Reminder: Paper Review Deadline Approaching";
+                        string content = $"The deadline to review the paper '{paper.Title}' is approaching!";
                         Console.WriteLine($"[Hangfire] Sending review reminder to Reviewer '{reviewerUser.Name}' (ID: {reviewerUser.UserId}) for Paper '{paper.Title}'.");
 
                         // Tạo và lưu thông báo vào cơ sở dữ liệu
@@ -113,7 +113,7 @@ namespace ConferenceFWebAPI.Service
         public async Task RemindAuthorsForPayment(int paperId)
         {
             var paper = await _paperRepository.GetPaperWithConferenceAndTimelinesAsync(paperId);
-            if (paper == null || paper.Status != "Accepted") return;
+            if (paper == null || paper.Status != "Accepted" || paper.IsPublished == false) return;
 
             Console.WriteLine($"Executing RemindAuthorsForPayment for Paper ID: {paperId}, Status: {paper.Status}");
 
@@ -125,8 +125,8 @@ namespace ConferenceFWebAPI.Service
                     var authorUser = pa.Author?.UserConferenceRoles.FirstOrDefault()?.User;
                     if (authorUser != null)
                     {
-                        string title = "Nhắc nhở: Phí xuất bản đến hạn";
-                        string content = $"Bài báo '{paper.Title}' của bạn đã được chấp nhận. Vui lòng thanh toán phí xuất bản!";
+                        string title = "Reminder: Publication Fee Deadline Approaching";
+                        string content = $"The deadline to pay the publication fee for your paper, '{paper.Title}', is approaching. Please submit the payment.";
                         Console.WriteLine($"[Hangfire] Sending payment reminder to Author '{authorUser.Name}' (ID: {authorUser.UserId}) for Paper '{paper.Title}'.");
 
                         // Tạo và lưu thông báo vào cơ sở dữ liệu
@@ -168,8 +168,8 @@ namespace ConferenceFWebAPI.Service
                     var authorUser = pa.Author?.UserConferenceRoles.FirstOrDefault()?.User;
                     if (authorUser != null)
                     {
-                        string title = "Nhắc nhở: Hạn chót nộp lại bài báo sắp đến";
-                        string content = $"Bài báo '{paper.Title}' của bạn cần sửa đổi. Vui lòng nộp lại trước hạn chót!";
+                        string title = "Reminder: Paper Resubmission Deadline Approaching";
+                        string content = $"Your paper, '{paper.Title}', requires revision. Please resubmit it before the deadline!";
                         Console.WriteLine($"[Hangfire] Sending resubmission reminder to Author '{authorUser.Name}' (ID: {authorUser.UserId}) for Paper '{paper.Title}'.");
 
                         // Tạo và lưu thông báo vào cơ sở dữ liệu

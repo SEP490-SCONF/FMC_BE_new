@@ -18,49 +18,24 @@ namespace ConferenceFWebAPI.Controllers.AI
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] AnalyzeAiRequestDTO request)
         {
-            if (request == null || request.Chunks == null || !request.Chunks.Any())
+            if (request == null || string.IsNullOrWhiteSpace(request.RawText))
             {
-                return BadRequest(new { error = "No chunks provided." });
+                return BadRequest(new { error = "No raw text provided." });
             }
 
-            var chunkResults = await ProcessChunksAsync(request.Chunks);
-            var analysisResult = CalculateAnalysisResult(chunkResults);
-
-            return Ok(analysisResult);
-        }
-
-        private async Task<List<ChunkResultDTO>> ProcessChunksAsync(IEnumerable<ChunkPayloadDTO> chunks)
-        {
-            var chunkResults = new List<ChunkResultDTO>();
-
-            foreach (var chunk in chunks)
+            try
             {
-                var result = await _detector.AnalyzeChunkAsync(chunk);
-
-                if (result != null)
-                {
-                    chunkResults.Add(result);
-                }
+                var analysisResult = await _detector.AnalyzeTextAsync(request.RawText);
+                return Ok(analysisResult);
             }
-
-            return chunkResults;
-        }
-
-        private AnalyzeAiResponseDTO CalculateAnalysisResult(List<ChunkResultDTO> chunkResults)
-        {
-            int totalTokens = chunkResults.Sum(r => r.TokenCount);
-            double weightedAiTokens = chunkResults.Sum(r => r.TokenCount * r.ScoreMachine);
-            double percentAi = totalTokens > 0
-                ? (weightedAiTokens / totalTokens) * 100.0
-                : 0.0;
-
-            return new AnalyzeAiResponseDTO
+            catch (ArgumentException ex)
             {
-                PercentAi = Math.Round(percentAi, 2),
-                TotalTokens = totalTokens,
-                AiTokenEquiv = Math.Round(weightedAiTokens, 2),
-                Chunks = chunkResults
-            };
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
         }
     }
 }

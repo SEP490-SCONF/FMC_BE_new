@@ -166,7 +166,6 @@ namespace ConferenceFWebAPI.Controllers.PaperRevisions
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
         // GET: api/PaperRevisions/{revisionId}
         [HttpGet("{revisionId}")]
         public async Task<IActionResult> GetRevisionById(int revisionId)
