@@ -625,6 +625,20 @@ namespace ConferenceFWebAPI.Controllers
             }
         }
 
+        [HttpGet("conference/{conferenceId}/presented")]
+        [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetPresentedPapersByConference(int conferenceId)
+        {
+            var papers = _paperRepository.GetPresentedPapersByConferenceId(conferenceId);
+            if (papers == null || !papers.Any())
+                return NotFound($"No presented papers found for conference ID: {conferenceId}");
+
+            var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
+            return Ok(paperDtos);
+        }
+
+
 
     }
 }

@@ -10,6 +10,7 @@ namespace ConferenceFWebAPI.DTOs.Schedules
         public DateTime? PresentationStartTime { get; set; }
         public DateTime? PresentationEndTime { get; set; }
 
+
         // Lấy nguyên đối tượng Paper
         public Paper? Paper { get; set; }
         public TimeLine? Timeline { get; set; }

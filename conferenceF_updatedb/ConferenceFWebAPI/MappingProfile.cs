@@ -48,7 +48,25 @@ namespace ConferenceFWebAPI
                         .OrderByDescending(ra => ra.AssignedAt)
                         .Select(ra => (int?)ra.AssignmentId)
                         .FirstOrDefault()
-                ));
+                )).ForMember(dest => dest.PaperScore, opt => opt.MapFrom(src =>
+        src.PaperRevisions
+            .Where(pr => pr.Status == "Accepted")
+            .SelectMany(pr => pr.Reviews)
+            .Select(r => r.Score ?? 0)
+            .DefaultIfEmpty(0)
+            .Average() != null
+                ? (int?)Math.Round(
+                    src.PaperRevisions
+                        .Where(pr => pr.Status == "Accepted")
+                        .SelectMany(pr => pr.Reviews)
+                        .Select(r => r.Score ?? 0)
+                        .DefaultIfEmpty(0)
+                        .Average()
+                  )
+                : null
+    ));
+
+
             CreateMap<Schedule, ScheduleRequestDto>();
             CreateMap<ScheduleRequestDto, Schedule>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));

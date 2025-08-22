@@ -22,6 +22,7 @@ namespace Repository
         Task<List<PaperAuthor>> GetAuthorsByPaperIdAsync(int paperId);
         Task<Paper> GetPaperWithAuthorsAsync(int paperId);
         List<Paper> GetPapersByUserId(int userId);
+        List<Paper> GetPresentedPapersByConferenceId(int conferenceId);
 
 
 

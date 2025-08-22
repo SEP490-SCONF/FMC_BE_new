@@ -41,9 +41,28 @@ namespace DataAccess
         // Hàm cập nhật lịch
         public async Task UpdateScheduleAsync(Schedule schedule)
         {
+            // Nếu có PaperId nhưng PresenterId null, tự động lấy author đầu tiên của paper
+            if (schedule.PaperId.HasValue && !schedule.PresenterId.HasValue)
+            {
+                var paper = await _context.Papers
+                    .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author)
+                    .FirstOrDefaultAsync(p => p.PaperId == schedule.PaperId.Value);
+
+                if (paper != null)
+                {
+                    var firstAuthor = paper.PaperAuthors.FirstOrDefault()?.Author;
+                    if (firstAuthor != null)
+                    {
+                        schedule.PresenterId = firstAuthor.UserId;
+                    }
+                }
+            }
+
             _context.Schedules.Update(schedule);
             await _context.SaveChangesAsync();
         }
+
 
         // Hàm xóa lịch
         public async Task DeleteScheduleAsync(int scheduleId)
@@ -57,6 +76,25 @@ namespace DataAccess
         }
         public async Task<Schedule> AddScheduleAsync(Schedule schedule)
         {
+            // Nếu có PaperId nhưng PresenterId null, tự động lấy author đầu tiên của paper
+            if (schedule.PaperId.HasValue && !schedule.PresenterId.HasValue)
+            {
+                var paper = await _context.Papers
+                    .Include(p => p.PaperAuthors)       // PaperAuthors liên kết Author
+                    .ThenInclude(pa => pa.Author)
+                    .FirstOrDefaultAsync(p => p.PaperId == schedule.PaperId.Value);
+
+                if (paper != null)
+                {
+                    // Lấy author đầu tiên làm presenter
+                    var firstAuthor = paper.PaperAuthors.FirstOrDefault()?.Author;
+                    if (firstAuthor != null)
+                    {
+                        schedule.PresenterId = firstAuthor.UserId;
+                    }
+                }
+            }
+
             _context.Schedules.Add(schedule);
             await _context.SaveChangesAsync();
             return schedule;

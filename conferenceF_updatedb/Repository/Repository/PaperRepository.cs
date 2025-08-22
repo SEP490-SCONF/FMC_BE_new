@@ -86,8 +86,12 @@ namespace Repository
         {
             return _paperDAO.GetPapersByUserId(userId);
         }
-        
 
+
+        public List<Paper> GetPresentedPapersByConferenceId(int conferenceId)
+        {
+            return _paperDAO.GetPresentedPapersByConferenceId(conferenceId);
+        }
 
 
 
