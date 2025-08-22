@@ -25,7 +25,7 @@ namespace ConferenceFWebAPI.Controllers.Proccedings
 
         // POST: api/Proceeding/create
         [HttpPost("create")]
-        public async Task<IActionResult> CreateProceeding([FromBody] ProceedingCreateDto dto)
+        public async Task<IActionResult> CreateProceeding([FromForm] ProceedingCreateFromFormDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -36,6 +36,16 @@ namespace ConferenceFWebAPI.Controllers.Proccedings
             if (existingProceeding != null)
             {
                 return BadRequest("A proceeding for this conference already exists.");
+            }
+
+            // Xử lý chuỗi PaperIds từ form
+            var paperIds = new List<int>();
+            if (!string.IsNullOrEmpty(dto.PaperIds))
+            {
+                paperIds = dto.PaperIds
+                              .Split(',')
+                              .Select(id => int.Parse(id.Trim()))
+                              .ToList();
             }
 
             var newProceeding = new Proceeding
@@ -55,9 +65,9 @@ namespace ConferenceFWebAPI.Controllers.Proccedings
             {
                 var createdProceeding = await _proceedingRepository.CreateProceedingAsync(newProceeding);
 
-                if (dto.PaperIds != null && dto.PaperIds.Any())
+                if (paperIds.Any())
                 {
-                    foreach (var paperId in dto.PaperIds)
+                    foreach (var paperId in paperIds)
                     {
                         var paper = await _paperRepository.GetPaperByIdAsync(paperId);
                         if (paper != null)
@@ -68,7 +78,34 @@ namespace ConferenceFWebAPI.Controllers.Proccedings
                     }
                 }
 
-                return CreatedAtAction(nameof(GetProceeding), new { proceedingId = createdProceeding.ProceedingId }, createdProceeding);
+                // Lấy lại đối tượng Proceeding đã được tạo, có bao gồm navigation properties
+                var fullProceeding = await _proceedingRepository.GetProceedingByIdAsync(createdProceeding.ProceedingId);
+
+                // Ánh xạ sang DTO trả về
+                var responseDto = new ProceedingResponseDto
+                {
+                    ProceedingId = fullProceeding.ProceedingId,
+                    Title = fullProceeding.Title,
+                    Description = fullProceeding.Description,
+                    FilePath = fullProceeding.FilePath,
+                    Doi = fullProceeding.Doi,
+                    Status = fullProceeding.Status,
+                    Version = fullProceeding.Version,
+                    PublishedDate = fullProceeding.PublishedDate,
+                    PublishedBy = fullProceeding.PublishedByNavigation != null ? new UserInfoDto
+                    {
+                        UserId = fullProceeding.PublishedByNavigation.UserId,
+                        FullName = fullProceeding.PublishedByNavigation.Name
+                    } : null,
+                    Papers = fullProceeding.Papers?.Select(p => new PaperInfoDto
+                    {
+                        PaperId = p.PaperId,
+                        Title = p.Title
+                    }).ToList()
+                };
+
+                // Trả về 201 Created với DTO
+                return CreatedAtAction(nameof(GetProceeding), new { proceedingId = responseDto.ProceedingId }, responseDto);
             }
             catch (Exception ex)
             {
