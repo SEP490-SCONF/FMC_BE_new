@@ -663,25 +663,35 @@ modelBuilder.Entity<TimeLine>(entity =>
 
         modelBuilder.Entity<Schedule>(entity =>
         {
-            entity.HasKey(e => e.ScheduleId).HasName("PK__Schedule__9C8A5B49A7037950");
+            entity.HasKey(e => e.ScheduleId);
 
             entity.ToTable("Schedule");
 
-            entity.Property(e => e.PresentationTime).HasColumnType("datetime");
             entity.Property(e => e.SessionTitle).HasMaxLength(255);
+            entity.Property(e => e.Location).HasMaxLength(255);
+            entity.Property(e => e.PresentationStartTime).HasColumnType("datetime");
+            entity.Property(e => e.PresentationEndTime).HasColumnType("datetime");
 
-            entity.HasOne(d => d.Conference).WithMany(p => p.Schedules)
+            // Foreign key for Conference
+            entity.HasOne(d => d.Conference)
+                .WithMany(p => p.Schedules)
                 .HasForeignKey(d => d.ConferenceId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Schedule__Confer__2BFE89A6");
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
-            entity.HasOne(d => d.Paper).WithMany(p => p.Schedules)
-                .HasForeignKey(d => d.PaperId)
-                .HasConstraintName("FK__Schedule__PaperI__2CF2ADDF");
+            // Foreign key for Paper
+            entity.HasOne(d => d.Paper)
+                .WithMany(p => p.Schedules)
+                .HasForeignKey(d => d.PaperId);
 
-            entity.HasOne(d => d.Presenter).WithMany(p => p.Schedules)
-                .HasForeignKey(d => d.PresenterId)
-                .HasConstraintName("FK__Schedule__Presen__2DE6D218");
+            // Foreign key for Presenter (User)
+            entity.HasOne(d => d.Presenter)
+                .WithMany(p => p.Schedules)
+                .HasForeignKey(d => d.PresenterId);
+
+            entity.HasOne(d => d.TimeLine)
+          .WithMany(p => p.Schedules)
+          .HasForeignKey(d => d.TimeLineId)
+          .HasConstraintName("FK_Schedule_TimeLine");
         });
 
         modelBuilder.Entity<Topic>(entity =>

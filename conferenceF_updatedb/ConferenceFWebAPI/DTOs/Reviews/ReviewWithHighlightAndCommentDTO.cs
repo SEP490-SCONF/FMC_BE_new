@@ -1,4 +1,4 @@
-﻿using ConferenceFWebAPI.DTOs.Paper;
+﻿using ConferenceFWebAPI.DTOs.Papers;
 using System;
 using System.Collections.Generic;
 

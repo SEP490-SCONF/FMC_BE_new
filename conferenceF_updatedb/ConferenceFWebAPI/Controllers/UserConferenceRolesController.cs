@@ -575,6 +575,33 @@ namespace ConferenceFWebAPI.Controllers
             return Ok(userIds);
         }
 
+        [HttpGet("user/{userId}")]
+        [ProducesResponseType(typeof(List<UserConferenceRoleViewDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetByUserId(int userId)
+        {
+            var entities = await _repo.GetByUserId(userId);
+
+            if (entities == null || !entities.Any())
+                return NotFound($"No conference roles found for user ID: {userId}");
+
+            var result = entities.Select(ucr => new UserConferenceRoleViewDto
+            {
+                Id = ucr.Id,
+                UserId = ucr.UserId,
+                UserName = ucr.User.Name,
+                UserEmail = ucr.User.Email,
+                ConferenceRoleId = ucr.ConferenceRoleId,
+                RoleName = ucr.ConferenceRole.RoleName,
+                ConferenceId = ucr.ConferenceId,
+                ConferenceTitle = ucr.Conference.Title,
+                AvatarUrl = ucr.User.AvatarUrl,
+                AssignedAt = ucr.AssignedAt
+            }).ToList();
+
+            return Ok(result);
+        }
+
 
     }
 }

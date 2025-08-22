@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
-using ConferenceFWebAPI.DTOs.Paper;
 using ConferenceFWebAPI.DTOs.Papers;
 using ConferenceFWebAPI.Hubs;
 using ConferenceFWebAPI.Service;
@@ -10,6 +9,12 @@ using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.SignalR;
 using Repository;
 using System.Security.Claims;
+using iText.Kernel.Pdf.Canvas.Parser.Listener;
+using iText.Kernel.Pdf.Canvas.Parser;
+using iText.Kernel.Pdf;
+using System.Text.RegularExpressions;
+using ConferenceFWebAPI.Services.PdfTextExtraction;
+
 
 namespace ConferenceFWebAPI.Controllers
 {
@@ -27,6 +32,9 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IConferenceRepository _conferenceRepository;
         private readonly IConferenceRoleRepository _conferenceRoleRepository;
         private readonly IEmailService _emailService;
+        private readonly IAiSpellCheckService _aiSpellCheckService;
+        private readonly DeepLTranslationService _translationService;
+        private readonly PdfService _pdfService; // Tiêm PdfService vào đây
         private readonly IWebHostEnvironment _env;
         private readonly PaperDeadlineService _paperDeadlineService; // THÊM CÁI NÀY
         private readonly ITimeLineRepository _timeLineRepository;
@@ -44,10 +52,13 @@ namespace ConferenceFWebAPI.Controllers
             IConferenceRepository conferenceRepository,
             IConferenceRoleRepository conferenceRoleRepository,
             IEmailService emailService,
+            PaperDeadlineService paperDeadlineService,
+            IAiSpellCheckService aiSpellCheckService,
             IWebHostEnvironment env,
-            PaperDeadlineService paperDeadlineService, // THÊM VÀO CONSTRUCTOR
             ITimeLineRepository timeLineRepository,
             INotificationRepository notificationRepository,
+            DeepLTranslationService translationService,
+             PdfService pdfService,
              IHubContext<NotificationHub> hubContext)
 
         {
@@ -62,10 +73,14 @@ namespace ConferenceFWebAPI.Controllers
             _conferenceRoleRepository = conferenceRoleRepository;
             _emailService = emailService;
             _env = env;
+             _aiSpellCheckService = aiSpellCheckService;
+
             _paperDeadlineService = paperDeadlineService; // GÁN
             _timeLineRepository = timeLineRepository; // GÁN
             _notificationRepository = notificationRepository;
             _hubContext = hubContext;
+            _translationService = translationService;
+            _pdfService = pdfService;
             
         }
 
@@ -381,5 +396,264 @@ namespace ConferenceFWebAPI.Controllers
             var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
             return Ok(paperDtos);
         }
+
+        [HttpPost("upload-and-spell-check")]
+        public async Task<IActionResult> UploadAndSpellCheck(IFormFile pdfFile)
+        {
+            if (pdfFile == null || pdfFile.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            try
+            {
+                // Upload PDF lên Azure Blob
+                string container = _configuration.GetValue<string>("BlobContainers:Papers");
+                string fileUrl = await _azureBlobStorageService.UploadFileAsync(pdfFile, container);
+
+                // Tải file PDF để đọc text + vị trí
+                using var originalStream = await _azureBlobStorageService.DownloadFileAsync(fileUrl);
+                using var pdfReader = new PdfReader(originalStream);
+                using var pdfDoc = new PdfDocument(pdfReader);
+
+                var allWordsWithPositions = new List<WordPosition>();
+                string rawText = "";
+
+                for (int i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
+                {
+                    var strategy = new LocationTextExtractionStrategyWithPosition();
+                    PdfTextExtractor.GetTextFromPage(pdfDoc.GetPage(i), strategy);
+
+                    foreach (var wp in strategy.WordsPositions)
+                    {
+                        wp.PageNumber = i;
+                        allWordsWithPositions.Add(wp);
+                    }
+
+                    rawText += strategy.GetResultantText() + "\n";
+                }
+
+                string cleanText = CleanExtractedText(rawText);
+
+                // 1. Lấy danh sách từ sai
+                List<string> misspelledWords = await _aiSpellCheckService.GetMisspelledWordsAsync(cleanText);
+
+                // DEBUG: In danh sách từ sai chính tả từ AI
+                Console.WriteLine("=== Misspelled Words from AI ===");
+                foreach (var w in misspelledWords)
+                    Console.WriteLine(w);
+
+                // Hàm normalize: bỏ dấu câu, khoảng trắng thừa, lowercase
+                string Normalize(string s) =>
+                    Regex.Replace(s, @"[^\p{L}\p{N}]+", "") // chỉ giữ chữ cái & số
+                          .Trim()
+                          .ToLowerInvariant();
+
+                // Chuẩn hóa danh sách từ sai chính tả
+                var misspelledSet = new HashSet<string>(
+                    misspelledWords
+                        .Select(Normalize)
+                        .Where(s => !string.IsNullOrEmpty(s))
+                );
+
+                // 2. Map từ sai -> vị trí
+                var misspelledWordPositions = allWordsWithPositions
+                    .Where(wp => misspelledSet.Contains(Normalize(wp.Word)))
+                    .ToList();
+
+                // DEBUG: In danh sách từ khớp trong PDF
+                Console.WriteLine("=== Matched Misspelled Words in PDF ===");
+                foreach (var wp in misspelledWordPositions)
+                {
+                    Console.WriteLine($"{wp.Word} (Page {wp.PageNumber}) - " +
+                        $"X={wp.BoundingBox.GetX()}, Y={wp.BoundingBox.GetY()}, " +
+                        $"W={wp.BoundingBox.GetWidth()}, H={wp.BoundingBox.GetHeight()}");
+                }
+
+                // 3. Highlight từ sai trong PDF
+                var highlightedPdfPath = Path.Combine(Path.GetTempPath(), $"highlighted_{Guid.NewGuid()}.pdf");
+
+                using (var reader = new PdfReader(await _azureBlobStorageService.DownloadFileAsync(fileUrl)))
+                using (var writer = new PdfWriter(highlightedPdfPath))
+                using (var pdfHighlightDoc = new PdfDocument(reader, writer))
+                {
+                    foreach (var wp in misspelledWordPositions)
+                    {
+                        var page = pdfHighlightDoc.GetPage(wp.PageNumber);
+                        var canvas = new iText.Kernel.Pdf.Canvas.PdfCanvas(page);
+
+                        canvas.SaveState()
+                              .SetFillColor(new iText.Kernel.Colors.DeviceRgb(255, 0, 0)) // Màu đỏ
+                              .SetExtGState(new iText.Kernel.Pdf.Extgstate.PdfExtGState().SetFillOpacity(0.3f)) // Độ trong suốt 30%
+                              .Rectangle(wp.BoundingBox)
+                              .Fill()
+                              .RestoreState();
+                    }
+
+                }
+
+                // Upload file PDF highlight lên Azure Blob
+                await using var highlightStream = System.IO.File.OpenRead(highlightedPdfPath);
+                string highlightUrl = await _azureBlobStorageService
+                    .UploadStreamAsync(highlightStream, Path.GetFileName(highlightedPdfPath), container, "application/pdf");
+
+                return Ok(new
+                {
+                    FileUrl = fileUrl,
+                    HighlightedFileUrl = highlightUrl,
+                    OriginalTextPreview = cleanText.Substring(0, Math.Min(500, cleanText.Length)),
+                    MisspelledWords = misspelledWords,
+                    MisspelledWordPositions = misspelledWordPositions.Select(wp => new
+                    {
+                        wp.Word,
+                        wp.PageNumber,
+                        BoundingBox = new
+                        {
+                            X = wp.BoundingBox.GetX(),
+                            Y = wp.BoundingBox.GetY(),
+                            Width = wp.BoundingBox.GetWidth(),
+                            Height = wp.BoundingBox.GetHeight()
+                        }
+                    })
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+
+
+        private string CleanExtractedText(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+
+            // 1. Thay thế xuống dòng, tab, carriage return thành khoảng trắng
+            string cleaned = Regex.Replace(text, @"[\r\n\t]+", " ");
+
+            // 2. Loại bỏ các ký tự không in được hoặc lạ (bạn có thể tùy chỉnh thêm)
+            cleaned = Regex.Replace(cleaned, @"[^\u0009\u000A\u000D\u0020-\u007E]", "");
+
+            // 3. Chuẩn hóa khoảng trắng nhiều thành 1 khoảng trắng
+            cleaned = Regex.Replace(cleaned, @"\s{2,}", " ");
+
+            // 4. Trim đầu cuối
+            return cleaned.Trim();
+        }
+
+        private async Task<string> RunSpellCheckInChunks(string text, int chunkSize = 2000)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
+            var parts = new List<string>();
+            for (int i = 0; i < text.Length; i += chunkSize)
+            {
+                var chunk = text.Substring(i, Math.Min(chunkSize, text.Length - i));
+                var res = await _aiSpellCheckService.CheckSpellingAsync(chunk);
+                parts.Add(res);
+            }
+            return string.Join("\n", parts);
+        }
+
+        // ... Trong PaperController
+        [HttpGet("translate-pdf/{paperId}")]
+        public async Task<IActionResult> TranslatePaperPdf(int paperId, [FromQuery] string targetLang)
+        {
+            var paper = await _paperRepository.GetPaperByIdAsync(paperId);
+            if (paper == null)
+            {
+                return NotFound("Paper not found.");
+            }
+
+            if (string.IsNullOrEmpty(targetLang))
+            {
+                return BadRequest("targetLang query parameter is required.");
+            }
+
+            try
+            {
+                // Gọi một hàm duy nhất từ PdfService để vừa tải vừa trích xuất
+                var paperText = await _pdfService.ExtractTextFromPdfAsync(paper.FilePath);
+
+                var translatedText = await _translationService.TranslateAsync(paperText, targetLang);
+
+                // Chỉ trả về translatedText thay vì cả OriginalText
+                return Ok(new { TranslatedText = translatedText });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpGet("user/{userId}")]
+        [ProducesResponseType(typeof(List<PaperResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetPapersByUser(int userId)
+        {
+            var papers = _paperRepository.GetPapersByUserId(userId);
+            if (papers == null || !papers.Any())
+                return NotFound($"No papers found for user ID: {userId}");
+
+            var paperDto = _mapper.Map<List<PaperResponseDto>>(papers);
+            return Ok(paperDto);
+        }
+
+         [HttpPut("set-presented/{paperId}")]
+        public async Task<IActionResult> SetPaperIsPresented(int paperId, [FromBody] IsPresentedRequestDto request)
+        {
+            var paper = await _paperRepository.GetPaperByIdAsync(paperId);
+            if (paper == null)
+            {
+                return NotFound($"Paper with ID {paperId} not found.");
+            }
+
+            // Cập nhật trạng thái IsPresented
+            paper.IsPresented = request.IsPresented;
+
+            try
+            {
+                await _paperRepository.UpdatePaperAsync(paper);
+                return Ok(new
+                {
+                    Message = $"Paper '{paper.Title}' IsPresented status updated successfully.",
+                    IsPresented = paper.IsPresented
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("conference/{conferenceId}/presented")]
+        [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetPresentedPapersByConference(int conferenceId)
+        {
+            var papers = _paperRepository.GetPresentedPapersByConferenceId(conferenceId);
+            if (papers == null || !papers.Any())
+                return NotFound($"No presented papers found for conference ID: {conferenceId}");
+
+            var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
+            return Ok(paperDtos);
+        }
+
+        [HttpGet("user/{userId}/conference/{conferenceId}/accepted")]
+        [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult GetAcceptedPapersByUserAndConference(int userId, int conferenceId)
+        {
+            if (userId <= 0 || conferenceId <= 0)
+                return BadRequest("User ID and Conference ID must be positive.");
+
+            var papers = _paperRepository.GetAcceptedPapersByUserIdAndConferenceId(userId, conferenceId);
+            if (papers == null || !papers.Any())
+                return NotFound($"No accepted papers for User ID {userId} in Conference ID {conferenceId}.");
+
+            var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
+            return Ok(paperDtos);
+        }
+
     }
 }

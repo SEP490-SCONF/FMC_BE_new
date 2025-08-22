@@ -19,8 +19,10 @@ namespace ConferenceFWebAPI.DTOs.Papers
         public int? AssignmentId { get; set; }
         // Thêm một thuộc tính để chứa thông tin từ PaperRevision
         public List<PaperRevisionDTO> PaperRevisions { get; set; } // Dữ liệu của PaperRevision
+        public int? PaperScore { get; set; }
+
     }
 
     // Tạo DTO cho PaperRevision
-   
+
 }

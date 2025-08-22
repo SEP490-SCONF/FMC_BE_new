@@ -4,9 +4,8 @@ using ConferenceFWebAPI.DTOs;
 using ConferenceFWebAPI.DTOs.CallForPapers;
 using ConferenceFWebAPI.DTOs.Conferences;
 using ConferenceFWebAPI.DTOs.ConferenceTopics;
-using ConferenceFWebAPI.DTOs.Paper;
-using ConferenceFWebAPI.DTOs.PaperRevisions;
 using ConferenceFWebAPI.DTOs.Papers;
+using ConferenceFWebAPI.DTOs.PaperRevisions;
 using ConferenceFWebAPI.DTOs.Proccedings;
 using ConferenceFWebAPI.DTOs.ReviewComments;
 using ConferenceFWebAPI.DTOs.ReviewerAssignments;
@@ -15,6 +14,7 @@ using ConferenceFWebAPI.DTOs.Reviews;
 using ConferenceFWebAPI.DTOs.User;
 using ConferenceFWebAPI.DTOs.UserProfile;
 using ConferenceFWebAPI.DTOs.Payment;
+using ConferenceFWebAPI.DTOs.Schedules;
 
 namespace ConferenceFWebAPI
 {
@@ -48,7 +48,36 @@ namespace ConferenceFWebAPI
                         .OrderByDescending(ra => ra.AssignedAt)
                         .Select(ra => (int?)ra.AssignmentId)
                         .FirstOrDefault()
-                ));
+                )).ForMember(dest => dest.PaperScore, opt => opt.MapFrom(src =>
+        src.PaperRevisions
+            .Where(pr => pr.Status == "Accepted")
+            .SelectMany(pr => pr.Reviews)
+            .Select(r => r.Score ?? 0)
+            .DefaultIfEmpty(0)
+            .Average() != null
+                ? (int?)Math.Round(
+                    src.PaperRevisions
+                        .Where(pr => pr.Status == "Accepted")
+                        .SelectMany(pr => pr.Reviews)
+                        .Select(r => r.Score ?? 0)
+                        .DefaultIfEmpty(0)
+                        .Average()
+                  )
+                : null
+    ));
+
+
+            CreateMap<Schedule, ScheduleRequestDto>();
+            CreateMap<ScheduleRequestDto, Schedule>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<Schedule, ScheduleUpdateDto>();
+            CreateMap<ScheduleUpdateDto, Schedule>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            ;
+
+            CreateMap<Schedule, ScheduleResponseDto>();
+            CreateMap<ScheduleResponseDto, Schedule>();
+
+
 
 
             CreateMap<User, UserInfomation>();
@@ -96,7 +125,13 @@ namespace ConferenceFWebAPI
 
             .ForMember(dest => dest.Paper, opt => opt.MapFrom(src => src.Paper));
 
-            CreateMap<Review, ReviewDTO>();
+            CreateMap<Review, ReviewDTO>()
+                .ForMember(dest => dest.PaperTitle, opt => opt.MapFrom(src => src.Paper.Title))
+                .ForMember(dest => dest.AuthorName, opt => opt.MapFrom(src =>
+                    src.Paper.PaperAuthors.FirstOrDefault() != null
+                    ? src.Paper.PaperAuthors.FirstOrDefault().Author.Name
+                    : "Unknown"
+                ));
             CreateMap<AddReviewDTO, Review>();
             CreateMap<AddReviewWithHighlightAndCommentDTO, Review>();
 
@@ -190,8 +225,7 @@ namespace ConferenceFWebAPI
             CreateMap<Conference, ConferenceResponseDTO>()
     .ForMember(dest => dest.Topics, opt => opt.MapFrom(src => src.Topics));
 
-            CreateMap<Proceeding, ProceedingResponseDto>()
-    .ForMember(dest => dest.PublishedByName, opt => opt.MapFrom(src => src.PublishedByNavigation.Name));
+            CreateMap<Proceeding, ProceedingResponseDto>();
             CreateMap<ProceedingCreateDto, Proceeding>().ForMember(dest => dest.FilePath, opt => opt.Ignore());
 
             CreateMap<CallForPaper, CallForPaperDto>();

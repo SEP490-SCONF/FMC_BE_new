@@ -1,4 +1,4 @@
-﻿namespace ConferenceFWebAPI.DTOs.Paper
+﻿namespace ConferenceFWebAPI.DTOs.Papers
 {
     public class PaperPublishDto
     {

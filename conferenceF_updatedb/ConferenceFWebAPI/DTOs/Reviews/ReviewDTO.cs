@@ -20,6 +20,8 @@ namespace ConferenceFWebAPI.DTOs.Reviews
         public string PaperStatus { get; set; }
         public DateTime? ReviewedAt { get; set; }
         public string PaperRevisionStatus { get; set; }
+        public string PaperTitle { get; set; } = string.Empty;
+        public string AuthorName { get; set; } = string.Empty;
 
         //public virtual BussinessObject.Entity.Paper Paper { get; set; } = null!;
 

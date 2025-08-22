@@ -7,7 +7,7 @@ using AutoMapper.Internal.Mappers;
 using ConferenceFWebAPI.Service;
 using Google.Apis.Drive.v3.Data;
 using DataAccess;
-using ConferenceFWebAPI.DTOs.Paper;
+using ConferenceFWebAPI.DTOs.Papers;
 using ConferenceFWebAPI.DTOs.Conferences;
 using Microsoft.AspNetCore.OData.Query;
 
@@ -24,9 +24,10 @@ namespace FMC_BE.Controllers
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
         private readonly ITopicRepository _topicRepository;
+        private readonly ConferenceFTestContext _conferenceFTestContext;
 
         public ConferencesController(IConferenceRepository conferenceRepository, IAzureBlobStorageService azureBlobStorageService, IMapper mapper, IConfiguration configuration,
-                                     IUserRepository userRepository, IEmailService emailService, ITopicRepository topicRepository)
+                                     IUserRepository userRepository, IEmailService emailService, ITopicRepository topicRepository, ConferenceFTestContext conferenceFTestContext)
         {
             _conferenceRepository = conferenceRepository;
             _azureBlobStorageService = azureBlobStorageService;
@@ -35,6 +36,7 @@ namespace FMC_BE.Controllers
             _userRepository = userRepository;
             _emailService = emailService;
             _topicRepository = topicRepository;
+            _conferenceFTestContext = conferenceFTestContext;
         }
 
 
@@ -148,7 +150,15 @@ namespace FMC_BE.Controllers
                 conference.BannerUrl = bannerUrl;
                 conference.CreatedAt = DateTime.UtcNow;
 
-                await _conferenceRepository.Add(conference);
+                //await _conferenceRepository.Add(conference);
+                var conferenceNew = await _conferenceFTestContext.Conferences.AddAsync(conference);
+                Forum forum = new Forum
+                {
+                    ConferenceId = conferenceNew.Entity.ConferenceId,
+                    CreatedAt = DateTime.UtcNow,
+                    Title = conferenceNew.Entity.Title,
+                };
+                await _conferenceFTestContext.Forums.AddAsync(forum);
                 return Ok(new
                 {
                     Message = "Conference created successfully.",

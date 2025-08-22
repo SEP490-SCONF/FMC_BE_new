@@ -15,7 +15,12 @@ namespace DataAccess
         {
             _context = context;
         }
-
+        public async Task<List<Paper>> GetPapersByIdsAsync(List<int> paperIds)
+        {
+            return await _context.Set<Paper>()
+                                 .Where(p => paperIds.Contains(p.PaperId))
+                                 .ToListAsync();
+        }
         public async Task<Paper?> GetPaperWithConferenceAndTimelinesAsync(int paperId)
         {
             return await _context.Papers
@@ -102,6 +107,21 @@ namespace DataAccess
                             .Include(p => p.PaperRevisions)
                            .ToList();
         }
+
+        public List<Paper> GetAcceptedPapersByUserIdAndConferenceId(int userId, int conferenceId)
+        {
+            return _context.Papers
+                           .Where(p => p.Status == "Accepted"
+                                    && p.ConferenceId == conferenceId
+                                    && p.PaperAuthors.Any(pa => pa.AuthorId == userId))
+                           .Include(p => p.Topic)
+                           .Include(p => p.PaperAuthors)
+                               .ThenInclude(pa => pa.Author)
+                           .ToList();
+        }
+
+
+
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
@@ -146,6 +166,36 @@ namespace DataAccess
                 .Include(p => p.Conference)
                 .ToListAsync();
         }
+        public List<Paper> GetPapersByUserId(int userId)
+        {
+            return _context.Papers
+                           .Where(p => p.Status == "Accepted"
+                                    && p.PaperAuthors.Any(pa => pa.AuthorId == userId))
+                           .Include(p => p.Topic)
+                           .Include(p => p.PaperAuthors)
+                               .ThenInclude(pa => pa.Author)
+                           .ToList();
+        }
+
+
+        public List<Paper> GetPresentedPapersByConferenceId(int conferenceId)
+        {
+            return _context.Papers
+                .Where(p => p.ConferenceId == conferenceId
+                            && p.IsPresented == true
+                            && p.Status == "Accepted")
+                .Include(p => p.Topic)
+                .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author)
+                .Include(p => p.PaperRevisions
+                    .Where(pr => pr.Status == "Accepted"))
+                    .ThenInclude(pr => pr.Reviews) 
+                .ToList();
+        }
+
+
+
+
 
 
     }
