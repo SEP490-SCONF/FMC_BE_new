@@ -64,13 +64,17 @@ namespace ConferenceFWebAPI.Service
         private static List<string> SplitTextWithOverlap(string text, int maxLen, int overlap)
         {
             var chunks = new List<string>();
+            if (string.IsNullOrWhiteSpace(text)) return chunks;
+
             for (int start = 0; start < text.Length; start += (maxLen - overlap))
             {
                 var length = Math.Min(maxLen, text.Length - start);
-                chunks.Add(text.Substring(start, length));
+                var chunk = text.Substring(start, length).Trim();
+                if (!string.IsNullOrWhiteSpace(chunk)) // Chỉ thêm chunk không rỗng
+                    chunks.Add(chunk);
                 if (start + length >= text.Length) break;
             }
-            return chunks;
+            return chunks.Any() ? chunks : new List<string> { text }; // Nếu không chunk, trả về text nguyên bản
         }
 
         public async Task<AnalyzeAiResponseDTO> AnalyzeTextAsync(string rawText)
@@ -82,6 +86,7 @@ namespace ConferenceFWebAPI.Service
                 throw new ArgumentException($"Text exceeds maximum length of {MaxTextLength} characters.");
 
             var text = PrepareText(rawText);
+            Console.WriteLine($"Raw text length: {rawText.Length}, Prepared text length: {text.Length}, Content: {text}");
 
             var key = ComputeHash(_model + "|" + text);
             var cacheKey = $"hf_full_{key}";
@@ -89,6 +94,8 @@ namespace ConferenceFWebAPI.Service
                 return cached;
 
             var splitChunks = SplitTextWithOverlap(text, MaxChunkChars, OverlapChars);
+            Console.WriteLine($"Number of chunks created: {splitChunks.Count}, First chunk: {splitChunks.FirstOrDefault()}");
+
             var chunkResults = new List<ChunkResultDTO>();
             double sumAiPercent = 0;
             int ok = 0;
@@ -98,6 +105,7 @@ namespace ConferenceFWebAPI.Service
             foreach (var ch in splitChunks)
             {
                 var prob = await InferMachineProbabilityAsync(ch);
+                Console.WriteLine($"Chunk {chunkId} length: {ch.Length}, Probability: {prob}");
                 if (prob.HasValue)
                 {
                     sumAiPercent += prob.Value * 100.0;
@@ -116,6 +124,7 @@ namespace ConferenceFWebAPI.Service
 
             var aiPercent = ok > 0 ? sumAiPercent / ok : 0.0;
             var aiTokenEquiv = totalTokens * (aiPercent / 100.0);
+            Console.WriteLine($"ok: {ok}, aiPercent: {aiPercent}, totalTokens: {totalTokens}");
 
             var result = new AnalyzeAiResponseDTO
             {
@@ -147,6 +156,8 @@ namespace ConferenceFWebAPI.Service
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _retryPolicy.ExecuteAsync(() => _http.PostAsync(url, content));
+            Console.WriteLine($"HF API response status: {response.StatusCode}, Body: {await response.Content.ReadAsStringAsync()}");
+
             if (!response.IsSuccessStatusCode) return null;
 
             var body = await response.Content.ReadAsStringAsync();
@@ -164,10 +175,12 @@ namespace ConferenceFWebAPI.Service
                     if (machine != null && machine.TryGetValue("score", out var sc))
                         return Convert.ToDouble(sc);
                 }
+                Console.WriteLine("No valid score found in HF response.");
             }
-            catch
+            catch (Exception ex)
             {
-                // ignore
+                Console.WriteLine($"Error parsing HF response: {ex.Message}");
+                return null;
             }
             return null;
         }
