@@ -53,7 +53,9 @@ namespace ConferenceFWebAPI.Service
             if (string.IsNullOrWhiteSpace(text)) return string.Empty;
             return text
                 .Replace("\r\n", "\n") // Chuẩn hóa xuống dòng
-                .Replace("\r", "\n"); // Đảm bảo giữ nguyên định dạng
+                .Replace("\r", "\n") // Đảm bảo giữ nguyên định dạng
+                .Replace("\u22A4", "transpose")
+                .Replace("[^\\w\\s.,!?()'-=]", "");
         }
 
         /// <summary>
