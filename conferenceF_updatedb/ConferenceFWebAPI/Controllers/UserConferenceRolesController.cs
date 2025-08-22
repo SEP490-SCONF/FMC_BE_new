@@ -541,6 +541,39 @@ namespace ConferenceFWebAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+        [HttpPost("resolve-authors")]
+        public async Task<IActionResult> ResolveAuthors([FromBody] AuthorEmailsDto dto)
+        {
+            if (dto.Emails == null || !dto.Emails.Any())
+                return BadRequest("Email list cannot be empty.");
+
+            var userIds = new List<int>();
+
+            foreach (var email in dto.Emails.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(email))
+                    continue;
+
+                // 1. Kiểm tra user có tồn tại chưa
+                var user = await _userRepository.GetByEmail(email);
+                if (user == null)
+                {
+                    // Nếu chưa có -> tạo user mới
+                    user = new User
+                    {
+                        Email = email.Trim(),
+                        CreatedAt = DateTime.UtcNow,
+                        RoleId = 2, // Default: Author
+                        Status = true
+                    };
+                    await _userRepository.Add(user);
+                }
+
+                userIds.Add(user.UserId);
+            }
+
+            return Ok(userIds);
+        }
 
 
     }
