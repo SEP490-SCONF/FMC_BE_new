@@ -34,26 +34,30 @@ namespace ConferenceFWebAPI.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreatePaymentLink([FromBody] CreatePaymentDTO dto)
         {
-            //var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            //if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            //    return Unauthorized("Invalid user context");
-            int userId = dto.UserId;
+            // Lấy userId từ JWT
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Unauthorized("Invalid user context");
 
-            // Tạo dữ liệu gửi tới PayOS
+            // Tạo orderCode tự động từ paperId, conferenceId, amount
+            int orderCode = GenerateOrderCode();
+
+            // Dữ liệu gửi tới PayOS
             var paymentData = new PaymentData(
-                dto.OrderCode,
-                (int)(dto.Amount * 1000),
+                orderCode,
+                (int)(dto.Amount),
                 dto.Purpose ?? $"Thanh toán hội thảo #{dto.ConferenceId}",
                 new List<ItemData>
                 {
-                    new ItemData("Conference Fee", 1, (int)(dto.Amount * 1000))
+                    new ItemData("Conference Fee", 1, (int)(dto.Amount))
                 },
                 "http://localhost:5173/payment-cancel",
-                $"http://localhost:5173/payment-success?orderCode={dto.OrderCode}"
+                $"http://localhost:5173/payment-success?orderCode={orderCode}"
             );
 
             var linkResponse = await _payOS.createPaymentLink(paymentData);
 
+            // Lưu vào DB
             var payment = new Payment
             {
                 UserId = userId,
@@ -65,37 +69,68 @@ namespace ConferenceFWebAPI.Controllers
                 PayStatus = "Pending",
                 CreatedAt = DateTime.UtcNow,
                 PayOsCheckoutUrl = linkResponse.checkoutUrl,
-                PayOsOrderCode =dto.OrderCode.ToString(),
+                PayOsOrderCode = orderCode.ToString(),
             };
 
             await _paymentRepository.Add(payment);
-            return Ok(new { checkoutUrl = linkResponse.checkoutUrl, orderCode = dto.OrderCode });
+
+            return Ok(new { checkoutUrl = linkResponse.checkoutUrl, orderCode });
         }
+
+        // Hàm tạo OrderCode
+        private int GenerateOrderCode()
+        {
+            // Lấy số mili giây hiện tại trong ngày để tránh quá lớn
+            int millis = (int)(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % int.MaxValue);
+
+            // Thêm 4 số random để tránh trùng
+            int randomPart = Random.Shared.Next(1000, 9999);
+
+            // Ghép lại và mod để đảm bảo <= int.MaxValue
+            int orderCode = (millis + randomPart) % int.MaxValue;
+
+            return orderCode;
+        }
+
 
         [HttpGet("success")]
         public async Task<IActionResult> PaymentSuccess([FromQuery] string orderCode)
         {
             var payment = await _paymentRepository.GetByOrderCode(orderCode);
-            if (payment == null) return NotFound("Payment not found");
+            if (payment == null)
+                return NotFound(new { message = "Payment not found" });
 
             payment.PayStatus = "Completed";
             payment.PaidAt = DateTime.UtcNow;
             await _paymentRepository.Update(payment);
 
-            return Redirect("http://localhost:5173/payment-success");
+            return Ok(new
+            {
+                status = "success",
+                orderCode,
+                message = "Payment completed successfully"
+            });
         }
 
         [HttpGet("cancel")]
         public async Task<IActionResult> PaymentCancel([FromQuery] string orderCode)
         {
             var payment = await _paymentRepository.GetByOrderCode(orderCode);
-            if (payment == null) return NotFound("Payment not found");
+            if (payment == null)
+                return NotFound(new { message = "Payment not found" });
 
             payment.PayStatus = "Cancelled";
             await _paymentRepository.Update(payment);
 
-            return Redirect("http://localhost:5173/payment-cancel");
+            return Ok(new
+            {
+                status = "cancelled",
+                orderCode,
+                message = "Payment cancelled"
+            });
         }
+
+
 
         [HttpGet("user")]
         public async Task<IActionResult> GetByUser()
