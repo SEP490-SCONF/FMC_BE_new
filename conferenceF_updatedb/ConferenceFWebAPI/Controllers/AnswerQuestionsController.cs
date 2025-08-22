@@ -1,10 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.AnswerQuestions;
 using AutoMapper;
 using Repository;
 using System.Security.Claims;
+using Microsoft.AspNetCore.SignalR;
+using ConferenceFWebAPI.Hubs;
 
 namespace ConferenceFWebAPI.Controllers
 {
@@ -17,19 +19,26 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly ConferenceFTestContext _context;
+        private readonly INotificationRepository _notificationRepository; // Add this repository
+        private readonly IHubContext<NotificationHub> _hubContext;
+
 
         public AnswerQuestionsController(
             IAnswerQuestionRepository answerQuestionRepository,
             IForumQuestionRepository forumQuestionRepository,
             IUserRepository userRepository,
             IMapper mapper,
-            ConferenceFTestContext context)
+            ConferenceFTestContext context,
+            INotificationRepository notificationRepository,
+            IHubContext<NotificationHub> hubContext)
         {
             _answerQuestionRepository = answerQuestionRepository;
             _forumQuestionRepository = forumQuestionRepository;
             _userRepository = userRepository;
             _mapper = mapper;
             _context = context;
+            _notificationRepository = notificationRepository;
+            _hubContext = hubContext;
         }
 
         // GET: api/AnswerQuestions
@@ -253,34 +262,30 @@ namespace ConferenceFWebAPI.Controllers
                     return BadRequest(ModelState);
                 }
 
-                // Verify forum question exists
+                // 1. Kiểm tra sự tồn tại của câu hỏi và người dùng
                 var forumQuestion = await _forumQuestionRepository.GetById(createDto.FqId);
                 if (forumQuestion == null)
                 {
                     return BadRequest($"Forum question with ID {createDto.FqId} not found.");
                 }
 
-                // Verify user exists
                 var user = await _userRepository.GetById(createDto.AnswerBy);
                 if (user == null)
                 {
                     return BadRequest($"User with ID {createDto.AnswerBy} not found.");
                 }
 
-                // If this is a reply, verify parent answer exists and belongs to the same question
+                // 2. Kiểm tra câu trả lời cha (nếu có)
                 if (createDto.ParentAnswerId.HasValue)
                 {
                     var parentAnswer = await _answerQuestionRepository.GetById(createDto.ParentAnswerId.Value);
-                    if (parentAnswer == null)
+                    if (parentAnswer == null || parentAnswer.FqId != createDto.FqId)
                     {
-                        return BadRequest($"Parent answer with ID {createDto.ParentAnswerId} not found.");
-                    }
-                    if (parentAnswer.FqId != createDto.FqId)
-                    {
-                        return BadRequest("Parent answer must belong to the same forum question.");
+                        return BadRequest("Parent answer must exist and belong to the same forum question.");
                     }
                 }
 
+                // 3. Tạo câu trả lời mới
                 var answerQuestion = new AnswerQuestion
                 {
                     FqId = createDto.FqId,
@@ -292,7 +297,29 @@ namespace ConferenceFWebAPI.Controllers
 
                 await _answerQuestionRepository.Add(answerQuestion);
 
-                // Get current user ID to include like status
+                // 4. Bắt đầu logic thông báo
+                var originalQuestionerId = forumQuestion.AskBy;
+                var notificationTitle = $"Has answer for your question '{forumQuestion.Title}'";
+                var notificationContent = $"{user.Name} has reply your question.";
+
+                // 5. Chỉ gửi thông báo cho người đặt câu hỏi gốc
+                if (originalQuestionerId != createDto.AnswerBy)
+                {
+                    // Tạo bản ghi thông báo trong cơ sở dữ liệu
+                    var notification = new Notification
+                    {
+                        Title = notificationTitle,
+                        Content = notificationContent,
+                        UserId = originalQuestionerId,
+                        RoleTarget = "User",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _notificationRepository.AddNotificationAsync(notification);
+
+                    // Gửi thông báo real-time qua SignalR
+                    await _hubContext.Clients.User(originalQuestionerId.ToString()).SendAsync("ReceiveNotification", notificationTitle, notificationContent);
+                }
+
                 var currentUserId = GetCurrentUserId();
                 var answerDto = await MapToAnswerDto(answerQuestion, currentUserId);
                 return CreatedAtAction(nameof(GetAnswerQuestion), new { id = answerQuestion.AnswerId }, answerDto);

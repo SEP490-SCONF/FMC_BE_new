@@ -23,7 +23,13 @@ namespace DataAccess
             await _context.SaveChangesAsync();
             return proceeding;
         }
-
+        public async Task<string?> GetFilePathByConferenceIdAsync(int conferenceId)
+        {
+            return await _context.Proceedings
+                                 .Where(p => p.ConferenceId == conferenceId)
+                                 .Select(p => p.FilePath)
+                                 .FirstOrDefaultAsync();
+        }
         public async Task<Proceeding?> GetProceedingByIdAsync(int proceedingId)
         {
             return await _context.Proceedings
