@@ -40,12 +40,12 @@ namespace ConferenceFWebAPI.Controllers.Proccedings
                 return BadRequest(ModelState);
             }
 
-            // Kiểm tra xem đã tồn tại kỷ yếu cho hội thảo này chưa
-            var existingProceeding = await _proceedingRepository.GetProceedingByConferenceIdAsync(dto.ConferenceId);
-            if (existingProceeding != null)
-            {
-                return BadRequest("A proceeding for this conference already exists.");
-            }
+            //// Kiểm tra xem đã tồn tại kỷ yếu cho hội thảo này chưa
+            //var existingProceeding = await _proceedingRepository.GetProceedingByConferenceIdAsync(dto.ConferenceId);
+            //if (existingProceeding != null)
+            //{
+            //    return BadRequest("A proceeding for this conference already exists.");
+            //}
 
             // Xử lý chuỗi PaperIds thành danh sách số nguyên
             var paperIds = new List<int>();
@@ -203,20 +203,50 @@ namespace ConferenceFWebAPI.Controllers.Proccedings
         [HttpGet("papers/{conferenceId}")]
         public async Task<IActionResult> GetPublishedPapers(int conferenceId)
         {
-            var papers = await _proceedingRepository.GetPublishedPapersByConferenceAsync(conferenceId);
-            if (papers == null || !papers.Any())
-            {
+            // Include PublishedByNavigation và Papers
+            var proceeding = await _proceedingRepository.GetProceedingByConferenceIdAsync(conferenceId);
+
+            if (proceeding == null)
+                return NotFound("No proceeding found for this conference.");
+
+            // Lọc các bài báo đã published và accepted
+            var publishedPapers = proceeding.Papers?
+                .Where(p => p.Status == "Accepted" && p.IsPublished == true)
+                .ToList();
+
+            if (publishedPapers == null || !publishedPapers.Any())
                 return NotFound("No published papers found for this conference.");
-            }
 
-            var paperDtos = papers.Select(p => new PaperInfoDto
+            // Map sang DTO
+            var proceedingDto = new ProceedingResponseDto
             {
-                PaperId = p.PaperId,
-                Title = p.Title
-            }).ToList();
+                ProceedingId = proceeding.ProceedingId,
+                Title = proceeding.Conference?.Title,
+                Description = proceeding.Conference?.Description,
+                FilePath = proceeding.FilePath,
+                Doi = proceeding.Doi,
+                Status = proceeding.Status,
+                Version = proceeding.Version,
+                PublishedDate = proceeding.PublishedDate,
+                PublishedBy = proceeding.PublishedByNavigation != null
+                    ? new UserInfoDto
+                    {
+                        UserId = proceeding.PublishedByNavigation.UserId,
+                        FullName = proceeding.PublishedByNavigation.Name
+                    }
+                    : null,
+                Papers = publishedPapers.Select(p => new PaperInfoDto
+                {
+                    PaperId = p.PaperId,
+                    Title = p.Title
+                }).ToList()
+            };
 
-            return Ok(paperDtos);
+            return Ok(proceedingDto);
         }
+
+
+
         [HttpGet("download/{conferenceId}")]
         public async Task<IActionResult> DownloadProceeding(int conferenceId)
         {

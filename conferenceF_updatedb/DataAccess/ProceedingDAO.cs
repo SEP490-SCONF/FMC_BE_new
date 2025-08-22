@@ -41,8 +41,11 @@ namespace DataAccess
         {
             return await _context.Proceedings
                                  .Include(p => p.Papers)
+                                 .Include(p=> p.PublishedByNavigation)
+                                 .Include(p => p.Conference) 
                                  .FirstOrDefaultAsync(p => p.ConferenceId == conferenceId);
         }
+
 
         public async Task UpdateProceedingAsync(Proceeding proceeding)
         {
