@@ -114,6 +114,8 @@ namespace DataAccess
             try
             {
                 return await _context.Payments
+                    .Include(p => p.User)
+                    .Include(p => p.Conference)
                     .Where(p => p.ConferenceId == conferenceId)
                     .AsNoTracking()
                     .ToListAsync();

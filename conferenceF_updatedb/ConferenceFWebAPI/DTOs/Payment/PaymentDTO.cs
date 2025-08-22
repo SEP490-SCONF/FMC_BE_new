@@ -4,7 +4,9 @@
     {
         public int PayId { get; set; }
         public int UserId { get; set; }
+        public string? UserName { get; set; }
         public int ConferenceId { get; set; }
+        public string? ConferenceName { get; set; }
         public int? RegId { get; set; }
         public decimal Amount { get; set; }
         public string? Currency { get; set; }
