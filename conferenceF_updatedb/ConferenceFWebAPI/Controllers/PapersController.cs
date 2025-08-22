@@ -15,6 +15,7 @@ using iText.Kernel.Pdf;
 using System.Text.RegularExpressions;
 using ConferenceFWebAPI.Services.PdfTextExtraction;
 
+
 namespace ConferenceFWebAPI.Controllers
 {
     [ApiController]
@@ -636,5 +637,23 @@ namespace ConferenceFWebAPI.Controllers
             var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
             return Ok(paperDtos);
         }
+
+        [HttpGet("user/{userId}/conference/{conferenceId}/accepted")]
+        [ProducesResponseType(typeof(List<PaperResponseWT>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult GetAcceptedPapersByUserAndConference(int userId, int conferenceId)
+        {
+            if (userId <= 0 || conferenceId <= 0)
+                return BadRequest("User ID and Conference ID must be positive.");
+
+            var papers = _paperRepository.GetAcceptedPapersByUserIdAndConferenceId(userId, conferenceId);
+            if (papers == null || !papers.Any())
+                return NotFound($"No accepted papers for User ID {userId} in Conference ID {conferenceId}.");
+
+            var paperDtos = _mapper.Map<List<PaperResponseWT>>(papers);
+            return Ok(paperDtos);
+        }
+
     }
 }

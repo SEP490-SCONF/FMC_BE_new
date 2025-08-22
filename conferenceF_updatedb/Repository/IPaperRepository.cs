@@ -25,6 +25,8 @@ namespace Repository
         List<Paper> GetPresentedPapersByConferenceId(int conferenceId);
 
         Task<List<Paper>> GetPapersByIdsAsync(List<int> paperIds);
+        List<Paper> GetAcceptedPapersByUserIdAndConferenceId(int userId, int conferenceId);
+
 
 
 
