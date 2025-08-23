@@ -229,7 +229,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("SpecificOrigin", build =>
     {
-        build.WithOrigins("http://localhost:5173", "http://localhost:5174", "https://conference-fe-iota.vercel.app", "https://conference-fe-admin.vercel.app")
+        build.WithOrigins("http://localhost:5173", "http://localhost:5174", "https://fmc-fe.vercel.app", "https://fmc-fe-admin.vercel.app")
              .AllowAnyMethod()
              .AllowAnyHeader()
              .AllowCredentials();
