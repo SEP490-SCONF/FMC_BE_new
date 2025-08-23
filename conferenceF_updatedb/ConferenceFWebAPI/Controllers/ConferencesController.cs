@@ -24,9 +24,10 @@ namespace FMC_BE.Controllers
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
         private readonly ITopicRepository _topicRepository;
+        private readonly IForumRepository _forumRepository;
 
         public ConferencesController(IConferenceRepository conferenceRepository, IAzureBlobStorageService azureBlobStorageService, IMapper mapper, IConfiguration configuration,
-                                     IUserRepository userRepository, IEmailService emailService, ITopicRepository topicRepository)
+                                     IUserRepository userRepository, IEmailService emailService, ITopicRepository topicRepository, IForumRepository forumRepository)
         {
             _conferenceRepository = conferenceRepository;
             _azureBlobStorageService = azureBlobStorageService;
@@ -35,6 +36,7 @@ namespace FMC_BE.Controllers
             _userRepository = userRepository;
             _emailService = emailService;
             _topicRepository = topicRepository;
+            _forumRepository = forumRepository;
         }
 
 
@@ -148,7 +150,14 @@ namespace FMC_BE.Controllers
                 conference.BannerUrl = bannerUrl;
                 conference.CreatedAt = DateTime.UtcNow;
 
-                await _conferenceRepository.Add(conference);
+                var confe = await _conferenceRepository.Insert(conference);
+                Forum forum = new Forum
+                {
+                    ConferenceId = confe.ConferenceId,
+                    Title = confe.Title,
+                    CreatedAt = DateTime.UtcNow,
+                };
+                await _forumRepository.Add(forum);
                 return Ok(new
                 {
                     Message = "Conference created successfully.",
