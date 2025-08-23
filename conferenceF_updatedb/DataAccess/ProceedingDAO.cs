@@ -30,6 +30,18 @@ namespace DataAccess
                                  .Select(p => p.FilePath)
                                  .FirstOrDefaultAsync();
         }
+        public async Task UpdateAsync(Proceeding proceeding)
+        {
+            _context.Proceedings.Update(proceeding);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<Proceeding?> GetByIdAsync(int id)
+        {
+            return await _context.Proceedings
+                                 .Include(p => p.Papers)
+                                 .FirstOrDefaultAsync(p => p.ProceedingId == id);
+        }
         public async Task<Proceeding?> GetProceedingByIdAsync(int proceedingId)
         {
             return await _context.Proceedings
