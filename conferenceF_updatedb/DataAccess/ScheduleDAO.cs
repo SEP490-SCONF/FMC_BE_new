@@ -110,5 +110,11 @@ namespace DataAccess
                 .OrderBy(s => s.PresentationStartTime)
                 .ToListAsync();
         }
+
+        public async Task<int> CountSchedulesByTimelineIdAsync(int timelineId)
+        {
+            return await _context.Schedules
+                .CountAsync(s => s.TimeLineId == timelineId);
+        }
     }
 }

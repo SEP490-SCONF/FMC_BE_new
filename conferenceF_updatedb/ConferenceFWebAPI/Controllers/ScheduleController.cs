@@ -169,5 +169,19 @@ namespace ConferenceFWebAPI.Controllers
             var scheduleDtos = _mapper.Map<List<ScheduleResponseDto>>(schedules);
             return Ok(scheduleDtos);
         }
+
+        [HttpGet("timeline/{timelineId}/count")]
+        public async Task<IActionResult> CountSchedulesByTimeline(int timelineId)
+        {
+            try
+            {
+                int count = await _scheduleRepository.CountSchedulesByTimelineIdAsync(timelineId);
+                return Ok(new { TimelineId = timelineId, ScheduleCount = count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 }

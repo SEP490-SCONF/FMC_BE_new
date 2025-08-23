@@ -12,6 +12,8 @@ namespace Repository
         Task<Proceeding> UpdateProceedingAsync(Proceeding proceeding);
         Task<List<Paper>> GetPublishedPapersByConferenceAsync(int conferenceId);
         Task<string?> GetFilePathByConferenceIdAsync(int conferenceId);
+        Task<List<Proceeding>> GetAllProceedingsAsync();
+
 
     }
 }

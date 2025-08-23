@@ -42,6 +42,9 @@ namespace Repository
         {
             return await _dao.GetSchedulesByTimelineIdAsync(timelineId);
         }
-
+        public async Task<int> CountSchedulesByTimelineIdAsync(int timelineId)
+        {
+            return await _dao.CountSchedulesByTimelineIdAsync(timelineId);
+        }
     }
 }

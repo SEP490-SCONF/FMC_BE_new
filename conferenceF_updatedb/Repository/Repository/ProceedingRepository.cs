@@ -34,13 +34,18 @@ namespace Repository
 
         public async Task<Proceeding> UpdateProceedingAsync(Proceeding proceeding)
         {
-            // Giả sử DAO có phương thức UpdateAsync
-            await _dao.UpdateAsync(proceeding);
-            return proceeding; // Trả về đối tượng đã được cập nhật
+            return await _dao.UpdateAsync(proceeding);
+            
         }
         public async Task<List<Paper>> GetPublishedPapersByConferenceAsync(int conferenceId)
         {
             return await _dao.GetPublishedPapersByConferenceAsync(conferenceId);
         }
+        public async Task<List<Proceeding>> GetAllProceedingsAsync()
+        {
+            return await _dao.GetAllProceedingsAsync();
+        }
+
+
     }
 }
