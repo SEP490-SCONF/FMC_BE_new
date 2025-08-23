@@ -9,7 +9,6 @@ namespace Repository
     {
         private readonly ConferenceDAO _conferenceDao;
 
-        
         public ConferenceRepository(ConferenceDAO conferenceDao)
         {
             _conferenceDao = conferenceDao;
