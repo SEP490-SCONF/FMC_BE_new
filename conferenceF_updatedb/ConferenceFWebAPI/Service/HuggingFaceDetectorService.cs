@@ -16,11 +16,10 @@ namespace ConferenceFWebAPI.Service
         private readonly AsyncRetryPolicy<HttpResponseMessage> _retryPolicy;
         private readonly string _model = "MonkeyDAnh/my-awesome-ai-detector-roberta-base-v4-human-vs-machine-finetune";
 
-        private const int MaxTokens = 512;
-        private const int OverlapTokens = 128;
-        private const int ApproxCharsPerToken = 3; // Ước lượng, cần đo thực tế
-        private const int MaxChunkChars = MaxTokens * ApproxCharsPerToken; // ~1536 ký tự
-        private const int OverlapChars = OverlapTokens * ApproxCharsPerToken; // ~384 ký tự
+        private const int MaxTokens = 512; // Giới hạn tối đa 512 token
+        private const int OverlapTokens = 128; // Overlap 128 token
+        private const int MaxWordsPerChunk = (int)(MaxTokens / 100.0 * 75); // ~384 từ (512 token)
+        private const int OverlapWords = (int)(OverlapTokens / 100.0 * 75); // ~96 từ (128 token)
         private const int MaxTextLength = 50000; // Giới hạn tối đa 50,000 ký tự (~20 trang)
 
         public HuggingFaceDetectorService(IHttpClientFactory httpFactory, IMemoryCache cache, IConfiguration config)
@@ -53,22 +52,37 @@ namespace ConferenceFWebAPI.Service
             if (string.IsNullOrWhiteSpace(text)) return string.Empty;
             return text
                 .Replace("\r\n", "\n") // Chuẩn hóa xuống dòng
-                .Replace("\r", "\n"); // Đảm bảo giữ nguyên định dạng
+                .Replace("\r", "\n") // Đảm bảo giữ nguyên định dạng
+                .Replace("\u22A4", "transpose")
+                .Replace("[^\\w\\s.,!?()'-=]", "");
         }
 
         /// <summary>
-        /// Chunk theo ký tự, có overlap, giữ nguyên định dạng.
+        /// Chunk theo số từ, có overlap, giữ nguyên định dạng, đảm bảo mỗi chunk dưới 512 token (~384 từ).
         /// </summary>
-        private static List<string> SplitTextWithOverlap(string text, int maxLen, int overlap)
+        private static List<string> SplitTextWithOverlap(string text, int maxWords, int overlapWords)
         {
             var chunks = new List<string>();
-            for (int start = 0; start < text.Length; start += (maxLen - overlap))
+            if (string.IsNullOrWhiteSpace(text)) return chunks;
+
+            var words = text.Split(new[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            for (int start = 0; start < words.Length; start += (maxWords - overlapWords))
             {
-                var length = Math.Min(maxLen, text.Length - start);
-                chunks.Add(text.Substring(start, length));
-                if (start + length >= text.Length) break;
+                var remainingWords = words.Length - start;
+                var length = Math.Min(maxWords, remainingWords);
+                if (length <= 0) break;
+
+                var chunkWords = words.Skip(start).Take(length).ToArray();
+                var chunk = string.Join(" ", chunkWords).Trim();
+                if (!string.IsNullOrWhiteSpace(chunk))
+                {
+                    chunks.Add(chunk);
+                }
+
+                if (start + length >= words.Length) break;
             }
-            return chunks;
+
+            return chunks.Any() ? chunks : new List<string> { text }; // Fallback nếu không chunk
         }
 
         public async Task<AnalyzeAiResponseDTO> AnalyzeTextAsync(string rawText)
@@ -80,13 +94,16 @@ namespace ConferenceFWebAPI.Service
                 throw new ArgumentException($"Text exceeds maximum length of {MaxTextLength} characters.");
 
             var text = PrepareText(rawText);
+            Console.WriteLine($"Raw text length: {rawText.Length}, Prepared text length: {text.Length}, Word count: {text.Split(new[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length}, Content: {text.Substring(0, Math.Min(100, text.Length))}...");
 
             var key = ComputeHash(_model + "|" + text);
             var cacheKey = $"hf_full_{key}";
             if (_cache.TryGetValue(cacheKey, out AnalyzeAiResponseDTO cached))
                 return cached;
 
-            var splitChunks = SplitTextWithOverlap(text, MaxChunkChars, OverlapChars);
+            var splitChunks = SplitTextWithOverlap(text, MaxWordsPerChunk, OverlapWords);
+            Console.WriteLine($"Number of chunks created: {splitChunks.Count}, First chunk: {splitChunks.FirstOrDefault()?.Substring(0, Math.Min(100, splitChunks.FirstOrDefault()?.Length ?? 0))}...");
+
             var chunkResults = new List<ChunkResultDTO>();
             double sumAiPercent = 0;
             int ok = 0;
@@ -96,11 +113,13 @@ namespace ConferenceFWebAPI.Service
             foreach (var ch in splitChunks)
             {
                 var prob = await InferMachineProbabilityAsync(ch);
+                Console.WriteLine($"Chunk {chunkId} word count: {ch.Split(new[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length}, Probability: {prob}");
                 if (prob.HasValue)
                 {
                     sumAiPercent += prob.Value * 100.0;
                     ok++;
-                    var estimatedTokens = ch.Length / ApproxCharsPerToken;
+                    var wordCount = ch.Split(new[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
+                    var estimatedTokens = (int)(wordCount / 75.0 * 100); // Chuyển từ số từ sang số token
                     totalTokens += estimatedTokens;
                     chunkResults.Add(new ChunkResultDTO
                     {
@@ -114,6 +133,7 @@ namespace ConferenceFWebAPI.Service
 
             var aiPercent = ok > 0 ? sumAiPercent / ok : 0.0;
             var aiTokenEquiv = totalTokens * (aiPercent / 100.0);
+            Console.WriteLine($"ok: {ok}, aiPercent: {aiPercent}, totalTokens: {totalTokens}");
 
             var result = new AnalyzeAiResponseDTO
             {
@@ -145,6 +165,8 @@ namespace ConferenceFWebAPI.Service
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _retryPolicy.ExecuteAsync(() => _http.PostAsync(url, content));
+            Console.WriteLine($"HF API response status: {response.StatusCode}, Body: {await response.Content.ReadAsStringAsync()}");
+
             if (!response.IsSuccessStatusCode) return null;
 
             var body = await response.Content.ReadAsStringAsync();
@@ -162,10 +184,12 @@ namespace ConferenceFWebAPI.Service
                     if (machine != null && machine.TryGetValue("score", out var sc))
                         return Convert.ToDouble(sc);
                 }
+                Console.WriteLine("No valid score found in HF response.");
             }
-            catch
+            catch (Exception ex)
             {
-                // ignore
+                Console.WriteLine($"Error parsing HF response: {ex.Message}");
+                return null;
             }
             return null;
         }
