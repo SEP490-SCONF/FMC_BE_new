@@ -210,20 +210,20 @@ namespace ConferenceFWebAPI
                 });
 
             CreateMap<User, UserInformationDTO>()
-    .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName))
-    .ForMember(dest => dest.CreatedAt,
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName))
+                .ForMember(dest => dest.CreatedAt,
         opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt ?? DateTime.MinValue, DateTimeKind.Unspecified)));
 
             CreateMap<Payment, PaymentDTO>()
-.ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User == null ? null : src.User.Name))
-.ForMember(dest => dest.ConferenceName, opt => opt.MapFrom(src => src.Conference == null ? null : src.Conference.Title));
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User == null ? null : src.User.Name))
+                .ForMember(dest => dest.ConferenceName, opt => opt.MapFrom(src => src.Conference == null ? null : src.Conference.Title));
             CreateMap<CreatePaymentDTO, Payment>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.PaperId, opt => opt.MapFrom(src => src.PaperId));
             CreateMap<UpdatePaymentDTO, Payment>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<Conference, ConferenceResponseDTO>()
-    .ForMember(dest => dest.Topics, opt => opt.MapFrom(src => src.Topics));
+                .ForMember(dest => dest.Topics, opt => opt.MapFrom(src => src.Topics));
 
             CreateMap<Proceeding, ProceedingResponseDto>();
             CreateMap<ProceedingCreateDto, Proceeding>().ForMember(dest => dest.FilePath, opt => opt.Ignore());

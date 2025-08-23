@@ -9,6 +9,7 @@
     {
         public int TopicId { get; set; }
         public string TopicName { get; set; } = null!;
+        public bool? Status { get; set; }
 
     }
 }
