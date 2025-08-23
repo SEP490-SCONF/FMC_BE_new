@@ -56,6 +56,9 @@ namespace Repository
 {
     return _conferenceDao.GetAllQueryable();
 }
-
+        public async Task<Conference> Insert(Conference conference)
+        {
+            return await _conferenceDao.InsertConference(conference);
+        }
     }
 }

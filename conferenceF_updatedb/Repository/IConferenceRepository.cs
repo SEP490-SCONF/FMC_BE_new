@@ -9,5 +9,6 @@ namespace Repository
         Task UpdateConferenceStatus(int conferenceId, bool newStatus);
         Task<IEnumerable<Conference>> GetAllConferencesFalse();
         IQueryable<Conference> GetAllQueryable();
+        Task<Conference> Insert(Conference conference);
     }
 }
