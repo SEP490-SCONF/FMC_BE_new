@@ -1,41 +1,156 @@
-﻿using System.Net.Http.Headers;
-using System.Security.Cryptography;
+﻿using Microsoft.ML.OnnxRuntime;
+using Microsoft.ML.OnnxRuntime.Tensors;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
-using Polly;
-using Polly.Retry;
 using ConferenceFWebAPI.DTOs.AICheckDTO;
+using System.Security.Cryptography;
+using System;
 
 namespace ConferenceFWebAPI.Service
 {
     public class HuggingFaceDetectorService : IAiDetectorService
     {
-        private readonly HttpClient _http;
         private readonly IMemoryCache _cache;
-        private readonly AsyncRetryPolicy<HttpResponseMessage> _retryPolicy;
-        private readonly string _model = "MonkeyDAnh/my-awesome-ai-detector-roberta-base-v4-human-vs-machine-finetune";
-
+        private readonly InferenceSession _session;
+        private readonly Tokenizer _tokenizer;
         private const int MaxTokens = 512; // Giới hạn tối đa 512 token
         private const int OverlapTokens = 128; // Overlap 128 token
-        private const int MaxWordsPerChunk = (int)(MaxTokens / 100.0 * 75); // ~384 từ (512 token)
-        private const int OverlapWords = (int)(OverlapTokens / 100.0 * 75); // ~96 từ (128 token)
         private const int MaxTextLength = 50000; // Giới hạn tối đa 50,000 ký tự (~20 trang)
 
-        public HuggingFaceDetectorService(IHttpClientFactory httpFactory, IMemoryCache cache, IConfiguration config)
+        public HuggingFaceDetectorService(IMemoryCache cache)
         {
-            _http = httpFactory.CreateClient();
             _cache = cache;
 
-            var token = config["HF_API_TOKEN"] ?? throw new InvalidOperationException("HF_API_TOKEN missing");
-            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            _http.DefaultRequestHeaders.UserAgent.ParseAdd("ConferenceFWebAPI/1.0");
+            // Khởi tạo session ONNX
+            var modelPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Models", "model.onnx");
+            if (!File.Exists(modelPath))
+                throw new FileNotFoundException("Model file not found at " + modelPath);
+            _session = new InferenceSession(modelPath);
 
-            _retryPolicy = Policy
-                .Handle<HttpRequestException>()
-                .OrResult<HttpResponseMessage>(r => (int)r.StatusCode >= 500 || r.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-                .WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)));
+            // Khởi tạo tokenizer với vocab và tokenizer files
+            var vocabPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Models", "vocab.json");
+            var tokenizerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Models", "tokenizer.json");
+            if (!File.Exists(vocabPath) || !File.Exists(tokenizerPath))
+                throw new FileNotFoundException("Tokenizer files not found.");
+            _tokenizer = new Tokenizer(vocabPath, tokenizerPath);
         }
+
+        public class Tokenizer
+        {
+            private readonly Dictionary<string, int> _vocab;
+            private readonly List<(string, string)> _merges;
+            private readonly Dictionary<(string, string), int> _mergeRanks;
+
+            public Tokenizer(string vocabPath, string tokenizerPath)
+            {
+                // vocab
+                var vocabJson = File.ReadAllText(vocabPath);
+                _vocab = JsonSerializer.Deserialize<Dictionary<string, int>>(vocabJson) ?? new();
+
+                // merges
+                var tokenizerJson = File.ReadAllText(tokenizerPath);
+                var tokenizerData = JsonDocument.Parse(tokenizerJson).RootElement;
+                _merges = new();
+                _mergeRanks = new();
+                if (tokenizerData.TryGetProperty("merges", out var mergesArray))
+                {
+                    int rank = 0;
+                    foreach (var merge in mergesArray.EnumerateArray())
+                    {
+                        var pair = merge.GetString()?.Split(' ');
+                        if (pair?.Length == 2)
+                        {
+                            _merges.Add((pair[0], pair[1]));
+                            _mergeRanks[(pair[0], pair[1])] = rank++;
+                        }
+                    }
+                }
+            }
+
+            public List<(int[] inputIds, int[] attentionMask, int realTokenCount)>
+                EncodeWithOverflowing(string text, int maxLength = 512, int stride = 128)
+            {
+                // bỏ hex hóa, dùng từng ký tự unicode
+                var tokens = text.Select(c => c.ToString()).ToList();
+
+                // BPE chuẩn
+                tokens = ApplyBpe(tokens);
+
+                var chunks = new List<(int[] inputIds, int[] attentionMask, int realTokenCount)>();
+                for (int start = 0; start < tokens.Count; start += (maxLength - stride))
+                {
+                    var end = Math.Min(start + maxLength, tokens.Count);
+                    var chunkTokens = tokens.Skip(start).Take(end - start).ToArray();
+
+                    var inputIds = chunkTokens
+                        .Select(t => _vocab.GetValueOrDefault(t, _vocab.GetValueOrDefault("<unk>", 0)))
+                        .ToList();
+
+                    int realCount = inputIds.Count;
+
+                    // pad
+                    if (realCount < maxLength)
+                        inputIds.AddRange(Enumerable.Repeat(0, maxLength - realCount));
+
+                    var attentionMask = inputIds.Select((id, idx) => idx < realCount ? 1 : 0).ToArray();
+
+                    chunks.Add((inputIds.ToArray(), attentionMask, realCount));
+
+                    if (end >= tokens.Count) break;
+                }
+
+                Console.WriteLine($"Total tokens before chunking: {tokens.Count}, Number of chunks: {chunks.Count}");
+                return chunks;
+            }
+
+            private List<string> ApplyBpe(List<string> tokens)
+            {
+                var word = new List<string>(tokens);
+                while (true)
+                {
+                    (string, string)? best = null;
+                    int bestRank = int.MaxValue;
+
+                    // tìm cặp merge có rank thấp nhất (ưu tiên cao nhất)
+                    for (int i = 0; i < word.Count - 1; i++)
+                    {
+                        var pair = (word[i], word[i + 1]);
+                        if (_mergeRanks.TryGetValue(pair, out var rank) && rank < bestRank)
+                        {
+                            best = pair;
+                            bestRank = rank;
+                        }
+                    }
+
+                    if (best == null) break;
+
+                    // merge cặp tốt nhất
+                    var newWord = new List<string>();
+                    int idx = 0;
+                    while (idx < word.Count)
+                    {
+                        int j = idx + 1;
+                        if (j < word.Count && (word[idx], word[j]) == best)
+                        {
+                            newWord.Add(word[idx] + word[j]);
+                            idx += 2;
+                        }
+                        else
+                        {
+                            newWord.Add(word[idx]);
+                            idx++;
+                        }
+                    }
+                    word = newWord;
+                }
+                return word;
+            }
+        }
+
 
         private static string ComputeHash(string input)
         {
@@ -44,45 +159,14 @@ namespace ConferenceFWebAPI.Service
             return Convert.ToHexString(bytes);
         }
 
-        /// <summary>
-        /// Giữ nguyên xuống dòng và khoảng trắng, chỉ loại bỏ ký tự không mong muốn nếu cần.
-        /// </summary>
         private static string PrepareText(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return string.Empty;
             return text
-                .Replace("\r\n", "\n") // Chuẩn hóa xuống dòng
-                .Replace("\r", "\n") // Đảm bảo giữ nguyên định dạng
+                .Replace("\r\n", "\n")
+                .Replace("\r", "\n")
                 .Replace("\u22A4", "transpose")
-                .Replace("[^\\w\\s.,!?()'-=]", "");
-        }
-
-        /// <summary>
-        /// Chunk theo số từ, có overlap, giữ nguyên định dạng, đảm bảo mỗi chunk dưới 512 token (~384 từ).
-        /// </summary>
-        private static List<string> SplitTextWithOverlap(string text, int maxWords, int overlapWords)
-        {
-            var chunks = new List<string>();
-            if (string.IsNullOrWhiteSpace(text)) return chunks;
-
-            var words = text.Split(new[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            for (int start = 0; start < words.Length; start += (maxWords - overlapWords))
-            {
-                var remainingWords = words.Length - start;
-                var length = Math.Min(maxWords, remainingWords);
-                if (length <= 0) break;
-
-                var chunkWords = words.Skip(start).Take(length).ToArray();
-                var chunk = string.Join(" ", chunkWords).Trim();
-                if (!string.IsNullOrWhiteSpace(chunk))
-                {
-                    chunks.Add(chunk);
-                }
-
-                if (start + length >= words.Length) break;
-            }
-
-            return chunks.Any() ? chunks : new List<string> { text }; // Fallback nếu không chunk
+                .Replace("[^\\w\\s.,!?()'-=₀-₉]", "");
         }
 
         public async Task<AnalyzeAiResponseDTO> AnalyzeTextAsync(string rawText)
@@ -94,15 +178,18 @@ namespace ConferenceFWebAPI.Service
                 throw new ArgumentException($"Text exceeds maximum length of {MaxTextLength} characters.");
 
             var text = PrepareText(rawText);
-            Console.WriteLine($"Raw text length: {rawText.Length}, Prepared text length: {text.Length}, Word count: {text.Split(new[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length}, Content: {text.Substring(0, Math.Min(100, text.Length))}...");
+            Console.WriteLine($"Raw text length: {rawText.Length}, Prepared text length: {text.Length}, Content: {text.Substring(0, Math.Min(100, text.Length))}...");
 
-            var key = ComputeHash(_model + "|" + text);
-            var cacheKey = $"hf_full_{key}";
+            var key = ComputeHash("local_model" + "|" + text);
+            var cacheKey = $"hf_local_{key}";
             if (_cache.TryGetValue(cacheKey, out AnalyzeAiResponseDTO cached))
                 return cached;
 
-            var splitChunks = SplitTextWithOverlap(text, MaxWordsPerChunk, OverlapWords);
-            Console.WriteLine($"Number of chunks created: {splitChunks.Count}, First chunk: {splitChunks.FirstOrDefault()?.Substring(0, Math.Min(100, splitChunks.FirstOrDefault()?.Length ?? 0))}...");
+            // Sử dụng EncodeWithOverflowing để tạo chunks với overlap
+            var overflowingChunks = _tokenizer.EncodeWithOverflowing(text, MaxTokens, OverlapTokens);
+            var firstChunk = overflowingChunks.FirstOrDefault();
+            int firstChunkTokenCount = firstChunk.inputIds != null ? firstChunk.inputIds.Length : 0;
+            Console.WriteLine($"Number of chunks created: {overflowingChunks.Count}, First chunk token count: {firstChunkTokenCount}");
 
             var chunkResults = new List<ChunkResultDTO>();
             double sumAiPercent = 0;
@@ -110,21 +197,18 @@ namespace ConferenceFWebAPI.Service
             int chunkId = 1;
             int totalTokens = 0;
 
-            foreach (var ch in splitChunks)
+            foreach (var (inputIds, attentionMask, realCount) in overflowingChunks)
             {
-                var prob = await InferMachineProbabilityAsync(ch);
-                Console.WriteLine($"Chunk {chunkId} word count: {ch.Split(new[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length}, Probability: {prob}");
+                var prob = InferMachineProbabilityLocal(inputIds, attentionMask);
                 if (prob.HasValue)
                 {
                     sumAiPercent += prob.Value * 100.0;
                     ok++;
-                    var wordCount = ch.Split(new[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
-                    var estimatedTokens = (int)(wordCount / 75.0 * 100); // Chuyển từ số từ sang số token
-                    totalTokens += estimatedTokens;
+                    totalTokens += realCount; // chỉ cộng số token thật, không cộng padding
                     chunkResults.Add(new ChunkResultDTO
                     {
                         ChunkId = chunkId++,
-                        TokenCount = estimatedTokens,
+                        TokenCount = realCount,
                         ScoreMachine = Math.Round(prob.Value * 100.0, 2),
                         ScoreHuman = Math.Round(100 - prob.Value * 100.0, 2)
                     });
@@ -147,51 +231,36 @@ namespace ConferenceFWebAPI.Service
             return result;
         }
 
-        public async Task<ChunkResultDTO?> AnalyzeChunkAsync(ChunkPayloadDTO chunk)
+        public Task<ChunkResultDTO?> AnalyzeChunkAsync(ChunkPayloadDTO chunk)
         {
-            return null; // Không dùng nữa
+            return Task.FromResult<ChunkResultDTO?>(null);
         }
 
-        private async Task<double?> InferMachineProbabilityAsync(string text)
+        private double? InferMachineProbabilityLocal(int[] inputIds, int[] attentionMask)
         {
-            var url = $"https://api-inference.huggingface.co/models/{_model}";
-            var payload = new
+            var inputTensor = new DenseTensor<long>(new[] { 1, inputIds.Length });
+            inputIds.Select(x => (long)x).ToArray().CopyTo(inputTensor.Buffer.Span);
+
+            var maskTensor = new DenseTensor<long>(new[] { 1, attentionMask.Length });
+            attentionMask.Select(x => (long)x).ToArray().CopyTo(maskTensor.Buffer.Span);
+
+            var inputs = new List<NamedOnnxValue>
             {
-                inputs = text,
-                parameters = new { truncation = true, max_length = 512 }
+                NamedOnnxValue.CreateFromTensor("input_ids", inputTensor),
+                NamedOnnxValue.CreateFromTensor("attention_mask", maskTensor)
             };
 
-            var json = JsonSerializer.Serialize(payload);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+            using var results = _session.Run(inputs);
+            var output = results.First().AsTensor<float>().ToArray();
 
-            var response = await _retryPolicy.ExecuteAsync(() => _http.PostAsync(url, content));
-            Console.WriteLine($"HF API response status: {response.StatusCode}, Body: {await response.Content.ReadAsStringAsync()}");
+            // Áp dụng softmax
+            var expScores = output.Select(x => Math.Exp(x)).ToArray();
+            var sumExp = expScores.Sum();
+            var probabilities = expScores.Select(x => x / sumExp).ToArray();
+            Console.WriteLine($"Output length: {output.Length}, Probabilities: {string.Join(", ", probabilities)}");
 
-            if (!response.IsSuccessStatusCode) return null;
-
-            var body = await response.Content.ReadAsStringAsync();
-
-            try
-            {
-                var arr = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(body);
-                if (arr != null && arr.Count > 0)
-                {
-                    var machine = arr.FirstOrDefault(d =>
-                                d.TryGetValue("label", out var l) &&
-                                l?.ToString()?.ToLower().Contains("machine") == true)
-                            ?? arr.OrderByDescending(d => Convert.ToDouble(d["score"])).FirstOrDefault();
-
-                    if (machine != null && machine.TryGetValue("score", out var sc))
-                        return Convert.ToDouble(sc);
-                }
-                Console.WriteLine("No valid score found in HF response.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error parsing HF response: {ex.Message}");
-                return null;
-            }
-            return null;
+            // Lấy xác suất AI-generated (index 1 theo thông tin mới)
+            return probabilities.Length > 1 ? probabilities[1] : probabilities[0];
         }
     }
 }
