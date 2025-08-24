@@ -227,6 +227,14 @@ namespace ConferenceFWebAPI
 
             CreateMap<Proceeding, ProceedingResponseDto>();
             CreateMap<ProceedingCreateDto, Proceeding>().ForMember(dest => dest.FilePath, opt => opt.Ignore());
+            CreateMap<ProceedingUpdateFromFormDto, Proceeding>()
+    .ForAllMembers(opts =>
+        opts.Condition((src, dest, srcMember) =>
+            srcMember != null &&
+            (!(srcMember is string str) || !string.IsNullOrEmpty(str))
+        )
+    );
+
 
             CreateMap<CallForPaper, CallForPaperDto>();
 

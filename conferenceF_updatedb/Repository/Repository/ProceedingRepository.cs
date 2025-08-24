@@ -32,14 +32,20 @@ namespace Repository
             return await _dao.GetProceedingByConferenceIdAsync(conferenceId);
         }
 
-        public async Task UpdateProceedingAsync(Proceeding proceeding)
+        public async Task<Proceeding> UpdateProceedingAsync(Proceeding proceeding)
         {
-            await _dao.UpdateProceedingAsync(proceeding);
+            return await _dao.UpdateAsync(proceeding);
+            
         }
-
         public async Task<List<Paper>> GetPublishedPapersByConferenceAsync(int conferenceId)
         {
             return await _dao.GetPublishedPapersByConferenceAsync(conferenceId);
         }
+        public async Task<List<Proceeding>> GetAllProceedingsAsync()
+        {
+            return await _dao.GetAllProceedingsAsync();
+        }
+
+
     }
 }

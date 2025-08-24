@@ -30,6 +30,24 @@ namespace DataAccess
                                  .Select(p => p.FilePath)
                                  .FirstOrDefaultAsync();
         }
+        public async Task<Proceeding> UpdateAsync(Proceeding proceeding)
+        {
+            _context.Proceedings.Update(proceeding);
+            await _context.SaveChangesAsync();
+
+            return await _context.Proceedings
+                .Include(p => p.PublishedByNavigation)
+                .Include(p => p.Papers)
+                .FirstOrDefaultAsync(p => p.ProceedingId == proceeding.ProceedingId);
+        }
+
+
+        public async Task<Proceeding?> GetByIdAsync(int id)
+        {
+            return await _context.Proceedings
+                                 .Include(p => p.Papers)
+                                 .FirstOrDefaultAsync(p => p.ProceedingId == id);
+        }
         public async Task<Proceeding?> GetProceedingByIdAsync(int proceedingId)
         {
             return await _context.Proceedings
@@ -47,17 +65,21 @@ namespace DataAccess
         }
 
 
-        public async Task UpdateProceedingAsync(Proceeding proceeding)
-        {
-            _context.Proceedings.Update(proceeding);
-            await _context.SaveChangesAsync();
-        }
 
         // Lấy danh sách các bài báo đã được chấp nhận và xuất bản
         public async Task<List<Paper>> GetPublishedPapersByConferenceAsync(int conferenceId)
         {
             return await _context.Papers
                                  .Where(p => p.ConferenceId == conferenceId && p.Status == "Accepted" && p.IsPublished == true)
+                                 .ToListAsync();
+        }
+
+        public async Task<List<Proceeding>> GetAllProceedingsAsync()
+        {
+            return await _context.Proceedings
+                                 .Include(p => p.Papers)
+                                 .Include(p => p.PublishedByNavigation)
+                                 .Include(p => p.Conference)
                                  .ToListAsync();
         }
 
