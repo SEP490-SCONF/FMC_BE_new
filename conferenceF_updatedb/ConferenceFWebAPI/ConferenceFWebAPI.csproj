@@ -36,6 +36,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.12.0" />
     <PackageReference Include="Tokenizers.DotNet" Version="1.2.1" />
+    <PackageReference Include="Tokenizers.DotNet.runtime.win-x64" Version="1.2.1" />
+    <PackageReference Include="Tokenizers.HuggingFace" Version="1.21.4" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,6 +48,9 @@
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
   <None Update="Models\tokenizer.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+    <None Update="Models\merges.txt">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
 </ItemGroup>

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Caching.Memory;
 using ConferenceFWebAPI.DTOs.AICheckDTO;
 using System.Security.Cryptography;
 using System;
+using Tokenizers.DotNet;
 
 namespace ConferenceFWebAPI.Service
 {
@@ -17,140 +18,121 @@ namespace ConferenceFWebAPI.Service
         private readonly IMemoryCache _cache;
         private readonly InferenceSession _session;
         private readonly Tokenizer _tokenizer;
-        private const int MaxTokens = 512; // Giới hạn tối đa 512 token
-        private const int OverlapTokens = 128; // Overlap 128 token
-        private const int MaxTextLength = 50000; // Giới hạn tối đa 50,000 ký tự (~20 trang)
+
+        private const int MaxTokens = 512;     // giới hạn tối đa 512 token
+        private const int OverlapTokens = 128; // overlap
+        private const int MaxTextLength = 50000;
+
+        // chúng ta tự quản lý vocab để lookup id cho special tokens
+        private readonly Dictionary<string, int> _vocab = new();
+        private readonly int _padTokenId = 0;
 
         public HuggingFaceDetectorService(IMemoryCache cache)
         {
             _cache = cache;
 
-            // Khởi tạo session ONNX
+            // Load ONNX model
             var modelPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Models", "model.onnx");
             if (!File.Exists(modelPath))
                 throw new FileNotFoundException("Model file not found at " + modelPath);
             _session = new InferenceSession(modelPath);
 
-            // Khởi tạo tokenizer với vocab và tokenizer files
-            var vocabPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Models", "vocab.json");
-            var tokenizerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Models", "tokenizer.json");
-            if (!File.Exists(vocabPath) || !File.Exists(tokenizerPath))
-                throw new FileNotFoundException("Tokenizer files not found.");
-            _tokenizer = new Tokenizer(vocabPath, tokenizerPath);
-        }
+            // Đường dẫn tokenizer & vocab
+            var modelsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Models");
+            var tokenizerPath = Path.Combine(modelsDir, "tokenizer.json");
+            var vocabPath = Path.Combine(modelsDir, "vocab.json");
+            var specialPath = Path.Combine(modelsDir, "special_tokens_map.json");
 
-        public class Tokenizer
-        {
-            private readonly Dictionary<string, int> _vocab;
-            private readonly List<(string, string)> _merges;
-            private readonly Dictionary<(string, string), int> _mergeRanks;
+            if (!File.Exists(tokenizerPath))
+                throw new FileNotFoundException("Tokenizer file not found at " + tokenizerPath);
 
-            public Tokenizer(string vocabPath, string tokenizerPath)
+            // Khởi tạo Tokenizers.DotNet bằng tokenizer.json
+            _tokenizer = new Tokenizer(vocabPath: tokenizerPath);
+
+            // Đọc vocab.json (nếu có) để map token -> id
+            if (File.Exists(vocabPath))
             {
-                // vocab
                 var vocabJson = File.ReadAllText(vocabPath);
-                _vocab = JsonSerializer.Deserialize<Dictionary<string, int>>(vocabJson) ?? new();
-
-                // merges
-                var tokenizerJson = File.ReadAllText(tokenizerPath);
-                var tokenizerData = JsonDocument.Parse(tokenizerJson).RootElement;
-                _merges = new();
-                _mergeRanks = new();
-                if (tokenizerData.TryGetProperty("merges", out var mergesArray))
+                var dict = JsonSerializer.Deserialize<Dictionary<string, int>>(vocabJson);
+                if (dict != null)
                 {
-                    int rank = 0;
-                    foreach (var merge in mergesArray.EnumerateArray())
-                    {
-                        var pair = merge.GetString()?.Split(' ');
-                        if (pair?.Length == 2)
-                        {
-                            _merges.Add((pair[0], pair[1]));
-                            _mergeRanks[(pair[0], pair[1])] = rank++;
-                        }
-                    }
+                    _vocab = dict;
                 }
             }
 
-            public List<(int[] inputIds, int[] attentionMask, int realTokenCount)>
-                EncodeWithOverflowing(string text, int maxLength = 512, int stride = 128)
+            // Xác định pad_token_id theo thứ tự ưu tiên:
+            // 1) special_tokens_map.json -> "pad_token" -> tra id trong vocab.json
+            // 2) nếu không có, thử các biến thể phổ biến
+            // 3) fallback về 0
+            int padId = 0;
+            if (File.Exists(specialPath))
             {
-                // bỏ hex hóa, dùng từng ký tự unicode
-                var tokens = text.Select(c => c.ToString()).ToList();
-
-                // BPE chuẩn
-                tokens = ApplyBpe(tokens);
-
-                var chunks = new List<(int[] inputIds, int[] attentionMask, int realTokenCount)>();
-                for (int start = 0; start < tokens.Count; start += (maxLength - stride))
+                try
                 {
-                    var end = Math.Min(start + maxLength, tokens.Count);
-                    var chunkTokens = tokens.Skip(start).Take(end - start).ToArray();
-
-                    var inputIds = chunkTokens
-                        .Select(t => _vocab.GetValueOrDefault(t, _vocab.GetValueOrDefault("<unk>", 0)))
-                        .ToList();
-
-                    int realCount = inputIds.Count;
-
-                    // pad
-                    if (realCount < maxLength)
-                        inputIds.AddRange(Enumerable.Repeat(0, maxLength - realCount));
-
-                    var attentionMask = inputIds.Select((id, idx) => idx < realCount ? 1 : 0).ToArray();
-
-                    chunks.Add((inputIds.ToArray(), attentionMask, realCount));
-
-                    if (end >= tokens.Count) break;
+                    var specialJson = File.ReadAllText(specialPath);
+                    var dict = JsonSerializer.Deserialize<Dictionary<string, object>>(specialJson);
+                    if (dict != null && dict.TryGetValue("pad_token", out var padObj))
+                    {
+                        var padToken = padObj?.ToString();
+                        if (!string.IsNullOrEmpty(padToken) && _vocab.TryGetValue(padToken!, out var vid))
+                        {
+                            padId = vid;
+                        }
+                    }
                 }
-
-                Console.WriteLine($"Total tokens before chunking: {tokens.Count}, Number of chunks: {chunks.Count}");
-                return chunks;
+                catch { /* bỏ qua, dùng fallback */ }
             }
-
-            private List<string> ApplyBpe(List<string> tokens)
+            if (padId == 0 && _vocab.Count > 0)
             {
-                var word = new List<string>(tokens);
-                while (true)
-                {
-                    (string, string)? best = null;
-                    int bestRank = int.MaxValue;
-
-                    // tìm cặp merge có rank thấp nhất (ưu tiên cao nhất)
-                    for (int i = 0; i < word.Count - 1; i++)
-                    {
-                        var pair = (word[i], word[i + 1]);
-                        if (_mergeRanks.TryGetValue(pair, out var rank) && rank < bestRank)
-                        {
-                            best = pair;
-                            bestRank = rank;
-                        }
-                    }
-
-                    if (best == null) break;
-
-                    // merge cặp tốt nhất
-                    var newWord = new List<string>();
-                    int idx = 0;
-                    while (idx < word.Count)
-                    {
-                        int j = idx + 1;
-                        if (j < word.Count && (word[idx], word[j]) == best)
-                        {
-                            newWord.Add(word[idx] + word[j]);
-                            idx += 2;
-                        }
-                        else
-                        {
-                            newWord.Add(word[idx]);
-                            idx++;
-                        }
-                    }
-                    word = newWord;
-                }
-                return word;
+                if (_vocab.TryGetValue("[PAD]", out var vidPad)) padId = vidPad;
+                else if (_vocab.TryGetValue("<pad>", out var vidPad2)) padId = vidPad2;
+                else if (_vocab.TryGetValue("<|pad|>", out var vidPad3)) padId = vidPad3;
             }
+            _padTokenId = padId; // nếu vẫn 0 thì coi như model dùng 0 làm PAD
         }
 
+        /// <summary>
+        /// Encode text thành nhiều chunk với overlap (dùng Tokenizers.DotNet → uint[])
+        /// </summary>
+        private List<(uint[] inputIds, int[] attentionMask, int realCount)> EncodeWithOverflowing(
+            string text, int maxLength = 512, int stride = 128)
+        {
+            if (maxLength <= 0) throw new ArgumentException("maxLength must be > 0");
+            if (stride < 0 || stride >= maxLength) stride = Math.Max(0, maxLength / 4); // guard
+
+            var ids = _tokenizer.Encode(text); // uint[]
+            var chunks = new List<(uint[], int[], int)>();
+            var step = Math.Max(1, maxLength - stride);
+
+            for (int start = 0; start < ids.Length; start += step)
+            {
+                var end = Math.Min(start + maxLength, ids.Length);
+                var sub = ids.Skip(start).Take(end - start).ToList();
+                int realCount = sub.Count;
+
+                // pad nếu chưa đủ
+                if (sub.Count < maxLength)
+                    sub.AddRange(Enumerable.Repeat((uint)_padTokenId, maxLength - sub.Count));
+
+                var attentionMask = sub.Select((_, i) => i < realCount ? 1 : 0).ToArray();
+                chunks.Add((sub.ToArray(), attentionMask, realCount));
+
+                if (end >= ids.Length) break;
+            }
+
+            // Trường hợp text quá ngắn (< maxLength), vẫn tạo 1 chunk duy nhất đã pad
+            if (chunks.Count == 0)
+            {
+                var sub = ids.ToList();
+                int realCount = sub.Count;
+                if (sub.Count < maxLength)
+                    sub.AddRange(Enumerable.Repeat((uint)_padTokenId, maxLength - sub.Count));
+                var attentionMask = sub.Select((_, i) => i < realCount ? 1 : 0).ToArray();
+                chunks.Add((sub.ToArray(), attentionMask, realCount));
+            }
+
+            return chunks;
+        }
 
         private static string ComputeHash(string input)
         {
@@ -162,34 +144,23 @@ namespace ConferenceFWebAPI.Service
         private static string PrepareText(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return string.Empty;
-            return text
-                .Replace("\r\n", "\n")
-                .Replace("\r", "\n")
-                .Replace("\u22A4", "transpose")
-                .Replace("[^\\w\\s.,!?()'-=₀-₉]", "");
+            return text.Replace("\r\n", "\n").Replace("\r", "\n");
         }
 
         public async Task<AnalyzeAiResponseDTO> AnalyzeTextAsync(string rawText)
         {
             if (string.IsNullOrWhiteSpace(rawText))
                 throw new ArgumentException("Raw text is required.");
-
             if (rawText.Length > MaxTextLength)
                 throw new ArgumentException($"Text exceeds maximum length of {MaxTextLength} characters.");
 
             var text = PrepareText(rawText);
-            Console.WriteLine($"Raw text length: {rawText.Length}, Prepared text length: {text.Length}, Content: {text.Substring(0, Math.Min(100, text.Length))}...");
-
             var key = ComputeHash("local_model" + "|" + text);
             var cacheKey = $"hf_local_{key}";
             if (_cache.TryGetValue(cacheKey, out AnalyzeAiResponseDTO cached))
                 return cached;
 
-            // Sử dụng EncodeWithOverflowing để tạo chunks với overlap
-            var overflowingChunks = _tokenizer.EncodeWithOverflowing(text, MaxTokens, OverlapTokens);
-            var firstChunk = overflowingChunks.FirstOrDefault();
-            int firstChunkTokenCount = firstChunk.inputIds != null ? firstChunk.inputIds.Length : 0;
-            Console.WriteLine($"Number of chunks created: {overflowingChunks.Count}, First chunk token count: {firstChunkTokenCount}");
+            var overflowingChunks = EncodeWithOverflowing(text, MaxTokens, OverlapTokens);
 
             var chunkResults = new List<ChunkResultDTO>();
             double sumAiPercent = 0;
@@ -204,7 +175,7 @@ namespace ConferenceFWebAPI.Service
                 {
                     sumAiPercent += prob.Value * 100.0;
                     ok++;
-                    totalTokens += realCount; // chỉ cộng số token thật, không cộng padding
+                    totalTokens += realCount;
                     chunkResults.Add(new ChunkResultDTO
                     {
                         ChunkId = chunkId++,
@@ -217,7 +188,6 @@ namespace ConferenceFWebAPI.Service
 
             var aiPercent = ok > 0 ? sumAiPercent / ok : 0.0;
             var aiTokenEquiv = totalTokens * (aiPercent / 100.0);
-            Console.WriteLine($"ok: {ok}, aiPercent: {aiPercent}, totalTokens: {totalTokens}");
 
             var result = new AnalyzeAiResponseDTO
             {
@@ -231,18 +201,62 @@ namespace ConferenceFWebAPI.Service
             return result;
         }
 
-        public Task<ChunkResultDTO?> AnalyzeChunkAsync(ChunkPayloadDTO chunk)
+        public async Task<ChunkResultDTO?> AnalyzeChunkAsync(ChunkPayloadDTO chunk)
         {
-            return Task.FromResult<ChunkResultDTO?>(null);
+            if (string.IsNullOrWhiteSpace(chunk.Text))
+                return null;
+            if (chunk.Text.Length > MaxTextLength)
+                throw new ArgumentException($"Chunk text exceeds maximum length of {MaxTextLength} characters.");
+
+            var text = PrepareText(chunk.Text);
+
+            var key = ComputeHash("local_chunk_model" + "|" + text + "|" + chunk.ChunkId);
+            var cacheKey = $"hf_local_chunk_{key}";
+            if (_cache.TryGetValue(cacheKey, out ChunkResultDTO cached))
+                return cached;
+
+            var overflowingSubChunks = EncodeWithOverflowing(text, MaxTokens, OverlapTokens);
+
+            double sumProb = 0;
+            int subOk = 0;
+            int totalSubTokens = 0;
+
+            foreach (var (inputIds, attentionMask, realCount) in overflowingSubChunks)
+            {
+                var prob = InferMachineProbabilityLocal(inputIds, attentionMask);
+                if (prob.HasValue)
+                {
+                    sumProb += prob.Value;
+                    subOk++;
+                    totalSubTokens += realCount;
+                }
+            }
+
+            var avgProb = subOk > 0 ? sumProb / subOk : 0.0;
+
+            var result = new ChunkResultDTO
+            {
+                ChunkId = chunk.ChunkId,
+                TokenCount = totalSubTokens,
+                ScoreMachine = Math.Round(avgProb * 100.0, 2),
+                ScoreHuman = Math.Round(100 - avgProb * 100.0, 2)
+            };
+
+            _cache.Set(cacheKey, result, TimeSpan.FromHours(1));
+            return result;
         }
 
-        private double? InferMachineProbabilityLocal(int[] inputIds, int[] attentionMask)
+        /// <summary>
+        /// Nhận uint[] từ tokenizer; chuyển sang long[] khi tạo tensor cho ONNX.
+        /// </summary>
+        private double? InferMachineProbabilityLocal(uint[] inputIds, int[] attentionMask)
         {
-            var inputTensor = new DenseTensor<long>(new[] { 1, inputIds.Length });
-            inputIds.Select(x => (long)x).ToArray().CopyTo(inputTensor.Buffer.Span);
+            // ONNX thường nhận int64 (long)
+            var idsLong = inputIds.Select(x => (long)x).ToArray();
+            var maskLong = attentionMask.Select(x => (long)x).ToArray();
 
-            var maskTensor = new DenseTensor<long>(new[] { 1, attentionMask.Length });
-            attentionMask.Select(x => (long)x).ToArray().CopyTo(maskTensor.Buffer.Span);
+            var inputTensor = new DenseTensor<long>(idsLong, new[] { 1, idsLong.Length });
+            var maskTensor = new DenseTensor<long>(maskLong, new[] { 1, maskLong.Length });
 
             var inputs = new List<NamedOnnxValue>
             {
@@ -253,13 +267,15 @@ namespace ConferenceFWebAPI.Service
             using var results = _session.Run(inputs);
             var output = results.First().AsTensor<float>().ToArray();
 
-            // Áp dụng softmax
-            var expScores = output.Select(x => Math.Exp(x)).ToArray();
+            // Softmax
+            // (dùng double để tránh tràn, nhưng input là float)
+            double maxLogit = output.Max();
+            var expScores = output.Select(x => Math.Exp(x - maxLogit)).ToArray(); // ổn định số học
             var sumExp = expScores.Sum();
             var probabilities = expScores.Select(x => x / sumExp).ToArray();
-            Console.WriteLine($"Output length: {output.Length}, Probabilities: {string.Join(", ", probabilities)}");
 
-            // Lấy xác suất AI-generated (index 1 theo thông tin mới)
+            // giả định index 1 là xác suất "AI-generated"
+            if (probabilities.Length == 0) return null;
             return probabilities.Length > 1 ? probabilities[1] : probabilities[0];
         }
     }
