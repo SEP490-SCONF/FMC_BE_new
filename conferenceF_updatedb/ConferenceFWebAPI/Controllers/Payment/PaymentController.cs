@@ -46,7 +46,7 @@ namespace ConferenceFWebAPI.Controllers
             var paymentData = new PaymentData(
                 orderCode,
                 (int)(dto.Amount),
-                dto.Purpose ?? $"Thanh toán hội thảo #{dto.ConferenceId}",
+                dto.Purpose ?? $"Conference payment #{dto.ConferenceId}",
                 new List<ItemData>
                 {
                     new ItemData("Conference Fee", 1, (int)(dto.Amount))
