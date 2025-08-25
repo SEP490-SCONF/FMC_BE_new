@@ -71,10 +71,34 @@ namespace ConferenceFWebAPI
             CreateMap<ScheduleRequestDto, Schedule>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<Schedule, ScheduleUpdateDto>();
-            CreateMap<ScheduleUpdateDto, Schedule>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-            ;
+            CreateMap<ScheduleUpdateDto, Schedule>()
+    .ForMember(dest => dest.PaperId, opt => opt.MapFrom(src => src.PaperId))
+    .ForMember(dest => dest.PresenterId, opt => opt.MapFrom(src => src.PresenterId))
+    .ForAllMembers(opts => opts.Condition((src, dest, srcMember, context) =>
+    {
+        // Nếu là PaperId hoặc PresenterId thì cho map luôn (kể cả null)
+        if (opts.DestinationMember.Name == nameof(Schedule.PaperId) ||
+            opts.DestinationMember.Name == nameof(Schedule.PresenterId))
+            return true;
 
-            CreateMap<Schedule, ScheduleResponseDto>();
+        // Các field khác: chỉ map khi srcMember != null
+        return srcMember != null;
+    }));
+
+
+            CreateMap<Schedule, ScheduleResponseDto>()
+                .ForMember(dest => dest.PaperScore, opt => opt.MapFrom(src =>
+                    src.Paper != null
+                    ? (int?)Math.Round(
+                        src.Paper.PaperRevisions
+                            .Where(pr => pr.Status == "Accepted")
+                            .SelectMany(pr => pr.Reviews)
+                            .Select(r => r.Score ?? 0)
+                            .DefaultIfEmpty(0)
+                            .Average()
+                      )
+                    : null
+                ));
             CreateMap<ScheduleResponseDto, Schedule>();
 
 

@@ -22,5 +22,8 @@ namespace ConferenceFWebAPI.DTOs.Schedules
         // Presenter info
         public int PresenterId { get; set; }
         public string? PresenterName { get; set; }
+
+        public int? PaperScore { get; set; }
+
     }
 }

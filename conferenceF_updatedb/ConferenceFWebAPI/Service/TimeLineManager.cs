@@ -32,7 +32,7 @@ namespace ConferenceFWebAPI.Service
             // Điều này có nghĩa là nếu deadline là 1 tuần nữa, job sẽ được lên lịch ngay lập tức.
             // Nếu deadline sớm hơn 1 tuần, job sẽ được lên lịch trong quá khứ và chạy ngay.
             // Nên cân nhắc logic nếu Date quá gần hoặc đã qua
-            DateTime reminderTime = createdTimeLine.Date.AddDays(-7);
+            DateTime reminderTime = createdTimeLine.Date.Value.AddDays(-7);
 
             // Bước 3: Kiểm tra và lên lịch job
             string? hangfireJobId = null;
@@ -42,7 +42,7 @@ namespace ConferenceFWebAPI.Service
                 // Gửi nhắc nhở ngay lập tức nếu deadline đã quá gần hoặc đã qua
                 _reminderService.SendTimelineReminder(createdTimeLine.TimeLineId, createdTimeLine.Description);
                 // Không cần lên lịch Hangfire job nếu nó chạy ngay lập tức.
-                // Tuy nhiên, nếu bạn muốn vẫn có bản ghi trong Hangfire Dashboard, bạn có thể Enqueue một job ngay lập tức.
+                // Tuy nhiên, nếu bạn muốn vẫn có bản ghi trong Hangfire Dashboard, bạn có thể Enqueue một jo   b ngay lập tức.
                 hangfireJobId = _jobClient.Enqueue(() => _reminderService.SendTimelineReminder(createdTimeLine.TimeLineId, createdTimeLine.Description));
             }
             else
@@ -88,7 +88,12 @@ namespace ConferenceFWebAPI.Service
             // existingTimeLine.ConferenceId = updatedTimeLineData.ConferenceId; // Cập nhật ConferenceId nếu cần
 
             // Bước 3: Tính toán và lên lịch job mới
-            DateTime reminderTime = existingTimeLine.Date.AddDays(-7);
+            if (!existingTimeLine.Date.HasValue)
+            {
+                throw new InvalidOperationException("Timeline Date is required to schedule reminder.");
+            }
+
+            DateTime reminderTime = existingTimeLine.Date.Value.AddDays(-7);
 
             string? newHangfireJobId = null;
             if (reminderTime <= DateTime.UtcNow) // Dùng UTC để so sánh nhất quán
