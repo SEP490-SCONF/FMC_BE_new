@@ -15,6 +15,7 @@ namespace ConferenceFWebAPI.Controllers
         private readonly TimeLineManager _timeLineManager;
         private readonly ITimeLineRepository _timeLineRepository; // Vẫn giữ để GetTimeLinesByConference
 
+
         // Inject TimeLineManager và ITimeLineRepository
         public TimelinesController(TimeLineManager timeLineManager, ITimeLineRepository timeLineRepository)
         {
@@ -84,7 +85,7 @@ namespace ConferenceFWebAPI.Controllers
                 var newTimeLine = new TimeLine
                 {
                     ConferenceId = createDto.ConferenceId,
-                    Date = createDto.Date.ToUniversalTime(),
+                    Date = createDto.Date?.ToUniversalTime(),
                     Description = createDto.Description
                 };
 
@@ -102,8 +103,9 @@ namespace ConferenceFWebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error while creating timeline: {ex.Message}");
+                return StatusCode(500, "Internal server error while creating timeline. Check logs for details.");
             }
+
         }
 
 
@@ -135,7 +137,7 @@ namespace ConferenceFWebAPI.Controllers
                     return NotFound($"Timeline with ID {id} not found.");
                 }
 
-                existing.Date = updateDto.Date.ToUniversalTime();
+                existing.Date = updateDto.Date?.ToUniversalTime();
                 existing.Description = updateDto.Description;
 
                 await _timeLineRepository.UpdateTimeLineAsync(existing);

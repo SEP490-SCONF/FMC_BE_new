@@ -25,9 +25,11 @@ namespace FMC_BE.Controllers
         private readonly IConfiguration _configuration;
         private readonly ITopicRepository _topicRepository;
         private readonly IForumRepository _forumRepository;
+        private readonly ITimeLineRepository _timeLineRepository;
+
 
         public ConferencesController(IConferenceRepository conferenceRepository, IAzureBlobStorageService azureBlobStorageService, IMapper mapper, IConfiguration configuration,
-                                     IUserRepository userRepository, IEmailService emailService, ITopicRepository topicRepository, IForumRepository forumRepository)
+                                     IUserRepository userRepository, IEmailService emailService, ITopicRepository topicRepository, IForumRepository forumRepository, ITimeLineRepository timeLineRepository)
         {
             _conferenceRepository = conferenceRepository;
             _azureBlobStorageService = azureBlobStorageService;
@@ -37,6 +39,7 @@ namespace FMC_BE.Controllers
             _emailService = emailService;
             _topicRepository = topicRepository;
             _forumRepository = forumRepository;
+            _timeLineRepository = timeLineRepository;
         }
 
 
@@ -146,11 +149,31 @@ namespace FMC_BE.Controllers
                 }
 
                 var conference = _mapper.Map<Conference>(conferenceDto);
-
                 conference.BannerUrl = bannerUrl;
                 conference.CreatedAt = DateTime.UtcNow;
 
                 var confe = await _conferenceRepository.Insert(conference);
+
+                var timelines = new List<TimeLine>
+ {
+     new TimeLine { ConferenceId = confe.ConferenceId, Description = "CFP Open", Date = null },
+     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Submission Deadline", Date = null },
+     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Revision/Update Deadline", Date = null },
+     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Assignment to Reviewers", Date = null },
+     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Review Period", Date = null },
+     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Review Deadline", Date = null },
+     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Acceptance/Rejection Notification", Date = null },
+     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Author Response/Rebuttal", Date = null },
+     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Camera-ready Submission Deadline", Date = null },
+     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Conference Dates", Date = null },
+     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Closing Ceremony", Date = null }
+ };
+
+                foreach (var tl in timelines)
+                {
+                    await _timeLineRepository.CreateTimeLineAsync(tl);
+                }
+
                 Forum forum = new Forum
                 {
                     ConferenceId = confe.ConferenceId,
@@ -158,6 +181,7 @@ namespace FMC_BE.Controllers
                     CreatedAt = DateTime.UtcNow,
                 };
                 await _forumRepository.Add(forum);
+
                 return Ok(new
                 {
                     Message = "Conference created successfully.",
@@ -165,14 +189,28 @@ namespace FMC_BE.Controllers
                     BannerUrl = conference.BannerUrl
                 });
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                // Lấy inner-most exception (thường là SqlException)
+                var baseEx = ex;
+                while (baseEx.InnerException != null)
+                {
+                    baseEx = baseEx.InnerException;
+                }
+
+                Console.WriteLine($"[CreateConference Error] {ex}");
+                Console.WriteLine($"[Base Error] {baseEx.Message}");
+
+                return StatusCode(500, new
+                {
+                    Message = "Internal server error while creating conference.",
+                    Error = ex.Message,
+                    InnerError = ex.InnerException?.Message,
+                    RootCause = baseEx.Message,   // ✅ Lỗi gốc (ví dụ lỗi DB constraint)
+                    StackTrace = ex.StackTrace
+                });
             }
+
         }
 
 
