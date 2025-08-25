@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.Schedules;
+using ConferenceFWebAPI.Service;
 using Microsoft.AspNetCore.Mvc;
 using Repository;
 
@@ -14,13 +15,17 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IPaperRepository _paperRepository;
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
-
-        public ScheduleController(IScheduleRepository scheduleRepository, IPaperRepository paperRepository, IUserRepository userRepository, IMapper mapper)
+        private readonly IEmailService _emailService;
+        private readonly IConferenceRepository _conferenceRepository;
+        public ScheduleController(IScheduleRepository scheduleRepository, IPaperRepository paperRepository, IUserRepository userRepository, IMapper mapper, IEmailService emailService,
+            IConferenceRepository conferenceRepository)
         {
             _scheduleRepository = scheduleRepository;
             _paperRepository = paperRepository;
             _userRepository = userRepository;
             _mapper = mapper;
+            _conferenceRepository = conferenceRepository;
+            _emailService = emailService;
         }
 
         // POST: api/Schedule/add
@@ -28,11 +33,10 @@ namespace ConferenceFWebAPI.Controllers
         public async Task<IActionResult> AddSchedule([FromForm] ScheduleRequestDto request)
         {
             // Kiểm tra null trước khi so sánh
-            if (request.TimelineId <= 0 ||  !request.PresentationStartTime.HasValue || !request.PresentationEndTime.HasValue)
+            if (request.TimelineId <= 0 || !request.PresentationStartTime.HasValue || !request.PresentationEndTime.HasValue)
             {
                 return BadRequest("Timeline, and time range are required.");
             }
-
 
             Paper? paper = null;
             if (request.PaperId.HasValue)
@@ -50,6 +54,12 @@ namespace ConferenceFWebAPI.Controllers
                     return NotFound("Presenter not found.");
             }
 
+            // Lấy thông tin hội thảo để gửi email
+            var conference = await _conferenceRepository.GetById(request.ConferenceId);
+            if (conference == null)
+            {
+                return NotFound("Conference not found.");
+            }
 
             var newSchedule = new Schedule
             {
@@ -69,6 +79,26 @@ namespace ConferenceFWebAPI.Controllers
                 // Lấy lại đầy đủ thông tin để trả về DTO
                 var fullSchedule = await _scheduleRepository.GetScheduleByIdAsync(addedSchedule.ScheduleId);
                 var scheduleDto = _mapper.Map<ScheduleRequestDto>(fullSchedule);
+
+                // --- Bắt đầu phần gửi email mới ---
+                if (presenter != null)
+                {
+                    string subject = $"Your Presentation Schedule for the '{conference.Title}' Conference";
+                    string body = $@"
+                <h3>Dear {presenter.Name ?? presenter.Email},</h3>
+                <p>We are pleased to inform you that your presentation has been scheduled for the <strong>{conference.Title}</strong> conference.</p>
+                <p><strong>Session Title:</strong> {request.SessionTitle}</p>
+                <p><strong>Location:</strong> {request.Location}</p>
+                <p><strong>Time:</strong> {request.PresentationStartTime?.ToString("dd/MM/yyyy HH:mm")} - {request.PresentationEndTime?.ToString("HH:mm")}</p>
+                <br/>
+                <p>We look forward to your presentation.</p>
+                <br/>
+                <p>Sincerely,<br/>The Organizing Committee</p>";
+
+                    await _emailService.SendEmailAsync(presenter.Email, subject, body);
+                }
+                // --- Kết thúc phần gửi email mới ---
+
                 return Ok(scheduleDto);
             }
             catch (Exception ex)

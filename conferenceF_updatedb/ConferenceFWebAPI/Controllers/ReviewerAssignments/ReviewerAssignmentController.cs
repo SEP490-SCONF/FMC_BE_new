@@ -96,9 +96,8 @@ namespace ConferenceFWebAPI.Controllers.ReviewerAssignments
             var reviewerUser = await _userRepository.GetById(dto.ReviewerId);
             if (reviewerUser != null)
             {
-                string notificationTitle = "Bài báo mới được gán!";
-                string notificationContent = $"Bạn vừa được gán đánh giá bài báo '{paper.Title}'. Vui lòng kiểm tra và thực hiện đánh giá.";
-
+                string notificationTitle = "New paper assigned!";
+                string notificationContent = $"You have been assigned to review the paper '{paper.Title}'. Please check and complete the review.";
                 // Tạo và lưu thông báo vào cơ sở dữ liệu
                 var notification = new Notification
                 {
