@@ -191,7 +191,7 @@ namespace ConferenceFWebAPI
 
                 .ForMember(dest => dest.Revisions,
                  opt => opt.MapFrom(src => src.Paper.PaperRevisions
-                                           .Where(r => r.Status == "Under Review")))
+                                          ))
 ;
 
 

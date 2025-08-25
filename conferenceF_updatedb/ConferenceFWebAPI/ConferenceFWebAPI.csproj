@@ -52,6 +52,9 @@
   <None Update="Models\tokenizer.json">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
+    <None Update="Models\special_tokens_map.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
     <None Update="Models\merges.txt">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>

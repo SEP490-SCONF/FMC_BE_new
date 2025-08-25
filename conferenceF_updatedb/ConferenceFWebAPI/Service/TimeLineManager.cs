@@ -49,9 +49,9 @@ namespace ConferenceFWebAPI.Service
             {
                 // Lên lịch job với Hangfire
                 hangfireJobId = _jobClient.Schedule(
-                    () => _reminderService.SendTimelineReminder(createdTimeLine.TimeLineId, createdTimeLine.Description),
-                    reminderTime
-                );
+                                    () => _reminderService.SendTimelineReminder(createdTimeLine.TimeLineId, createdTimeLine.Description),
+                                    reminderTime
+                                );
                 Console.WriteLine($"Đã lên lịch nhắc nhở cho Timeline ID {createdTimeLine.TimeLineId} vào lúc {reminderTime.ToLocalTime()}. Hangfire Job ID: {hangfireJobId}");
             }
 
@@ -105,7 +105,7 @@ namespace ConferenceFWebAPI.Service
             else
             {
                 newHangfireJobId = _jobClient.Schedule(
-                    () => _reminderService.SendTimelineReminder(existingTimeLine.TimeLineId, existingTimeLine.Description),
+() => _reminderService.SendTimelineReminder(existingTimeLine.TimeLineId, existingTimeLine.Description),
                     reminderTime
                 );
                 Console.WriteLine($"Đã lên lịch lại nhắc nhở cho Timeline ID {existingTimeLine.TimeLineId} vào lúc {reminderTime.ToLocalTime()}. Hangfire Job ID: {newHangfireJobId}");
