@@ -2,7 +2,6 @@
 using ConferenceFWebAPI.DTOs.AICheckDTO;
 using ConferenceFWebAPI.Service;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.RegularExpressions;
 
 namespace ConferenceFWebAPI.Controllers.AI
 {
@@ -20,23 +19,31 @@ namespace ConferenceFWebAPI.Controllers.AI
         [HttpPost("translate-highlight")]
         public async Task<IActionResult> TranslateHighlightedText([FromForm] TranslationRequestDto request)
         {
-            // Logic của bạn vẫn giữ nguyên ở đây
             if (string.IsNullOrWhiteSpace(request.Text))
                 return BadRequest("Text to translate cannot be empty.");
 
             try
             {
-                string text = request.Text.Replace("\r\n", "\n");
+                // Tách text thành từng dòng
+                var lines = request.Text.Replace("\r\n", "\n").Split('\n');
 
-                string translated = await _translationService.TranslateAsync(
-                    text,
-                    request.TargetLanguage ?? "en"
-                );
+                var translatedLines = new List<string>();
+                foreach (var line in lines)
+                {
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        var translated = await _translationService.TranslateAsync(
+                            line.Trim(),
+                            request.TargetLanguage ?? "en"
+                        );
+                        translatedLines.Add(translated.Trim());
+                    }
+                }
 
-                // ... (phần còn lại của code)
-                translated = Regex.Replace(translated, @"<br\s*/?>", " ").Trim();
+                // Ghép các dòng đã dịch bằng '\n'
+                string finalText = string.Join("\n", translatedLines);
 
-                return new JsonResult(new { translatedText = translated });
+                return new JsonResult(new { translatedText = finalText });
             }
             catch (RequestFailedException ex)
             {
@@ -47,5 +54,6 @@ namespace ConferenceFWebAPI.Controllers.AI
                 return StatusCode(500, new { Error = "An unexpected error occurred." });
             }
         }
+
     }
-    }
+}
