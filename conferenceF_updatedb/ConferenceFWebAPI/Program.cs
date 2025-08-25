@@ -19,6 +19,8 @@ using ConferenceFWebAPI.Hubs;
 using Microsoft.OData.ModelBuilder;
 using ConferenceFWebAPI.Provider;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Localization;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 // 1. Lấy chuỗi kết nối SignalR từ appsettings.json
@@ -35,6 +37,7 @@ builder.Services.AddControllers().AddOData(
     .Count() // Enable $count
                       .AddRouteComponents("odata", modelBuilder.GetEdmModel()) // Define the OData route
 );
+
 
 // 2. Thêm dịch vụ SignalR và kết nối với Azure SignalR Service
 builder.Services.AddSignalR().AddAzureSignalR(builder.Configuration.GetConnectionString("AzureSignalR"));
@@ -283,7 +286,28 @@ builder.Services.AddControllers().AddOData(opt => opt.Select().Filter().OrderBy(
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// 🔹 B1: Khai báo ResourcePath cho file .resx
+
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+// 🔹 B2: Thêm localization cho Controller
+
+builder.Services
+    .AddControllers()
+    .AddViewLocalization()
+    .AddDataAnnotationsLocalization();
+
 var app = builder.Build();
+
+// 🔹 B3: Đăng ký ngôn ngữ được hỗ trợ
+var supportedCultures = new[] { "en", "vi" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture("en")                      // Ngôn ngữ mặc định
+    .AddSupportedCultures(supportedCultures)      // Hỗ trợ dữ liệu
+    .AddSupportedUICultures(supportedCultures);   // Hỗ trợ giao diện
+
+app.UseRequestLocalization(localizationOptions);
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
