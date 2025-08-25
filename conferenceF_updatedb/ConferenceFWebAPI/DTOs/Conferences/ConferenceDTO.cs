@@ -15,7 +15,19 @@ namespace ConferenceFWebAPI.DTOs.Conferences
         public int CreatedBy { get; set; }
         public string? CallForPaper { get; set; }
         public bool? Status { get; set; }
-        public IFormFile? BannerImage { get; set; } 
+        public IFormFile? BannerImage { get; set; }
+
+        public DateTime? CfpOpen { get; set; }
+        public DateTime? SubmissionDeadline { get; set; }
+        public DateTime? RevisionDeadline { get; set; }
+        public DateTime? AssignmentToReviewers { get; set; }
+        public DateTime? ReviewPeriod { get; set; }
+        public DateTime? ReviewDeadline { get; set; }
+        public DateTime? AcceptanceNotification { get; set; }
+        public DateTime? AuthorResponseDeadline { get; set; }
+        public DateTime? CameraReadyDeadline { get; set; }
+        public DateTime? ConferenceDates { get; set; }
+        public DateTime? ClosingCeremony { get; set; }
 
 
 
