@@ -7,22 +7,52 @@ namespace ConferenceFWebAPI.Service
     {
         private readonly BlobServiceClient _blobServiceClient;
         private readonly string _paperContainerName;
+        private readonly string _proceedingsContainerName; // Thêm trường này
+        private readonly IConfiguration _configuration; // Giữ lại trường này
 
         public AzureBlobStorageService(IConfiguration configuration)
         {
-            var connectionString = configuration.GetValue<string>("AzureStorage:ConnectionString");
+            _configuration = configuration;
+            var connectionString = _configuration.GetValue<string>("AzureStorage:ConnectionString");
             if (string.IsNullOrEmpty(connectionString))
             {
                 throw new ArgumentNullException("AzureStorage:ConnectionString is not configured.");
             }
             _blobServiceClient = new BlobServiceClient(connectionString);
-            _paperContainerName = configuration.GetValue<string>("BlobContainers:Papers") ?? "papers";
-            if (string.IsNullOrEmpty(_paperContainerName))
-            {
-                throw new ArgumentNullException("BlobContainers:Papers is not configured.");
-            }
+            _paperContainerName = _configuration.GetValue<string>("BlobContainers:Papers") ?? "papers";
+            _proceedingsContainerName = _configuration.GetValue<string>("BlobContainers:Proceedings") ?? "proceedings"; // Gán giá trị ở đây
         }
 
+        public async Task<string> UploadProceedingAsync(Stream fileStream, string fileName)
+        {
+            var proceedingsContainerName = _configuration.GetValue<string>("BlobContainers:Proceedings") ?? "proceedings";
+
+            if (string.IsNullOrEmpty(proceedingsContainerName))
+            {
+                throw new ArgumentNullException("BlobContainers:Proceedings is not configured.");
+            }
+
+            // Lấy đối tượng container client
+            var containerClient = _blobServiceClient.GetBlobContainerClient(proceedingsContainerName);
+
+            // Tạo container nếu chưa tồn tại
+            await containerClient.CreateIfNotExistsAsync(Azure.Storage.Blobs.Models.PublicAccessType.BlobContainer);
+
+            // Lấy đối tượng blob client
+            var blobClient = containerClient.GetBlobClient(fileName);
+
+            // Đặt lại vị trí luồng về đầu nếu cần
+            if (fileStream.CanSeek)
+            {
+                fileStream.Position = 0;
+            }
+
+            // Tải luồng lên blob, ghi đè nếu đã tồn tại
+            await blobClient.UploadAsync(fileStream, overwrite: true);
+
+            // Trả về URL tuyệt đối của blob
+            return blobClient.Uri.ToString();
+        }
         public async Task<string> UploadFileAsync(IFormFile file, string containerName)
         {
             if (file == null || file.Length == 0)
@@ -139,5 +169,45 @@ namespace ConferenceFWebAPI.Service
                 return false;
             }
         }
+
+        public async Task<Stream> DownloadFileAsync(string fileUrl)
+        {
+            if (string.IsNullOrEmpty(fileUrl))
+                throw new ArgumentException("File URL cannot be null or empty.");
+
+            Uri uri = new Uri(fileUrl);
+            string containerName = uri.Segments[1].TrimEnd('/');
+            string blobName = string.Join("", uri.Segments.Skip(2));
+
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            BlobClient blobClient = containerClient.GetBlobClient(blobName);
+
+            var downloadInfo = await blobClient.DownloadAsync();
+            MemoryStream ms = new MemoryStream();
+            await downloadInfo.Value.Content.CopyToAsync(ms);
+            ms.Position = 0; // reset về đầu stream
+            return ms;
+        }
+
+
+        public async Task<string> UploadStreamAsync(Stream stream, string fileName, string containerName, string contentType)
+        {
+            if (stream == null || stream.Length == 0)
+                throw new ArgumentException("Stream cannot be null or empty.");
+            if (string.IsNullOrEmpty(fileName))
+                throw new ArgumentException("File name cannot be null or empty.");
+
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
+
+            BlobClient blobClient = containerClient.GetBlobClient(fileName);
+
+            stream.Position = 0; // reset
+            await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = contentType });
+
+            return blobClient.Uri.ToString();
+        }
+
+
     }
 }

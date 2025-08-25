@@ -9,7 +9,6 @@ namespace Repository
     {
         private readonly ConferenceDAO _conferenceDao;
 
-        
         public ConferenceRepository(ConferenceDAO conferenceDao)
         {
             _conferenceDao = conferenceDao;
@@ -53,9 +52,13 @@ namespace Repository
             return await _conferenceDao.GetConferenceCount();
         }
         public IQueryable<Conference> GetAllQueryable()
-{
-    return _conferenceDao.GetAllQueryable();
-}
+        {
+            return _conferenceDao.GetAllQueryable();
+        }
 
+        public async Task<Conference> Insert(Conference conference)
+        {
+            return await _conferenceDao.InsertConference(conference);
+        }
     }
 }

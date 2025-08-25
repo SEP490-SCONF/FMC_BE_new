@@ -25,6 +25,7 @@ namespace ConferenceFWebAPI.Controllers
         private readonly IConferenceRoleRepository _conferenceRoleRepository;
         private readonly AutoMapper.IMapper _mapper; // Cần inject AutoMapper nếu bạn muốn map User entity sang UserDto
         private readonly IConfiguration _configuration;
+        private readonly IReviewerAssignmentRepository _reviewerAssignmentRepository;
 
 
         public UserConferenceRolesController(
@@ -34,7 +35,8 @@ namespace ConferenceFWebAPI.Controllers
             IConferenceRepository conferenceRepository,
             IConferenceRoleRepository conferenceRoleRepository,
             AutoMapper.IMapper mapper,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IReviewerAssignmentRepository reviewerAssignmentRepository)
         {
             _repo = repo;
             _userRepository = userRepository;
@@ -43,6 +45,7 @@ namespace ConferenceFWebAPI.Controllers
             _conferenceRoleRepository = conferenceRoleRepository;
             _mapper = mapper;
             _configuration = configuration;
+            _reviewerAssignmentRepository = reviewerAssignmentRepository;
         }
 
 
@@ -520,6 +523,81 @@ namespace ConferenceFWebAPI.Controllers
                 ConferenceTitle = conference.Title ?? "",
                 Groups = grouped
             };
+
+            return Ok(result);
+        }
+        [HttpGet("reviewers/{reviewerId}/assigned-paper-count")]
+        public async Task<IActionResult> GetReviewerAssignedPaperCount(int conferenceId, int reviewerId)
+        {
+            try
+            {
+                var count = await _reviewerAssignmentRepository
+                    .GetAssignedPaperCountByReviewerIdAndConferenceId(reviewerId, conferenceId);
+
+                return Ok(new { ReviewerId = reviewerId, ConferenceId = conferenceId, AssignedPaperCount = count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+        [HttpPost("resolve-authors")]
+        public async Task<IActionResult> ResolveAuthors([FromBody] AuthorEmailsDto dto)
+        {
+            if (dto.Emails == null || !dto.Emails.Any())
+                return BadRequest("Email list cannot be empty.");
+
+            var userIds = new List<int>();
+
+            foreach (var email in dto.Emails.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(email))
+                    continue;
+
+                // 1. Kiểm tra user có tồn tại chưa
+                var user = await _userRepository.GetByEmail(email);
+                if (user == null)
+                {
+                    // Nếu chưa có -> tạo user mới
+                    user = new User
+                    {
+                        Email = email.Trim(),
+                        CreatedAt = DateTime.UtcNow,
+                        RoleId = 2, // Default: Author
+                        Status = true
+                    };
+                    await _userRepository.Add(user);
+                }
+
+                userIds.Add(user.UserId);
+            }
+
+            return Ok(userIds);
+        }
+
+        [HttpGet("user/{userId}")]
+        [ProducesResponseType(typeof(List<UserConferenceRoleViewDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetByUserId(int userId)
+        {
+            var entities = await _repo.GetByUserId(userId);
+
+            if (entities == null || !entities.Any())
+                return NotFound($"No conference roles found for user ID: {userId}");
+
+            var result = entities.Select(ucr => new UserConferenceRoleViewDto
+            {
+                Id = ucr.Id,
+                UserId = ucr.UserId,
+                UserName = ucr.User.Name,
+                UserEmail = ucr.User.Email,
+                ConferenceRoleId = ucr.ConferenceRoleId,
+                RoleName = ucr.ConferenceRole.RoleName,
+                ConferenceId = ucr.ConferenceId,
+                ConferenceTitle = ucr.Conference.Title,
+                AvatarUrl = ucr.User.AvatarUrl,
+                AssignedAt = ucr.AssignedAt
+            }).ToList();
 
             return Ok(result);
         }

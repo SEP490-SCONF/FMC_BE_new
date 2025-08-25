@@ -373,6 +373,176 @@ namespace ConferenceFWebAPI.Controllers
             }
         }
 
+        // POST: api/Certificates/generate-for-paper-author
+        [HttpPost("generate-for-paper-author")]
+        public async Task<ActionResult<CertificateDto>> GenerateCertificateForPaperAuthor([FromBody] GenerateCertificateForAuthorDto dto)
+        {
+            try
+            {
+                // Lấy thông tin paper với đầy đủ navigation properties
+                var paper = await _paperRepository.GetPaperByIdWithIncludesAsync(dto.PaperId);
+                if (paper == null)
+                {
+                    return NotFound("Paper not found.");
+                }
+
+                // Kiểm tra paper đã được approve/publish chưa
+                if (paper.Status != "Approved" && paper.Status != "Accepted" && paper.Status != "Published")
+                {
+                    return BadRequest($"Paper status is '{paper.Status}'. Only 'Approved', 'Accepted' or 'Published' papers can generate certificates.");
+                }
+
+                // Kiểm tra xem user có phải là author của paper này không
+                var paperAuthors = paper.PaperAuthors?.ToList();
+                if (paperAuthors == null || !paperAuthors.Any())
+                {
+                    return BadRequest("No authors found for this paper.");
+                }
+
+                var isAuthor = paperAuthors.Any(pa => pa.AuthorId == dto.UserId);
+                if (!isAuthor)
+                {
+                    return BadRequest($"User with ID {dto.UserId} is not an author of this paper.");
+                }
+
+                // Lấy thông tin author user
+                var userRepository = HttpContext.RequestServices.GetService<IUserRepository>();
+                if (userRepository == null)
+                {
+                    return StatusCode(500, "User repository service not available.");
+                }
+                
+                var authorUser = await userRepository.GetById(dto.UserId);
+                if (authorUser == null)
+                {
+                    return BadRequest($"User with ID {dto.UserId} not found.");
+                }
+
+                // Lấy thông tin conference
+                var conference = paper.Conference;
+                if (conference == null)
+                {
+                    var conferenceRepository = HttpContext.RequestServices.GetService<IConferenceRepository>();
+                    if (conferenceRepository != null)
+                    {
+                        conference = await conferenceRepository.GetById(paper.ConferenceId);
+                    }
+                }
+
+                if (conference == null)
+                {
+                    return BadRequest("Conference information not found.");
+                }
+
+                // Kiểm tra xem user có role Author trong conference này không
+                var userConferenceRoles = await _userConferenceRoleRepository.GetByConferenceId(paper.ConferenceId);
+                var authorRole = userConferenceRoles.FirstOrDefault(ucr => 
+                    ucr.UserId == dto.UserId && 
+                    ucr.ConferenceRole.RoleName == "Author");
+
+                if (authorRole == null)
+                {
+                    return BadRequest($"User with ID {dto.UserId} does not have Author role in this conference.");
+                }
+
+                // Tìm registration của author cho conference này
+                var registrations = await _registrationRepository.GetByUserId(dto.UserId);
+                var registration = registrations.FirstOrDefault(r => r.ConferenceId == paper.ConferenceId);
+
+                if (registration == null)
+                {
+                    // Tạo registration tạm thời cho author nếu chưa có
+                    var newRegistration = new Registration
+                    {
+                        UserId = dto.UserId,
+                        ConferenceId = paper.ConferenceId,
+                        RegisteredAt = DateTime.UtcNow
+                    };
+                    await _registrationRepository.Add(newRegistration);
+                    registration = newRegistration;
+                }
+
+                // Kiểm tra xem đã có certificate cho registration này chưa
+                var existingCertificate = await _certificateRepository.GetByRegistrationId(registration.RegId);
+                
+                if (existingCertificate != null)
+                {
+                    // Nếu đã có certificate, trả về certificate hiện có
+                    return Ok(new CertificateDto
+                    {
+                        CertificateId = existingCertificate.CertificateId,
+                        RegId = existingCertificate.RegId,
+                        IssueDate = existingCertificate.IssueDate,
+                        CertificateUrl = existingCertificate.CertificateUrl,
+                        CertificateNumber = existingCertificate.CertificateNumber,
+                        Status = existingCertificate.Status,
+                        CreatedAt = existingCertificate.CreatedAt,
+                        UserConferenceRoleId = existingCertificate.UserConferenceRoleId,
+                        UserName = authorUser.Name,
+                        UserEmail = authorUser.Email,
+                        ConferenceTitle = conference.Title,
+                        ConferenceRoleName = "Author"
+                    });
+                }
+
+                // Tạo certificate mới
+                var certificate = new Certificate
+                {
+                    RegId = registration.RegId,
+                    IssueDate = DateTime.UtcNow,
+                    CertificateNumber = GenerateCertificateNumber(),
+                    Status = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UserConferenceRoleId = authorRole.Id
+                };
+
+                await _certificateRepository.Add(certificate);
+
+                // Generate certificate image
+                var imageBytes = GenerateCertificateImage(
+                    certificate, 
+                    authorUser.Name ?? "Unknown Author", 
+                    conference.Title ?? "Unknown Conference", 
+                    paper.Title ?? "Unknown Paper"
+                );
+
+                // Upload certificate image to Azure Blob Storage
+                var fileName = $"certificate_{certificate.CertificateId}_{certificate.CertificateNumber}.png";
+                var certificateUrl = await _azureBlobStorageService.UploadImageAsync(
+                    imageBytes, 
+                    fileName, 
+                    "certificates"
+                );
+                
+                // Update certificate URL
+                certificate.CertificateUrl = certificateUrl;
+                await _certificateRepository.Update(certificate);
+
+                // Trả về thông tin certificate đã tạo
+                var result = new CertificateDto
+                {
+                    CertificateId = certificate.CertificateId,
+                    RegId = certificate.RegId,
+                    IssueDate = certificate.IssueDate,
+                    CertificateUrl = certificate.CertificateUrl,
+                    CertificateNumber = certificate.CertificateNumber,
+                    Status = certificate.Status,
+                    CreatedAt = certificate.CreatedAt,
+                    UserConferenceRoleId = certificate.UserConferenceRoleId,
+                    UserName = authorUser.Name,
+                    UserEmail = authorUser.Email,
+                    ConferenceTitle = conference.Title,
+                    ConferenceRoleName = "Author"
+                };
+
+                return CreatedAtAction(nameof(GetCertificate), new { id = certificate.CertificateId }, result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
         // POST: api/Certificates/generate
         [HttpPost("generate")]
         public async Task<ActionResult<CertificateDto>> GenerateCertificate([FromBody] CertificateGenerateDto dto)

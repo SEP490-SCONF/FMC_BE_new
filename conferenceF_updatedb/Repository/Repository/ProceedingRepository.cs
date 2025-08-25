@@ -7,41 +7,45 @@ namespace Repository
 {
     public class ProceedingRepository : IProceedingRepository
     {
-        private readonly ProceedingDAO _proceedingDao;
+        private readonly ProceedingDAO _dao;
 
-        public ProceedingRepository(ProceedingDAO proceedingDao)
+        public ProceedingRepository(ConferenceFTestContext context)
         {
-            _proceedingDao = proceedingDao;
+            _dao = new ProceedingDAO(context);
         }
 
-        public async Task<IEnumerable<Proceeding>> GetAll()
+        public async Task<Proceeding> CreateProceedingAsync(Proceeding proceeding)
         {
-            return await _proceedingDao.GetAll();
+            return await _dao.CreateProceedingAsync(proceeding);
         }
 
-        public async Task<Proceeding> GetById(int id)
+        public async Task<Proceeding?> GetProceedingByIdAsync(int proceedingId)
         {
-            return await _proceedingDao.GetById(id);
+            return await _dao.GetProceedingByIdAsync(proceedingId);
+        }
+        public async Task<string?> GetFilePathByConferenceIdAsync(int conferenceId)
+        {
+            return await _dao.GetFilePathByConferenceIdAsync(conferenceId);
+        }
+        public async Task<Proceeding?> GetProceedingByConferenceIdAsync(int conferenceId)
+        {
+            return await _dao.GetProceedingByConferenceIdAsync(conferenceId);
         }
 
-        public async Task Add(Proceeding entity)
+        public async Task<Proceeding> UpdateProceedingAsync(Proceeding proceeding)
         {
-            await _proceedingDao.Add(entity);
+            return await _dao.UpdateAsync(proceeding);
+            
+        }
+        public async Task<List<Paper>> GetPublishedPapersByConferenceAsync(int conferenceId)
+        {
+            return await _dao.GetPublishedPapersByConferenceAsync(conferenceId);
+        }
+        public async Task<List<Proceeding>> GetAllProceedingsAsync()
+        {
+            return await _dao.GetAllProceedingsAsync();
         }
 
-        public async Task Update(Proceeding entity)
-        {
-            await _proceedingDao.Update(entity);
-        }
 
-        public async Task Delete(int id)
-        {
-            await _proceedingDao.Delete(id);
-        }
-
-        public async Task<IEnumerable<Proceeding>> GetByConferenceId(int conferenceId)
-        {
-            return await _proceedingDao.GetByConferenceId(conferenceId);
-        }
     }
 }

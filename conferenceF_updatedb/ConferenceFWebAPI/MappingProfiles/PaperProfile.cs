@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
-using ConferenceFWebAPI.DTOs.Paper;
+using ConferenceFWebAPI.DTOs.Papers;
 
 namespace ConferenceFWebAPI.MappingProfiles
 {

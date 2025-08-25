@@ -9,39 +9,42 @@ namespace Repository
     {
         private readonly ScheduleDAO _dao;
 
-        public ScheduleRepository(ScheduleDAO dao)
+        public ScheduleRepository(ConferenceFTestContext context)
         {
-            _dao = dao;
+            _dao = new ScheduleDAO(context);
         }
 
-        public async Task<IEnumerable<Schedule>> GetAll()
+        public async Task<Schedule> AddScheduleAsync(Schedule schedule)
         {
-            return await _dao.GetAllSchedules();
+            return await _dao.AddScheduleAsync(schedule);
         }
 
-        public async Task<Schedule> GetById(int id)
+        public async Task<Schedule?> GetScheduleByIdAsync(int scheduleId)
         {
-            return await _dao.GetScheduleById(id);
+            return await _dao.GetScheduleByIdAsync(scheduleId);
         }
 
-        public async Task Add(Schedule entity)
+        public async Task<List<Schedule>> GetSchedulesByConferenceIdAsync(int conferenceId)
         {
-            await _dao.AddSchedule(entity);
+            return await _dao.GetSchedulesByConferenceIdAsync(conferenceId);
         }
 
-        public async Task Update(Schedule entity)
+        public async Task UpdateScheduleAsync(Schedule schedule)
         {
-            await _dao.UpdateSchedule(entity);
+            await _dao.UpdateScheduleAsync(schedule);
         }
 
-        public async Task Delete(int id)
+        public async Task DeleteScheduleAsync(int scheduleId)
         {
-            await _dao.DeleteSchedule(id);
+            await _dao.DeleteScheduleAsync(scheduleId);
         }
-
-        public async Task<IEnumerable<Schedule>> GetByConferenceId(int conferenceId)
+        public async Task<List<Schedule>> GetSchedulesByTimelineIdAsync(int timelineId)
         {
-            return await _dao.GetSchedulesByConference(conferenceId);
+            return await _dao.GetSchedulesByTimelineIdAsync(timelineId);
+        }
+        public async Task<int> CountSchedulesByTimelineIdAsync(int timelineId)
+        {
+            return await _dao.CountSchedulesByTimelineIdAsync(timelineId);
         }
     }
 }

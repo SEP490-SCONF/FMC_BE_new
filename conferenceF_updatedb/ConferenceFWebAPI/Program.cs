@@ -83,6 +83,15 @@ catch (Exception ex)
 // Đăng ký các service
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ICertificateService, CertificateService>();
+//builder.Services.AddHttpClient<IAiSpellCheckService, AiSpellCheckService>();
+builder.Services.AddHttpClient<IAiSpellCheckService, ColabSpellCheckService>();
+
+
+builder.Services.AddSingleton<DeepLTranslationService>();
+builder.Services.AddScoped<PdfService>();
+builder.Services.AddScoped<PdfMergerService>();
+
+
 
 // Conditional BackgroundCertificateService registration
 try
@@ -220,7 +229,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("SpecificOrigin", build =>
     {
-        build.WithOrigins("http://localhost:5173", "http://localhost:5174", "https://conference-fe-iota.vercel.app", "https://conference-fe-admin.vercel.app")
+        build.WithOrigins("http://localhost:5173", "http://localhost:5174", "https://fmc-fe.vercel.app", "https://fmc-fe-admin.vercel.app")
              .AllowAnyMethod()
              .AllowAnyHeader()
              .AllowCredentials();

@@ -8,5 +8,7 @@ namespace Repository
     {
         Task<IEnumerable<ReviewComment>> GetByReviewId(int reviewId);
         Task<ReviewComment> GetByHighlightId(int highlightId);
+       
+
     }
 }

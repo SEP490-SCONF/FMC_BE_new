@@ -86,6 +86,23 @@ public IQueryable<Conference> GetAllQueryable()
                 throw new Exception("Unexpected error while adding a new conference.", ex);
             }
         }
+        public async Task<Conference> InsertConference(Conference conference)
+        {
+            try
+            {
+                var a =  _context.Conferences.Add(conference);
+                await _context.SaveChangesAsync();
+                return a.Entity;
+            }
+            catch (DbUpdateException dbEx)
+            {
+                throw new Exception("Database error while adding a new conference.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Unexpected error while adding a new conference.", ex);
+            }
+        }
 
         // Update existing conference
         public async Task UpdateConference(Conference updatedConference)

@@ -14,8 +14,12 @@ namespace Repository
         {
             _paperDAO = paperDAO;
         }
-
-         public async Task<Paper?> GetPaperWithConferenceAndTimelinesAsync(int paperId)
+        public async Task<List<Paper>> GetPapersByIdsAsync(List<int> paperIds)
+        {
+            // Gọi thẳng đến phương thức tương ứng của DAO
+            return await _paperDAO.GetPapersByIdsAsync(paperIds);
+        }
+        public async Task<Paper?> GetPaperWithConferenceAndTimelinesAsync(int paperId)
         {
             return await _paperDAO.GetPaperWithConferenceAndTimelinesAsync(paperId);
         }
@@ -61,7 +65,7 @@ namespace Repository
                 await _paperDAO.SaveChangesAsync(); // Lưu thay đổi sau khi xóa
             }
         }
-        
+
         public List<Paper> GetPapersByConferenceId(int conferenceId)
         {
             return _paperDAO.GetPapersByConferenceId(conferenceId);
@@ -82,6 +86,22 @@ namespace Repository
         {
             return await _paperDAO.GetAcceptedPapersWithRegistrationsByAuthor(authorId);
         }
+        public List<Paper> GetPapersByUserId(int userId)
+        {
+            return _paperDAO.GetPapersByUserId(userId);
+        }
+
+
+        public List<Paper> GetPresentedPapersByConferenceId(int conferenceId)
+        {
+            return _paperDAO.GetPresentedPapersByConferenceId(conferenceId);
+        }
+
+        public List<Paper> GetAcceptedPapersByUserIdAndConferenceId(int userId, int conferenceId)
+        {
+            return _paperDAO.GetAcceptedPapersByUserIdAndConferenceId(userId, conferenceId);
+        }
+
 
 
 

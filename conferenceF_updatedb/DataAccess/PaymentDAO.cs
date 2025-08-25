@@ -21,6 +21,8 @@ namespace DataAccess
             try
             {
                 return await _context.Payments
+                    .Include(p => p.User)
+                    .Include(p => p.Conference)
                     .AsNoTracking()
                     .ToListAsync();
             }
@@ -49,6 +51,8 @@ namespace DataAccess
             try
             {
                 return await _context.Payments
+                    .Include(p => p.User)
+                    .Include(p => p.Conference)
                     .Where(p => p.UserId == userId)
                     .AsNoTracking()
                     .ToListAsync();
@@ -114,6 +118,8 @@ namespace DataAccess
             try
             {
                 return await _context.Payments
+                    .Include(p => p.User)
+                    .Include(p => p.Conference)
                     .Where(p => p.ConferenceId == conferenceId)
                     .AsNoTracking()
                     .ToListAsync();
@@ -128,7 +134,7 @@ namespace DataAccess
         {
             try
             {
-                return await _context.Payments
+                return await _context.Payments.Include(p => p.User).Include(p => p.Conference)
                     .Where(p => p.PayStatus == status)
                     .AsNoTracking()
                     .ToListAsync();
@@ -143,7 +149,7 @@ namespace DataAccess
         {
             try
             {
-                return await _context.Payments
+                return await _context.Payments.Include(p => p.User).Include(p => p.Conference)
                     .Where(p => p.CreatedAt >= fromDate)
                     .AsNoTracking()
                     .ToListAsync();
@@ -158,7 +164,7 @@ namespace DataAccess
         {
             try
             {
-                return await _context.Payments
+                return await _context.Payments.Include(p => p.User).Include(p => p.Conference)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(p => p.PayOsOrderCode == orderCode);
             }

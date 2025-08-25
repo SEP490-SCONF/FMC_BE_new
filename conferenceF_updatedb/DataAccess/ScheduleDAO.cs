@@ -17,115 +17,104 @@ namespace DataAccess
         }
 
         // Get all schedules (basic)
-        public async Task<IEnumerable<Schedule>> GetAllSchedules()
+        public async Task<Schedule?> GetScheduleByIdAsync(int scheduleId)
         {
-            try
-            {
-                return await _context.Schedules
-                                     .AsNoTracking()
-                                     .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error occurred while retrieving all schedules.", ex);
-            }
+            return await _context.Schedules
+                .Include(s => s.Paper)         
+                .Include(s => s.Conference)     
+                .Include(s => s.Presenter)      
+                .FirstOrDefaultAsync(s => s.ScheduleId == scheduleId);
         }
 
-        // Get schedule by ID (basic)
-        public async Task<Schedule> GetScheduleById(int id)
+        // Hàm lấy tất cả lịch của một hội thảo
+        public async Task<List<Schedule>> GetSchedulesByConferenceIdAsync(int conferenceId)
         {
-            try
-            {
-                return await _context.Schedules
-                                     .AsNoTracking()
-                                     .FirstOrDefaultAsync(s => s.ScheduleId == id);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error occurred while retrieving schedule with ID {id}.", ex);
-            }
+            return await _context.Schedules
+                .Where(s => s.ConferenceId == conferenceId)
+                .Include(s => s.Paper)         
+                .Include(s => s.Conference)     
+                .Include(s => s.Presenter)     
+                .OrderBy(s => s.PresentationStartTime)
+                .ToListAsync();
         }
 
-        // Add a new schedule
-        public async Task AddSchedule(Schedule schedule)
+        // Hàm cập nhật lịch
+        public async Task UpdateScheduleAsync(Schedule schedule)
         {
-            try
+            // Nếu có PaperId nhưng PresenterId null, tự động lấy author đầu tiên của paper
+            if (schedule.PaperId.HasValue && !schedule.PresenterId.HasValue)
             {
-                _context.Schedules.Add(schedule);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException dbEx)
-            {
-                throw new Exception("Database error while adding a new schedule.", dbEx);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Unexpected error while adding a new schedule.", ex);
-            }
-        }
+                var paper = await _context.Papers
+                    .Include(p => p.PaperAuthors)
+                    .ThenInclude(pa => pa.Author)
+                    .FirstOrDefaultAsync(p => p.PaperId == schedule.PaperId.Value);
 
-        // Update existing schedule
-        public async Task UpdateSchedule(Schedule schedule)
-        {
-            try
-            {
-                var existing = await _context.Schedules.FindAsync(schedule.ScheduleId);
-                if (existing == null)
-                    throw new Exception($"Schedule with ID {schedule.ScheduleId} not found.");
-
-                _context.Entry(existing).CurrentValues.SetValues(schedule);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException dbEx)
-            {
-                throw new Exception("Database error while updating the schedule.", dbEx);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error occurred while updating schedule with ID {schedule.ScheduleId}.", ex);
-            }
-        }
-
-        // Delete schedule by ID
-        public async Task DeleteSchedule(int id)
-        {
-            try
-            {
-                var schedule = await _context.Schedules.FindAsync(id);
-                if (schedule != null)
+                if (paper != null)
                 {
-                    _context.Schedules.Remove(schedule);
-                    await _context.SaveChangesAsync();
-                }
-                else
-                {
-                    throw new Exception($"Schedule with ID {id} not found for deletion.");
+                    var firstAuthor = paper.PaperAuthors.FirstOrDefault()?.Author;
+                    if (firstAuthor != null)
+                    {
+                        schedule.PresenterId = firstAuthor.UserId;
+                    }
                 }
             }
-            catch (DbUpdateException dbEx)
-            {
-                throw new Exception("Database error while deleting the schedule.", dbEx);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error occurred while deleting schedule with ID {id}.", ex);
-            }
+
+            _context.Schedules.Update(schedule);
+            await _context.SaveChangesAsync();
         }
 
-        // Get schedules by conference ID (basic)
-        public async Task<IEnumerable<Schedule>> GetSchedulesByConference(int conferenceId)
+
+        // Hàm xóa lịch
+        public async Task DeleteScheduleAsync(int scheduleId)
         {
-            try
+            var scheduleToDelete = await _context.Schedules.FindAsync(scheduleId);
+            if (scheduleToDelete != null)
             {
-                return await _context.Schedules
-                                     .Where(s => s.ConferenceId == conferenceId)
-                                     .AsNoTracking()
-                                     .ToListAsync();
+                _context.Schedules.Remove(scheduleToDelete);
+                await _context.SaveChangesAsync();
             }
-            catch (Exception ex)
+        }
+        public async Task<Schedule> AddScheduleAsync(Schedule schedule)
+        {
+            // Nếu có PaperId nhưng PresenterId null, tự động lấy author đầu tiên của paper
+            if (schedule.PaperId.HasValue && !schedule.PresenterId.HasValue)
             {
-                throw new Exception($"Error occurred while retrieving schedules for conference ID {conferenceId}.", ex);
+                var paper = await _context.Papers
+                    .Include(p => p.PaperAuthors)       // PaperAuthors liên kết Author
+                    .ThenInclude(pa => pa.Author)
+                    .FirstOrDefaultAsync(p => p.PaperId == schedule.PaperId.Value);
+
+                if (paper != null)
+                {
+                    // Lấy author đầu tiên làm presenter
+                    var firstAuthor = paper.PaperAuthors.FirstOrDefault()?.Author;
+                    if (firstAuthor != null)
+                    {
+                        schedule.PresenterId = firstAuthor.UserId;
+                    }
+                }
             }
+
+            _context.Schedules.Add(schedule);
+            await _context.SaveChangesAsync();
+            return schedule;
+        }
+
+        public async Task<List<Schedule>> GetSchedulesByTimelineIdAsync(int timelineId)
+        {
+            return await _context.Schedules
+                .Where(s => s.TimeLineId == timelineId)
+                .Include(s => s.Paper)
+                .Include(s => s.Conference)
+                .Include(s => s.Presenter)
+                .OrderBy(s => s.PresentationStartTime)
+                .ToListAsync();
+        }
+
+        public async Task<int> CountSchedulesByTimelineIdAsync(int timelineId)
+        {
+            return await _context.Schedules
+                .CountAsync(s => s.TimeLineId == timelineId);
         }
     }
 }

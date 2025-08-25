@@ -42,6 +42,15 @@ namespace ConferenceFWebAPI.DTOs.Certificates
         public int RegId { get; set; }
     }
 
+    public class GenerateCertificateForAuthorDto
+    {
+        [Required]
+        public int PaperId { get; set; }
+        
+        [Required]
+        public int UserId { get; set; }
+    }
+
     public class CertificateVerifyDto
     {
         public string CertificateNumber { get; set; } = string.Empty;

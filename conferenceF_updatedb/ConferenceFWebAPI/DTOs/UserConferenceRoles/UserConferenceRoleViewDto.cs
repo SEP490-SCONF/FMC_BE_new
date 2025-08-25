@@ -13,5 +13,6 @@
         public string? AvatarUrl { get; set; }
 
         public DateTime? AssignedAt { get; set; }
+        public int AssignedPaperCount { get; set; }
     }
 }

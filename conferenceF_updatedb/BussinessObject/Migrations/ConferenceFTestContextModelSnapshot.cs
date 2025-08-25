@@ -454,6 +454,9 @@ namespace BussinessObject.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<bool?>("IsPresented")
+                        .HasColumnType("bit");
+
                     b.Property<bool?>("IsPublished")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -636,12 +639,18 @@ namespace BussinessObject.Migrations
                     b.Property<int>("ConferenceId")
                         .HasColumnType("int");
 
+                    b.Property<string>("CoverPageUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
                         .HasDefaultValueSql("(getdate())");
 
                     b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Doi")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FilePath")
@@ -656,12 +665,18 @@ namespace BussinessObject.Migrations
                         .HasColumnType("datetime")
                         .HasDefaultValueSql("(getdate())");
 
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Title")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime");
+
+                    b.Property<string>("Version")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ProceedingId")
                         .HasName("PK__Proceedi__9710D55B8BE3C9BB");
@@ -938,13 +953,20 @@ namespace BussinessObject.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ScheduleId"));
 
-                    b.Property<int>("ConferenceId")
+                    b.Property<int?>("ConferenceId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<int?>("PaperId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("PresentationTime")
+                    b.Property<DateTime?>("PresentationEndTime")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("PresentationStartTime")
                         .HasColumnType("datetime");
 
                     b.Property<int?>("PresenterId")
@@ -954,14 +976,18 @@ namespace BussinessObject.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.HasKey("ScheduleId")
-                        .HasName("PK__Schedule__9C8A5B49A7037950");
+                    b.Property<int>("TimeLineId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ScheduleId");
 
                     b.HasIndex("ConferenceId");
 
                     b.HasIndex("PaperId");
 
                     b.HasIndex("PresenterId");
+
+                    b.HasIndex("TimeLineId");
 
                     b.ToTable("Schedule", (string)null);
                 });
@@ -1569,25 +1595,30 @@ namespace BussinessObject.Migrations
                 {
                     b.HasOne("BussinessObject.Entity.Conference", "Conference")
                         .WithMany("Schedules")
-                        .HasForeignKey("ConferenceId")
-                        .IsRequired()
-                        .HasConstraintName("FK__Schedule__Confer__2BFE89A6");
+                        .HasForeignKey("ConferenceId");
 
                     b.HasOne("BussinessObject.Entity.Paper", "Paper")
                         .WithMany("Schedules")
-                        .HasForeignKey("PaperId")
-                        .HasConstraintName("FK__Schedule__PaperI__2CF2ADDF");
+                        .HasForeignKey("PaperId");
 
                     b.HasOne("BussinessObject.Entity.User", "Presenter")
                         .WithMany("Schedules")
-                        .HasForeignKey("PresenterId")
-                        .HasConstraintName("FK__Schedule__Presen__2DE6D218");
+                        .HasForeignKey("PresenterId");
+
+                    b.HasOne("BussinessObject.Entity.TimeLine", "TimeLine")
+                        .WithMany("Schedules")
+                        .HasForeignKey("TimeLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_Schedule_TimeLine");
 
                     b.Navigation("Conference");
 
                     b.Navigation("Paper");
 
                     b.Navigation("Presenter");
+
+                    b.Navigation("TimeLine");
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.TimeLine", b =>
@@ -1771,6 +1802,11 @@ namespace BussinessObject.Migrations
             modelBuilder.Entity("BussinessObject.Entity.Role", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("BussinessObject.Entity.TimeLine", b =>
+                {
+                    b.Navigation("Schedules");
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.Topic", b =>

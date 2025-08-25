@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace BussinessObject.Entity;
 
@@ -11,4 +11,6 @@ public partial class TimeLine
     public string? HangfireJobId { get; set; }
 
     public virtual Conference Conference { get; set; } = null!;
+    public virtual ICollection<Schedule> Schedules { get; set; } = new List<Schedule>(); // Thêm collection của Schedule
+
 }

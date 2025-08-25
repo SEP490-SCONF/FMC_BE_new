@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ConferenceFWebAPI.DTOs.Paper
+namespace ConferenceFWebAPI.DTOs.Papers
 {
     public class PaperUploadDto
     {

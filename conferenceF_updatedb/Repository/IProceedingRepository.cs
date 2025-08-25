@@ -4,8 +4,16 @@ using System.Threading.Tasks;
 
 namespace Repository
 {
-    public interface IProceedingRepository : IRepositoryBase<Proceeding>
+    public interface IProceedingRepository
     {
-        Task<IEnumerable<Proceeding>> GetByConferenceId(int conferenceId);
+        Task<Proceeding> CreateProceedingAsync(Proceeding proceeding);
+        Task<Proceeding?> GetProceedingByIdAsync(int proceedingId);
+        Task<Proceeding?> GetProceedingByConferenceIdAsync(int conferenceId);
+        Task<Proceeding> UpdateProceedingAsync(Proceeding proceeding);
+        Task<List<Paper>> GetPublishedPapersByConferenceAsync(int conferenceId);
+        Task<string?> GetFilePathByConferenceIdAsync(int conferenceId);
+        Task<List<Proceeding>> GetAllProceedingsAsync();
+
+
     }
 }

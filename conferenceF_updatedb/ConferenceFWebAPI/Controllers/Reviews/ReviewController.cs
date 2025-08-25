@@ -357,7 +357,8 @@ namespace ConferenceFWebAPI.Controllers.Reviews
 
             // 2. Lấy PaperStatus trực tiếp từ Review (không cần truyền nữa)
             string paperStatus = review.PaperStatus;
-
+            review.Status = "Completed";
+            await _reviewRepository.Update(review);
             // 3. Cập nhật Paper và PaperRevision status dựa trên PaperStatus
             await _reviewRepository.UpdatePaperAndRevisionStatus(review.PaperId, paperStatus, review.RevisionId);
 
@@ -439,8 +440,36 @@ namespace ConferenceFWebAPI.Controllers.Reviews
 
             var result = _mapper.Map<ReviewDTO>(review);
             return Ok(result);
-        }   
+        }
 
+        [HttpGet("completed/user/{userId}/conference/{conferenceId}")]
+        public async Task<IActionResult> GetCompletedReviewsByUserAndConference(int userId, int conferenceId)
+        {
+            try
+            {
+                var reviews = await _reviewRepository.GetCompletedReviewsByUserAndConference(userId, conferenceId);
+                var reviewsDto = reviews.Select(r => _mapper.Map<ReviewDTO>(r));
+                return Ok(reviewsDto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"❌ Error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("completed/count/user/{userId}/conference/{conferenceId}")]
+        public async Task<IActionResult> CountCompletedReviewsByUserAndConference(int userId, int conferenceId)
+        {
+            try
+            {
+                var count = await _reviewRepository.CountCompletedReviewsByUserAndConference(userId, conferenceId);
+                return Ok(new { UserId = userId, ConferenceId = conferenceId, CompletedReviewCount = count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"❌ Error: {ex.Message}");
+            }
+        }
 
 
     }
