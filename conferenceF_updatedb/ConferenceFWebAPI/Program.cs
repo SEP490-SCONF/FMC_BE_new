@@ -90,6 +90,7 @@ builder.Services.AddHttpClient<IAiSpellCheckService, ColabSpellCheckService>();
 builder.Services.AddSingleton<DeepLTranslationService>();
 builder.Services.AddScoped<PdfService>();
 builder.Services.AddScoped<PdfMergerService>();
+builder.Services.AddSingleton<AzureTranslationService>();
 
 
 
