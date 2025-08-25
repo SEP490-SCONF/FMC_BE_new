@@ -154,10 +154,9 @@ namespace DataAccess
             {
                 return await _context.ReviewerAssignments
                     .Include(r => r.Paper)
-                        .ThenInclude(p => p.PaperRevisions.Where(rev => rev.Status == "Under Review"))
+                        .ThenInclude(p => p.PaperRevisions)
                     .Include(r => r.Paper.Topic) 
-                    .Where(r => r.ReviewerId == reviewerId &&
-                                r.Paper.PaperRevisions.Any(rev => rev.Status == "Under Review"))
+                    .Where(r => r.ReviewerId == reviewerId )
                     .AsNoTracking()
                     .ToListAsync();
             }
