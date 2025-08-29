@@ -2,19 +2,20 @@
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
 using ConferenceFWebAPI.DTOs.CallForPapers;
+using ConferenceFWebAPI.DTOs.ConferenceFees;
 using ConferenceFWebAPI.DTOs.Conferences;
 using ConferenceFWebAPI.DTOs.ConferenceTopics;
-using ConferenceFWebAPI.DTOs.Papers;
 using ConferenceFWebAPI.DTOs.PaperRevisions;
+using ConferenceFWebAPI.DTOs.Papers;
+using ConferenceFWebAPI.DTOs.Payment;
 using ConferenceFWebAPI.DTOs.Proccedings;
 using ConferenceFWebAPI.DTOs.ReviewComments;
 using ConferenceFWebAPI.DTOs.ReviewerAssignments;
 using ConferenceFWebAPI.DTOs.ReviewHightlights;
 using ConferenceFWebAPI.DTOs.Reviews;
+using ConferenceFWebAPI.DTOs.Schedules;
 using ConferenceFWebAPI.DTOs.User;
 using ConferenceFWebAPI.DTOs.UserProfile;
-using ConferenceFWebAPI.DTOs.Payment;
-using ConferenceFWebAPI.DTOs.Schedules;
 
 namespace ConferenceFWebAPI
 {
@@ -213,6 +214,13 @@ namespace ConferenceFWebAPI
             CreateMap<ReviewComment, ReviewCommentDTO>();
             CreateMap<ReviewComment, CommentsDTO>();
             CreateMap<ReviewHighlight, HighlightDTO>();
+            CreateMap<FeeType, FeeTypeDto>().ReverseMap();
+            CreateMap<FeeDetail, FeeDetailPublicDto>()
+                .ForMember(dest => dest.FeeTypeName, opt => opt.MapFrom(src => src.FeeType.Name));
+            CreateMap<FeeDetail, FeeDetailOrganizerDto>()
+                .ForMember(dest => dest.FeeTypeName, opt => opt.MapFrom(src => src.FeeType.Name));
+            CreateMap<FeeDetailCreateDto, FeeDetail>();
+            CreateMap<FeeDetailUpdateDto, FeeDetail>();
 
 
             CreateMap<AddReviewCommentDTO, ReviewComment>();

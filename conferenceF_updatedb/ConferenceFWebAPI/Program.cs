@@ -134,6 +134,10 @@ builder.Services.AddScoped<UserConferenceRoleDAO>();
 builder.Services.AddScoped<TimeLineDAO>();
 builder.Services.AddScoped<CertificateDAO>();
 builder.Services.AddScoped<HighlightAreaDAO>();
+builder.Services.AddScoped<IFeeTypeRepository, FeeTypeRepository>();
+builder.Services.AddScoped<FeeTypeDAO>();
+builder.Services.AddScoped<IFeeDetailRepository, FeeDetailRepository>();
+builder.Services.AddScoped<FeeDetailDAO>();
 // Add Scoped services for each repository
 builder.Services.AddScoped<IHighlightAreaRepository, HighlightAreaRepository>();
 
