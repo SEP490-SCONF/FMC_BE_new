@@ -8,5 +8,6 @@
         public decimal Amount { get; set; }
         public string Currency { get; set; } = "VND";
         public string Mode { get; set; } = "Regular";
+        public bool IsVisible { get; set; }
     }
 }

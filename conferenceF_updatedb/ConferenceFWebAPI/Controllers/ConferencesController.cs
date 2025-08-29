@@ -1,15 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Repository;
+﻿using AutoMapper;
+using AutoMapper.Internal.Mappers;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
-using AutoMapper;
-using AutoMapper.Internal.Mappers;
-using ConferenceFWebAPI.Service;
-using Google.Apis.Drive.v3.Data;
-using DataAccess;
-using ConferenceFWebAPI.DTOs.Papers;
 using ConferenceFWebAPI.DTOs.Conferences;
+using ConferenceFWebAPI.DTOs.Papers;
+using ConferenceFWebAPI.Service;
+using DataAccess;
+using Google.Apis.Drive.v3.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
+using Repository;
+using Repository.Repository;
 
 namespace FMC_BE.Controllers
 {
@@ -26,9 +27,9 @@ namespace FMC_BE.Controllers
         private readonly ITopicRepository _topicRepository;
         private readonly IForumRepository _forumRepository;
         private readonly ITimeLineRepository _timeLineRepository;
-
+        private readonly IFeeDetailRepository _feeDetailRepository;
         public ConferencesController(IConferenceRepository conferenceRepository, IAzureBlobStorageService azureBlobStorageService, IMapper mapper, IConfiguration configuration,
-                                     IUserRepository userRepository, IEmailService emailService, ITopicRepository topicRepository, IForumRepository forumRepository, ITimeLineRepository timeLineRepository)
+                                     IUserRepository userRepository, IEmailService emailService, ITopicRepository topicRepository, IForumRepository forumRepository, ITimeLineRepository timeLineRepository, IFeeDetailRepository feeDetailRepository)
         {
             _conferenceRepository = conferenceRepository;
             _azureBlobStorageService = azureBlobStorageService;
@@ -39,6 +40,7 @@ namespace FMC_BE.Controllers
             _topicRepository = topicRepository;
             _forumRepository = forumRepository;
             _timeLineRepository = timeLineRepository;
+            _feeDetailRepository = feeDetailRepository;
         }
 
 
@@ -180,7 +182,18 @@ namespace FMC_BE.Controllers
                     CreatedAt = DateTime.UtcNow,
                 };
                 await _forumRepository.Add(forum);
+                var defaultFees = new List<FeeDetail>
+{
+    new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 1, Amount = 0, Mode = "Regular", IsVisible = false },
+    new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 2, Amount = 0, Mode = "Regular", IsVisible = false },
+    new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 3, Amount = 0, Mode = "PerPage", IsVisible = false },
+    new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 4, Amount = 0, Mode = "Regular", IsVisible = false }
+};
 
+                foreach (var fee in defaultFees)
+                {
+                    await _feeDetailRepository.Add(fee);
+                }
                 return Ok(new
                 {
                     Message = "Conference created successfully.",
