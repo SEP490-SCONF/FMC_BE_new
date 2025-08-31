@@ -1,11 +1,13 @@
 ﻿using iText.Kernel.Pdf;
-using iText.Layout;
-using iText.Layout.Element;
 using iText.Kernel.Pdf.Action;
 using iText.Kernel.Pdf.Navigation;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
 using System.IO;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using iText.Kernel.Utils;
 
 namespace ConferenceFWebAPI.Service
 {
@@ -26,64 +28,48 @@ namespace ConferenceFWebAPI.Service
                 {
                     using (var pdfDocument = new PdfDocument(pdfWriter))
                     {
-                        using (var document = new Document(pdfDocument))
-                        {
-                            // Map để lưu trữ trang bắt đầu của mỗi bài báo
-                            var paperPageStartMap = new Dictionary<string, int>();
+                        var paperPageStartMap = new Dictionary<string, int>();
+                        PdfMerger merger = new PdfMerger(pdfDocument);
 
-                            // Step 1: Thêm ảnh bìa (nếu có)
-                            if (!string.IsNullOrEmpty(coverPageUrl))
+                        // Bước 1: Thêm ảnh bìa (nếu có)
+                        if (!string.IsNullOrEmpty(coverPageUrl))
+                        {
+                            try
                             {
-                                try
+                                using (var coverStream = await _azureBlobStorageService.DownloadFileAsync(coverPageUrl))
                                 {
-                                    using (var coverStream = await _azureBlobStorageService.DownloadFileAsync(coverPageUrl))
+                                    if (coverStream != null && coverStream.Length > 0)
                                     {
-                                        if (coverStream != null && coverStream.Length > 0)
+                                        using (var coverPdfReader = new PdfReader(coverStream))
                                         {
-                                            using (var coverPdfReader = new PdfReader(coverStream))
+                                            using (var coverSourceDoc = new PdfDocument(coverPdfReader))
                                             {
-                                                using (var coverSourceDoc = new PdfDocument(coverPdfReader))
-                                                {
-                                                    coverSourceDoc.CopyPagesTo(1, coverSourceDoc.GetNumberOfPages(), pdfDocument);
-                                                }
+                                                merger.Merge(coverSourceDoc, 1, coverSourceDoc.GetNumberOfPages());
                                             }
                                         }
                                     }
                                 }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Error adding cover page from URL {coverPageUrl}: {ex.Message}");
-                                }
                             }
-
-                            // Step 2: Thêm Mục lục (nếu có bài báo)
-                            if (paperUrls.Count > 0)
+                            catch (Exception ex)
                             {
-                                // Tạo một trang mới cho mục lục
-                                document.Add(new AreaBreak());
-
-                                document.Add(new Paragraph("Table of Contents")
-                                    .SetFontSize(24)
-                                    .SetBold()
-                                    .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER));
-
-                                // Bước này chỉ tạo chỗ trống cho mục lục.
-                                // Nội dung sẽ được điền sau khi tất cả các bài báo đã được thêm.
-                                // Thêm các placeholder paragraphs để giữ chỗ.
-                                foreach (var title in paperTitles)
-                                {
-                                    document.Add(new Paragraph($"{title} ... [Page]").SetFontSize(12));
-                                }
+                                Console.WriteLine($"Error adding cover page: {ex.Message}");
                             }
+                        }
 
-                            // Step 3: Thêm các bài báo và ghi lại trang bắt đầu của chúng
-                            for (int i = 0; i < paperUrls.Count; i++)
+                        // Bước 2: Thêm một trang trống để làm mục lục sau này
+                        int tocPageStart = pdfDocument.GetNumberOfPages() + 1;
+                        pdfDocument.AddNewPage();
+
+                        // Bước 3: Hợp nhất các bài báo và ghi lại trang bắt đầu của chúng
+                        for (int i = 0; i < paperUrls.Count; i++)
+                        {
+                            var url = paperUrls[i];
+                            var title = paperTitles[i];
+                            try
                             {
-                                var url = paperUrls[i];
-                                var title = paperTitles[i];
-                                try
+                                using (var fileStream = await _azureBlobStorageService.DownloadFileAsync(url))
                                 {
-                                    using (var fileStream = await _azureBlobStorageService.DownloadFileAsync(url))
+                                    if (fileStream != null && fileStream.Length > 0)
                                     {
                                         using (var pdfReader = new PdfReader(fileStream))
                                         {
@@ -91,30 +77,54 @@ namespace ConferenceFWebAPI.Service
                                             {
                                                 // Lưu lại trang bắt đầu của bài báo này
                                                 paperPageStartMap[title] = pdfDocument.GetNumberOfPages() + 1;
-
-                                                // Copy các trang của bài báo vào tài liệu chính
-                                                sourceDoc.CopyPagesTo(1, sourceDoc.GetNumberOfPages(), pdfDocument);
+                                                merger.Merge(sourceDoc, 1, sourceDoc.GetNumberOfPages());
                                             }
                                         }
                                     }
                                 }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Error merging PDF from URL {url}: {ex.Message}");
-                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Error merging PDF from URL {url}: {ex.Message}");
+                            }
+                        }
+
+                        // Bước 4: Tạo và điền nội dung Mục lục
+                        using (var document = new Document(pdfDocument))
+                        {
+                            document.SetBottomMargin(0);
+                            document.SetTopMargin(0);
+
+                            // Di chuyển con trỏ đến trang mục lục đã tạo
+                            pdfDocument.RemovePage(tocPageStart);
+                            PdfPage tocPage = pdfDocument.AddNewPage(tocPageStart);
+
+                            Document tocDocument = new Document(pdfDocument, new iText.Kernel.Geom.PageSize(tocPage.GetPageSize()));
+
+                            tocDocument.Add(new Paragraph("Table of Contents")
+                                .SetFontSize(24)
+                                .SetBold()
+                                .SetTextAlignment(TextAlignment.CENTER));
+
+                            foreach (var entry in paperPageStartMap)
+                            {
+                                var title = entry.Key;
+                                var pageNum = entry.Value;
+
+                                // Tạo một Paragraph mới cho mỗi mục lục
+                                Paragraph tocEntry = new Paragraph()
+                                    // Thêm TabStop cho Paragraph này
+                                    .AddTabStops(new TabStop(1000, TabAlignment.RIGHT))
+                                    // Thêm Link và Text vào Paragraph
+                                    .Add(new Link(title, PdfAction.CreateGoTo(PdfExplicitDestination.CreateFit(pdfDocument.GetPage(pageNum)))))
+                                    .Add(new Tab())
+                                    .Add(new Text(pageNum.ToString()));
+
+                                // Chỉ thêm Paragraph vào tài liệu một lần
+                                tocDocument.Add(tocEntry);
                             }
 
-                            // Step 4: Điền nội dung chính xác vào Mục lục đã tạo ở bước 2
-                            if (paperPageStartMap.Count > 0)
-                            {
-                                // Bạn không cần sửa đổi tocPage nữa. Thay vào đó, bạn sẽ chỉnh sửa lại nội dung đã có.
-                                // Tuy nhiên, iText không hỗ trợ sửa đổi nội dung đã được thêm.
-                                // Do đó, cách tiếp cận tốt nhất là... quay lại phương pháp cũ.
-                                // Phương pháp này không khả thi vì iText không cho phép sửa đổi nội dung đã được thêm.
-                                // Vậy nên, phương pháp tốt nhất vẫn là tạo TOC sau đó di chuyển trang.
-                                // Cách bạn đã làm trước đó là đúng, vấn đề có thể nằm ở chỗ khác.
-                                // Hãy thử lại phiên bản code đã chỉnh sửa gần nhất và kiểm tra lỗi ở đó.
-                            }
+                            tocDocument.Close();
                         }
                     }
                 }
