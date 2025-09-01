@@ -655,5 +655,22 @@ namespace ConferenceFWebAPI.Controllers
             return Ok(paperDtos);
         }
 
+        [HttpGet("{paperId}/page-count")]
+        [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetPdfPageCount(int paperId)
+        {
+            if (paperId <= 0)
+                return BadRequest("Paper ID must be positive.");
+
+            var pageCount = await _paperRepository.GetPdfPageCountByPaperIdAsync(paperId);
+
+            if (pageCount == 0)
+                return NotFound($"No PDF found or invalid file path for Paper ID {paperId}.");
+
+            return Ok(pageCount);
+        }
+
+
     }
 }

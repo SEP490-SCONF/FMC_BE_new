@@ -4,9 +4,11 @@ using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
 using ConferenceFWebAPI.DTOs.Conferences;
 using ConferenceFWebAPI.DTOs.Papers;
+using ConferenceFWebAPI.Filters;
 using ConferenceFWebAPI.Service;
 using DataAccess;
 using Google.Apis.Drive.v3.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Repository;
@@ -120,6 +122,8 @@ namespace FMC_BE.Controllers
         }
 
         [HttpPost]
+        //[Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> CreateConference([FromForm] ConferenceDTO conferenceDto)
         {
             if (!ModelState.IsValid)
@@ -225,9 +229,8 @@ namespace FMC_BE.Controllers
 
         }
 
-
-
         [HttpPut("{id}")]
+        [AuthorizeConferenceRole("Organizer")]
         public async Task<IActionResult> Update(int id, [FromForm] ConferenceUpdateDTO conferenceDto)
         {
             if (!ModelState.IsValid)

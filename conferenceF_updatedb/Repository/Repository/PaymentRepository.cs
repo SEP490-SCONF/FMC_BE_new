@@ -65,5 +65,17 @@ namespace Repository
         {
             return await _paymentDao.GetByUserId(userId);
         }
+        public async Task<bool> HasUserPaidFee(int userId, int conferenceId, int feeDetailId)
+        {
+            return await _paymentDao.HasUserPaidFee(userId, conferenceId, feeDetailId);
+        }
+
+        public async Task<FeeDetail?> GetFeeDetailByIdAsync(int feeDetailId)
+        {
+            return await _paymentDao.GetFeeDetailByIdAsync(feeDetailId);
+        }
+
+
+
     }
 }

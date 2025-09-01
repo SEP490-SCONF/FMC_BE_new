@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.Proccedings;
+using ConferenceFWebAPI.Filters;
 using ConferenceFWebAPI.Service;
 using iText.Kernel.Utils;
 using Microsoft.AspNetCore.Http;
@@ -433,6 +434,7 @@ namespace ConferenceFWebAPI.Controllers.Proccedings
                 var responseDtos = proceedings.Select(p => new ProceedingResponseDto
                 {
                     ProceedingId = p.ProceedingId,
+                    ConferenceId = p.ConferenceId, 
                     Title = p.Conference != null ? p.Conference.Title : p.Title,
                     Description = p.Conference != null ? p.Conference.Description : p.Description,
                     FilePath = p.FilePath,

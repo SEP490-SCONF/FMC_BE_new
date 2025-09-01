@@ -31,6 +31,52 @@ namespace ConferenceFWebAPI.Controllers
             return Ok(_mapper.Map<IEnumerable<PaymentDTO>>(payments));
         }
 
+        //[HttpPost("create")]
+        //public async Task<IActionResult> CreatePaymentLink([FromBody] CreatePaymentDTO dto)
+        //{
+        //    // Lấy userId từ JWT
+        //    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //    if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        //        return Unauthorized("Invalid user context");
+
+        //    // Tạo orderCode tự động từ paperId, conferenceId, amount
+        //    int orderCode = GenerateOrderCode();
+
+        //    // Dữ liệu gửi tới PayOS
+        //    var paymentData = new PaymentData(
+        //        orderCode,
+        //        (int)(dto.Amount),
+        //        dto.Purpose ?? $"Conference payment #{dto.ConferenceId}",
+        //        new List<ItemData>
+        //        {
+        //            new ItemData("Conference Fee", 1, (int)(dto.Amount))
+        //        },
+        //        "https://fmc-fe.vercel.app/payment-cancel",
+        //        $"https://fmc-fe.vercel.app/payment-success?orderCode={orderCode}"
+        //    );
+
+        //    var linkResponse = await _payOS.createPaymentLink(paymentData);
+
+        //    // Lưu vào DB
+        //    var payment = new Payment
+        //    {
+        //        UserId = userId,
+        //        ConferenceId = dto.ConferenceId,
+        //        PaperId = dto.PaperId,
+        //        Purpose = dto.Purpose,
+        //        Amount = dto.Amount,
+        //        Currency = dto.Currency ?? "VND",
+        //        PayStatus = "Pending",
+        //        CreatedAt = DateTime.UtcNow,
+        //        PayOsCheckoutUrl = linkResponse.checkoutUrl,
+        //        PayOsOrderCode = orderCode.ToString(),
+        //    };
+
+        //    await _paymentRepository.Add(payment);
+
+        //    return Ok(new { checkoutUrl = linkResponse.checkoutUrl, orderCode });
+        //}
+
         [HttpPost("create")]
         public async Task<IActionResult> CreatePaymentLink([FromBody] CreatePaymentDTO dto)
         {
@@ -39,20 +85,25 @@ namespace ConferenceFWebAPI.Controllers
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Unauthorized("Invalid user context");
 
-            // Tạo orderCode tự động từ paperId, conferenceId, amount
+            // Lấy FeeDetail từ DB
+            var feeDetail = await _paymentRepository.GetFeeDetailByIdAsync(dto.FeeDetailId);
+            if (feeDetail == null)
+                return BadRequest("Invalid FeeDetailId");
+
+            // Tạo orderCode
             int orderCode = GenerateOrderCode();
 
             // Dữ liệu gửi tới PayOS
             var paymentData = new PaymentData(
                 orderCode,
-                (int)(dto.Amount),
-                dto.Purpose ?? $"Conference payment #{dto.ConferenceId}",
+                (int)feeDetail.Amount,
+                feeDetail.FeeType?.Name ?? "Conference Fee",
                 new List<ItemData>
                 {
-                    new ItemData("Conference Fee", 1, (int)(dto.Amount))
+            new ItemData(feeDetail.FeeType?.Name ?? "Conference Fee", 1, (int)feeDetail.Amount)
                 },
-                "https://fmc-fe.vercel.app/payment-cancel",
-                $"https://fmc-fe.vercel.app/payment-success?orderCode={orderCode}"
+                "http://localhost:5173/payment-cancel",
+                $"http://localhost:5173/payment-success?orderCode={orderCode}"
             );
 
             var linkResponse = await _payOS.createPaymentLink(paymentData);
@@ -63,9 +114,10 @@ namespace ConferenceFWebAPI.Controllers
                 UserId = userId,
                 ConferenceId = dto.ConferenceId,
                 PaperId = dto.PaperId,
-                Purpose = dto.Purpose,
-                Amount = dto.Amount,
-                Currency = dto.Currency ?? "VND",
+                FeeDetailId = dto.FeeDetailId, // thêm cột này trong entity Payment
+                Purpose = feeDetail.FeeType?.Name,
+                Amount = feeDetail.Amount,
+                Currency = feeDetail.Currency ?? "VND",
                 PayStatus = "Pending",
                 CreatedAt = DateTime.UtcNow,
                 PayOsCheckoutUrl = linkResponse.checkoutUrl,
@@ -76,6 +128,8 @@ namespace ConferenceFWebAPI.Controllers
 
             return Ok(new { checkoutUrl = linkResponse.checkoutUrl, orderCode });
         }
+
+
 
         // Hàm tạo OrderCode
         private int GenerateOrderCode()
@@ -163,5 +217,52 @@ namespace ConferenceFWebAPI.Controllers
             var payments = await _paymentRepository.GetRecentPayments(fromDate);
             return Ok(_mapper.Map<IEnumerable<PaymentDTO>>(payments));
         }
+
+       
+
+           
+
+            [HttpGet("hasUserPaid")]
+            public async Task<IActionResult> HasUserPaidFee([FromQuery] int conferenceId, [FromQuery] int feeDetailId)
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                    return Unauthorized("Invalid user context");
+
+                var hasPaid = await _paymentRepository.HasUserPaidFee(userId, conferenceId, feeDetailId);
+
+                return Ok(new
+                {
+                    UserId = userId,
+                    ConferenceId = conferenceId,
+                    FeeDetailId = feeDetailId,
+                    HasPaid = hasPaid
+                });
+            }
+
+
+            [HttpGet("fee/{feeDetailId}")]
+            public async Task<IActionResult> GetFeeDetail(int feeDetailId)
+            {
+                var feeDetail = await _paymentRepository.GetFeeDetailByIdAsync(feeDetailId);
+                if (feeDetail == null)
+                    return NotFound("Fee detail not found.");
+
+                return Ok(new
+                {
+                    feeDetail.FeeDetailId,
+                    feeDetail.ConferenceId,
+                    feeDetail.Amount,
+                    feeDetail.Currency,
+                    feeDetail.Mode,
+                    feeDetail.Note,
+                    feeDetail.IsVisible,
+                    FeeType = feeDetail.FeeType?.Name
+                });
+            }
+
+        }
     }
-}
+
+
+

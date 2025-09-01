@@ -20,11 +20,13 @@ namespace ConferenceFWebAPI.Controllers.Authen
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
-        public GoogleLoginController(IUserRepository userRepository, IMapper mapper, IConfiguration configuration)
+        private readonly IUserConferenceRoleRepository _userConferenceRoleRepository;
+        public GoogleLoginController(IUserRepository userRepository, IMapper mapper, IConfiguration configuration, IUserConferenceRoleRepository userConferenceRoleRepository)
         {
             _userRepository = userRepository;
             _mapper = mapper;
             _configuration = configuration;
+            _userConferenceRoleRepository = userConferenceRoleRepository;
         }
         [HttpPost]
         [Route("Login")]
@@ -75,7 +77,7 @@ namespace ConferenceFWebAPI.Controllers.Authen
                 await _userRepository.Update(user);
 
                 // 4. Tạo access token (JWT)
-                var accessToken = GenerateToken(user);
+                var accessToken = await GenerateToken(user);
                 // 5. Đặt refresh token vào HttpOnly Secure cookie
                 var cookieOptions = new CookieOptions
                 {
@@ -150,30 +152,38 @@ namespace ConferenceFWebAPI.Controllers.Authen
             return Guid.NewGuid().ToString("N");
         }
 
-        private string GenerateToken(User user)
+        private async Task<string> GenerateToken(User user)
         {
             var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-            new Claim(ClaimTypes.Name, user.Name),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "Member")
-        };
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+        new Claim(ClaimTypes.Name, user.Name ?? ""),
+        new Claim(ClaimTypes.Email, user.Email ?? ""),
+        new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "Member")
+    };
+
+            // 🔑 Thêm conference role vào claims
+            var conferenceRoles = await _userConferenceRoleRepository.GetByUserId(user.UserId);
+            foreach (var role in conferenceRoles)
+            {
+                claims.Add(new Claim("ConferenceRole", $"{role.ConferenceId}:{role.ConferenceRole.RoleName}"));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-               _configuration["Jwt:Issuer"],
-               _configuration["Jwt:Audience"],
+                _configuration["Jwt:Issuer"],
+                _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddHours(1), // Token expiry time (e.g., 1 hour)
+                expires: DateTime.Now.AddHours(1),
                 signingCredentials: credentials
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-        
+
+
         [HttpPost("Logout")]
         public async Task<IActionResult> Logout()
         {

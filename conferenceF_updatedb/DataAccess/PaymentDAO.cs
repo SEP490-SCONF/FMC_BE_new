@@ -188,5 +188,31 @@ namespace DataAccess
             }
         }
 
+        public async Task<bool> HasUserPaidFee(int userId, int conferenceId, int feeDetailId)
+        {
+            try
+            {
+                return await _context.Payments
+                    .AnyAsync(p => p.UserId == userId
+                                && p.ConferenceId == conferenceId
+                                && p.FeeDetailId == feeDetailId
+                                && p.PayStatus == "Completed");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error checking payment for user {userId} in conference {conferenceId}, feeDetailId {feeDetailId}.", ex);
+            }
+        }
+
+
+        public async Task<FeeDetail?> GetFeeDetailByIdAsync(int feeDetailId)
+        {
+            return await _context.FeeDetails
+                .Include(f => f.FeeType)
+                .FirstOrDefaultAsync(f => f.FeeDetailId == feeDetailId);
+        }
+
+
+
     }
 }
