@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs.Proccedings;
-using ConferenceFWebAPI.Filters;
 using ConferenceFWebAPI.Service;
 using iText.Kernel.Utils;
 using Microsoft.AspNetCore.Http;

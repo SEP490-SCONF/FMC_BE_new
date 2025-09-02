@@ -4,7 +4,6 @@ using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
 using ConferenceFWebAPI.DTOs.Conferences;
 using ConferenceFWebAPI.DTOs.Papers;
-using ConferenceFWebAPI.Filters;
 using ConferenceFWebAPI.Service;
 using DataAccess;
 using Google.Apis.Drive.v3.Data;
@@ -230,7 +229,6 @@ namespace FMC_BE.Controllers
         }
 
         [HttpPut("{id}")]
-        [AuthorizeConferenceRole("Organizer")]
         public async Task<IActionResult> Update(int id, [FromForm] ConferenceUpdateDTO conferenceDto)
         {
             if (!ModelState.IsValid)
