@@ -602,6 +602,20 @@ namespace ConferenceFWebAPI.Controllers
             return Ok(result);
         }
 
+        [HttpGet("available-users")]
+        public async Task<IActionResult> GetAvailableUsers()
+        {
+            var users = await _repo.GetUsersWithoutAnyConferenceRole();
 
+            var result = users.Select(u => new
+            {
+                u.UserId,
+                u.Name,
+                u.Email,
+                u.AvatarUrl
+            });
+
+            return Ok(result);
+        }
     }
 }
