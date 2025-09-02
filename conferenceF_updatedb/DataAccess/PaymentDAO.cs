@@ -53,7 +53,10 @@ namespace DataAccess
                 return await _context.Payments
                     .Include(p => p.User)
                     .Include(p => p.Conference)
-                    .Where(p => p.UserId == userId)
+                    .Include(p => p.Paper)
+                    .Include(p => p.FeeDetail)
+                        .ThenInclude(fd => fd.FeeType) // include FeeType
+                    .Where(p => p.UserId == userId && p.PayStatus == "Completed")
                     .AsNoTracking()
                     .ToListAsync();
             }
@@ -62,6 +65,8 @@ namespace DataAccess
                 throw new Exception($"Error retrieving payments for user ID {userId}.", ex);
             }
         }
+
+
 
         public async Task Add(Payment payment)
         {
@@ -210,6 +215,21 @@ namespace DataAccess
             return await _context.FeeDetails
                 .Include(f => f.FeeType)
                 .FirstOrDefaultAsync(f => f.FeeDetailId == feeDetailId);
+        }
+
+        public async Task<List<FeeDetail>> GetFeeDetailsByIdsAsync(List<int> feeDetailIds)
+        {
+            try
+            {
+                return await _context.FeeDetails
+                    .Include(f => f.FeeType)
+                    .Where(f => feeDetailIds.Contains(f.FeeDetailId))
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error retrieving fee details by IDs.", ex);
+            }
         }
 
 

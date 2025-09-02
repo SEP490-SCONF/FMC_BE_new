@@ -80,44 +80,73 @@ namespace ConferenceFWebAPI.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreatePaymentLink([FromBody] CreatePaymentDTO dto)
         {
-            // Lấy userId từ JWT
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Unauthorized("Invalid user context");
 
-            // Lấy FeeDetail từ DB
-            var feeDetail = await _paymentRepository.GetFeeDetailByIdAsync(dto.FeeDetailId);
-            if (feeDetail == null)
-                return BadRequest("Invalid FeeDetailId");
+            if (dto.Fees == null || !dto.Fees.Any())
+                return BadRequest("No fees provided");
 
-            // Tạo orderCode
+            // Lấy tất cả FeeDetails từ DB
+            var feeDetails = await _paymentRepository.GetFeeDetailsByIdsAsync(
+                dto.Fees.Select(f => f.FeeDetailId).ToList()
+            );
+            if (feeDetails.Count != dto.Fees.Count)
+                return BadRequest("Some FeeDetailIds are invalid");
+
+            // Tính tổng tiền
+            decimal totalAmount = 0;
+            var items = new List<ItemData>();
+            var purposes = new List<string>();
+
+            foreach (var feeItem in dto.Fees)
+            {
+                var detail = feeDetails.First(d => d.FeeDetailId == feeItem.FeeDetailId);
+                var amount = detail.Amount * feeItem.Quantity;
+                totalAmount += amount;
+
+                purposes.Add($"{detail.FeeType?.Name} x{feeItem.Quantity}");
+
+                items.Add(new ItemData(
+                    detail.FeeType?.Name ?? "Conference Fee",
+                    feeItem.Quantity,
+                    (int)detail.Amount
+                ));
+            }
+
+            // lấy feeDetailId chính (mặc định là Registration nếu có)
+            int? mainFeeDetailId = dto.Fees.FirstOrDefault()?.FeeDetailId;
+
             int orderCode = GenerateOrderCode();
 
-            // Dữ liệu gửi tới PayOS
+            // Rút gọn description cho PayOS (giới hạn 25 ký tự)
+            string description = string.Join(", ", purposes);
+            if (description.Length > 25)
+            {
+                description = description.Substring(0, 25);
+            }
+
             var paymentData = new PaymentData(
                 orderCode,
-                (int)feeDetail.Amount,
-                feeDetail.FeeType?.Name ?? "Conference Fee",
-                new List<ItemData>
-                {
-            new ItemData(feeDetail.FeeType?.Name ?? "Conference Fee", 1, (int)feeDetail.Amount)
-                },
+                (int)totalAmount,
+                description,   // gửi sang PayOS: max 25 ký tự
+                items,
                 "http://localhost:5173/payment-cancel",
                 $"http://localhost:5173/payment-success?orderCode={orderCode}"
             );
 
             var linkResponse = await _payOS.createPaymentLink(paymentData);
 
-            // Lưu vào DB
+            // Lưu DB với purpose đầy đủ
             var payment = new Payment
             {
                 UserId = userId,
                 ConferenceId = dto.ConferenceId,
                 PaperId = dto.PaperId,
-                FeeDetailId = dto.FeeDetailId, // thêm cột này trong entity Payment
-                Purpose = feeDetail.FeeType?.Name,
-                Amount = feeDetail.Amount,
-                Currency = feeDetail.Currency ?? "VND",
+                FeeDetailId = mainFeeDetailId, // chỉ lưu được 1 loại
+                Purpose = string.Join(", ", purposes), // giữ nguyên full text
+                Amount = totalAmount,
+                Currency = "VND",
                 PayStatus = "Pending",
                 CreatedAt = DateTime.UtcNow,
                 PayOsCheckoutUrl = linkResponse.checkoutUrl,
@@ -128,6 +157,8 @@ namespace ConferenceFWebAPI.Controllers
 
             return Ok(new { checkoutUrl = linkResponse.checkoutUrl, orderCode });
         }
+
+
 
 
 
@@ -194,8 +225,33 @@ namespace ConferenceFWebAPI.Controllers
                 return Unauthorized("Invalid user context");
 
             var payments = await _paymentRepository.GetByUserId(userId);
-            return Ok(_mapper.Map<IEnumerable<PaymentDTO>>(payments));
+
+            var paymentDTOs = payments.Select(p => new PaymentDTO
+            {
+                PayId = p.PayId,
+                UserId = p.UserId,
+                UserName = p.User?.Name,
+                ConferenceId = p.ConferenceId,
+                ConferenceName = p.Conference?.Title,
+                RegId = p.RegId,
+                Amount = p.Amount,
+                Currency = p.Currency,
+                PayStatus = p.PayStatus,
+                PayOsOrderCode = p.PayOsOrderCode,
+                PayOsCheckoutUrl = p.PayOsCheckoutUrl,
+                PaidAt = p.PaidAt,
+                CreatedAt = p.CreatedAt,
+                PaperId = p.PaperId,
+                PaperTitle = p.Paper?.Title,
+                Purpose = p.Purpose,
+                FeeType = p.FeeDetail?.FeeType?.Name, // lấy tên FeeType
+                Mode = p.FeeDetail?.Mode
+            });
+
+            return Ok(paymentDTOs);
         }
+
+
 
         [HttpGet("conference/{conferenceId}")]
         public async Task<IActionResult> GetByConference(int conferenceId)
@@ -218,51 +274,51 @@ namespace ConferenceFWebAPI.Controllers
             return Ok(_mapper.Map<IEnumerable<PaymentDTO>>(payments));
         }
 
-       
 
-           
 
-            [HttpGet("hasUserPaid")]
-            public async Task<IActionResult> HasUserPaidFee([FromQuery] int conferenceId, [FromQuery] int feeDetailId)
+
+
+        [HttpGet("hasUserPaid")]
+        public async Task<IActionResult> HasUserPaidFee([FromQuery] int conferenceId, [FromQuery] int feeDetailId)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Unauthorized("Invalid user context");
+
+            var hasPaid = await _paymentRepository.HasUserPaidFee(userId, conferenceId, feeDetailId);
+
+            return Ok(new
             {
-                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                    return Unauthorized("Invalid user context");
-
-                var hasPaid = await _paymentRepository.HasUserPaidFee(userId, conferenceId, feeDetailId);
-
-                return Ok(new
-                {
-                    UserId = userId,
-                    ConferenceId = conferenceId,
-                    FeeDetailId = feeDetailId,
-                    HasPaid = hasPaid
-                });
-            }
-
-
-            [HttpGet("fee/{feeDetailId}")]
-            public async Task<IActionResult> GetFeeDetail(int feeDetailId)
-            {
-                var feeDetail = await _paymentRepository.GetFeeDetailByIdAsync(feeDetailId);
-                if (feeDetail == null)
-                    return NotFound("Fee detail not found.");
-
-                return Ok(new
-                {
-                    feeDetail.FeeDetailId,
-                    feeDetail.ConferenceId,
-                    feeDetail.Amount,
-                    feeDetail.Currency,
-                    feeDetail.Mode,
-                    feeDetail.Note,
-                    feeDetail.IsVisible,
-                    FeeType = feeDetail.FeeType?.Name
-                });
-            }
-
+                UserId = userId,
+                ConferenceId = conferenceId,
+                FeeDetailId = feeDetailId,
+                HasPaid = hasPaid
+            });
         }
+
+
+        [HttpGet("fee/{feeDetailId}")]
+        public async Task<IActionResult> GetFeeDetail(int feeDetailId)
+        {
+            var feeDetail = await _paymentRepository.GetFeeDetailByIdAsync(feeDetailId);
+            if (feeDetail == null)
+                return NotFound("Fee detail not found.");
+
+            return Ok(new
+            {
+                feeDetail.FeeDetailId,
+                feeDetail.ConferenceId,
+                feeDetail.Amount,
+                feeDetail.Currency,
+                feeDetail.Mode,
+                feeDetail.Note,
+                feeDetail.IsVisible,
+                FeeType = feeDetail.FeeType?.Name
+            });
+        }
+
     }
+}
 
 
 

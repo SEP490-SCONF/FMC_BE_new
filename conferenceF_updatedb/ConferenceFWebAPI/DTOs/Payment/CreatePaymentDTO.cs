@@ -15,7 +15,13 @@
     {
         public int ConferenceId { get; set; }
         public int? PaperId { get; set; }
-        public int FeeDetailId { get; set; } // thay vì nhập Purpose + Amount
-
+        public List<FeeItemDTO> Fees { get; set; } = new();
     }
+
+    public class FeeItemDTO
+    {
+        public int FeeDetailId { get; set; }
+        public int Quantity { get; set; } = 1;
+    }
+
 }

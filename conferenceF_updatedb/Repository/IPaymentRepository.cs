@@ -19,6 +19,8 @@ namespace Repository
         Task Delete(int id);
         Task<bool> HasUserPaidFee(int userId, int conferenceId, int feeDetailId);
         Task<FeeDetail?> GetFeeDetailByIdAsync(int feeDetailId);
+        Task<List<FeeDetail>> GetFeeDetailsByIdsAsync(List<int> feeDetailIds);
+
 
     }
 }

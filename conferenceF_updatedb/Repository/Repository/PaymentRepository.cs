@@ -75,6 +75,10 @@ namespace Repository
             return await _paymentDao.GetFeeDetailByIdAsync(feeDetailId);
         }
 
+        public async Task<List<FeeDetail>> GetFeeDetailsByIdsAsync(List<int> feeDetailIds)
+        {
+            return await _paymentDao.GetFeeDetailsByIdsAsync(feeDetailIds);
+        }
 
 
     }
