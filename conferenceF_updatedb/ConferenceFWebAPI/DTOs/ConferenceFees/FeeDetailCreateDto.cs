@@ -7,5 +7,7 @@
         public string Currency { get; set; } = "VND";
         public string Mode { get; set; } = "Regular";
         public string? Note { get; set; }
+        public bool IsVisible { get; set; }
+
     }
 }
