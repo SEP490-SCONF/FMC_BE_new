@@ -1,15 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Repository;
+﻿using AutoMapper;
+using AutoMapper.Internal.Mappers;
 using BussinessObject.Entity;
 using ConferenceFWebAPI.DTOs;
-using AutoMapper;
-using AutoMapper.Internal.Mappers;
-using ConferenceFWebAPI.Service;
-using Google.Apis.Drive.v3.Data;
-using DataAccess;
-using ConferenceFWebAPI.DTOs.Papers;
 using ConferenceFWebAPI.DTOs.Conferences;
+using ConferenceFWebAPI.DTOs.Papers;
+using ConferenceFWebAPI.Service;
+using DataAccess;
+using Google.Apis.Drive.v3.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
+using Repository;
+using Repository.Repository;
 
 namespace FMC_BE.Controllers
 {
@@ -26,10 +27,9 @@ namespace FMC_BE.Controllers
         private readonly ITopicRepository _topicRepository;
         private readonly IForumRepository _forumRepository;
         private readonly ITimeLineRepository _timeLineRepository;
-
-
+        private readonly IFeeDetailRepository _feeDetailRepository;
         public ConferencesController(IConferenceRepository conferenceRepository, IAzureBlobStorageService azureBlobStorageService, IMapper mapper, IConfiguration configuration,
-                                     IUserRepository userRepository, IEmailService emailService, ITopicRepository topicRepository, IForumRepository forumRepository, ITimeLineRepository timeLineRepository)
+                                     IUserRepository userRepository, IEmailService emailService, ITopicRepository topicRepository, IForumRepository forumRepository, ITimeLineRepository timeLineRepository, IFeeDetailRepository feeDetailRepository)
         {
             _conferenceRepository = conferenceRepository;
             _azureBlobStorageService = azureBlobStorageService;
@@ -40,6 +40,7 @@ namespace FMC_BE.Controllers
             _topicRepository = topicRepository;
             _forumRepository = forumRepository;
             _timeLineRepository = timeLineRepository;
+            _feeDetailRepository = feeDetailRepository;
         }
 
 
@@ -155,19 +156,19 @@ namespace FMC_BE.Controllers
                 var confe = await _conferenceRepository.Insert(conference);
 
                 var timelines = new List<TimeLine>
- {
-     new TimeLine { ConferenceId = confe.ConferenceId, Description = "CFP Open", Date = null },
-     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Submission Deadline", Date = null },
-     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Revision/Update Deadline", Date = null },
-     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Assignment to Reviewers", Date = null },
-     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Review Period", Date = null },
-     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Review Deadline", Date = null },
-     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Acceptance/Rejection Notification", Date = null },
-     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Author Response/Rebuttal", Date = null },
-     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Camera-ready Submission Deadline", Date = null },
-     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Conference Dates", Date = null },
-     new TimeLine { ConferenceId = confe.ConferenceId, Description = "Closing Ceremony", Date = null }
- };
+        {
+            new TimeLine { ConferenceId = confe.ConferenceId, Description = "CFP Open", Date = null },
+            new TimeLine { ConferenceId = confe.ConferenceId, Description = "Submission Deadline", Date = null },
+            new TimeLine { ConferenceId = confe.ConferenceId, Description = "Revision/Update Deadline", Date = null },
+            new TimeLine { ConferenceId = confe.ConferenceId, Description = "Assignment to Reviewers", Date = null },
+            new TimeLine { ConferenceId = confe.ConferenceId, Description = "Review Period", Date = null },
+            new TimeLine { ConferenceId = confe.ConferenceId, Description = "Review Deadline", Date = null },
+            new TimeLine { ConferenceId = confe.ConferenceId, Description = "Acceptance/Rejection Notification", Date = null },
+            new TimeLine { ConferenceId = confe.ConferenceId, Description = "Author Response/Rebuttal", Date = null },
+            new TimeLine { ConferenceId = confe.ConferenceId, Description = "Camera-ready Submission Deadline", Date = null },
+            new TimeLine { ConferenceId = confe.ConferenceId, Description = "Conference Dates", Date = null },
+            new TimeLine { ConferenceId = confe.ConferenceId, Description = "Closing Ceremony", Date = null }
+        };
 
                 foreach (var tl in timelines)
                 {
@@ -181,7 +182,18 @@ namespace FMC_BE.Controllers
                     CreatedAt = DateTime.UtcNow,
                 };
                 await _forumRepository.Add(forum);
+                var defaultFees = new List<FeeDetail>
+{
+    new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 1, Amount = 0, Mode = "Regular", IsVisible = false },
+    new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 2, Amount = 0, Mode = "Regular", IsVisible = false },
+    new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 3, Amount = 0, Mode = "PerPage", IsVisible = false },
+    new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 4, Amount = 0, Mode = "Regular", IsVisible = false }
+};
 
+                foreach (var fee in defaultFees)
+                {
+                    await _feeDetailRepository.Add(fee);
+                }
                 return Ok(new
                 {
                     Message = "Conference created successfully.",
@@ -214,6 +226,7 @@ namespace FMC_BE.Controllers
         }
 
 
+
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] ConferenceUpdateDTO conferenceDto)
         {
@@ -239,25 +252,20 @@ namespace FMC_BE.Controllers
 
                 if (conferenceDto.BannerImage != null && conferenceDto.BannerImage.Length > 0)
                 {
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                    var extension = Path.GetExtension(conferenceDto.BannerImage.FileName)?.ToLowerInvariant();
-                    if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
-                    {
-                        return BadRequest("Invalid image file format. Only .jpg, .jpeg, .png, .gif are allowed.");
-                    }
-
+                    // Upload ảnh mới
                     var bannerContainerName = _configuration.GetValue<string>("BlobContainers:Banners");
-                    if (string.IsNullOrEmpty(bannerContainerName))
-                    {
-                        return StatusCode(500, "Banner storage container name is not configured.");
-                    }
-
                     bannerUrl = await _azureBlobStorageService.UploadFileAsync(conferenceDto.BannerImage, bannerContainerName);
                 }
+                else if (Request.Form["BannerImage"] == "") // frontend gửi "" khi remove
+                {
+                    // Người dùng xóa banner → xóa BannerUrl
+                    bannerUrl = null;
+                }
 
-                // Cập nhật các thuộc tính scalar
+                // Map các field còn lại
                 _mapper.Map(conferenceDto, conferenceToUpdate);
                 conferenceToUpdate.BannerUrl = bannerUrl;
+
 
                 // ✅ Lấy danh sách Topic mới từ TopicIds (nếu có)
                 if (conferenceDto.TopicIds != null && conferenceDto.TopicIds.Any())

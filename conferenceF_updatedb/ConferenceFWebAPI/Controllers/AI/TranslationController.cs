@@ -1,7 +1,7 @@
-﻿using ConferenceFWebAPI.DTOs.AICheckDTO;
+﻿using Azure;
+using ConferenceFWebAPI.DTOs.AICheckDTO;
 using ConferenceFWebAPI.Service;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.RegularExpressions;
 
 namespace ConferenceFWebAPI.Controllers.AI
 {
@@ -9,41 +9,51 @@ namespace ConferenceFWebAPI.Controllers.AI
     [Route("api/[controller]")]
     public class TranslationController : ControllerBase
     {
-        private readonly DeepLTranslationService _translationService;
+        private readonly AzureTranslationService _translationService;
 
-        public TranslationController(DeepLTranslationService translationService)
+        public TranslationController(AzureTranslationService translationService)
         {
             _translationService = translationService;
         }
 
         [HttpPost("translate-highlight")]
-        public async Task<IActionResult> TranslateHighlightedText([FromBody] TranslationRequestDto request)
+        public async Task<IActionResult> TranslateHighlightedText([FromForm] TranslationRequestDto request)
         {
             if (string.IsNullOrWhiteSpace(request.Text))
                 return BadRequest("Text to translate cannot be empty.");
 
             try
             {
-                // Chuẩn hóa newline
-                string text = request.Text.Replace("\r\n", "\n");
+                // Tách text thành từng dòng
+                var lines = request.Text.Replace("\r\n", "\n").Split('\n');
 
-                // Dịch nguyên cả block text, không tách câu
-                string translated = await _translationService.TranslateAsync(
-                    text,
-                    request.TargetLanguage ?? "en-US"
-                );
+                var translatedLines = new List<string>();
+                foreach (var line in lines)
+                {
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        var translated = await _translationService.TranslateAsync(
+                            line.Trim(),
+                            request.TargetLanguage ?? "en"
+                        );
+                        translatedLines.Add(translated.Trim());
+                    }
+                }
 
-                // Loại bỏ thẻ HTML nếu có
-                translated = Regex.Replace(translated, @"<br\s*/?>", " ").Trim();
+                // Ghép các dòng đã dịch bằng '\n'
+                string finalText = string.Join("\n", translatedLines);
 
-                // Giữ nguyên newline gốc
-                // Trả về JSON, FE sẽ nhận dạng \n đúng
-                return new JsonResult(new { translatedText = translated });
+                return new JsonResult(new { translatedText = finalText });
+            }
+            catch (RequestFailedException ex)
+            {
+                return StatusCode(ex.Status, new { Error = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Error = ex.Message });
+                return StatusCode(500, new { Error = "An unexpected error occurred." });
             }
         }
+
     }
 }

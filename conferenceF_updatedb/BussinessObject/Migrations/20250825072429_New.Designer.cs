@@ -4,6 +4,7 @@ using BussinessObject.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BussinessObject.Migrations
 {
     [DbContext(typeof(ConferenceFTestContext))]
-    partial class ConferenceFTestContextModelSnapshot : ModelSnapshot
+    [Migration("20250825072429_New")]
+    partial class New
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -253,120 +256,6 @@ namespace BussinessObject.Migrations
                         .IsUnique();
 
                     b.ToTable("ConferenceRole", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            ConferenceRoleId = 1,
-                            RoleName = "Participate"
-                        },
-                        new
-                        {
-                            ConferenceRoleId = 2,
-                            RoleName = "Author"
-                        },
-                        new
-                        {
-                            ConferenceRoleId = 3,
-                            RoleName = "Reviewer"
-                        },
-                        new
-                        {
-                            ConferenceRoleId = 4,
-                            RoleName = "Organizer"
-                        });
-                });
-
-            modelBuilder.Entity("BussinessObject.Entity.FeeDetail", b =>
-                {
-                    b.Property<int>("FeeDetailId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FeeDetailId"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("money");
-
-                    b.Property<int>("ConferenceId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .HasDefaultValue("VND");
-
-                    b.Property<int>("FeeTypeId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsVisible")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Mode")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.HasKey("FeeDetailId");
-
-                    b.HasIndex("ConferenceId");
-
-                    b.HasIndex("FeeTypeId");
-
-                    b.ToTable("FeeDetails");
-                });
-
-            modelBuilder.Entity("BussinessObject.Entity.FeeType", b =>
-                {
-                    b.Property<int>("FeeTypeId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FeeTypeId"));
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("FeeTypeId");
-
-                    b.ToTable("FeeTypes");
-
-                    b.HasData(
-                        new
-                        {
-                            FeeTypeId = 1,
-                            Description = "Phí đăng ký tác giả / Author registration fee",
-                            Name = "Registration"
-                        },
-                        new
-                        {
-                            FeeTypeId = 2,
-                            Description = "Phí tham dự hội thảo (listener) / Conference participation fee (listener)",
-                            Name = "Participation"
-                        },
-                        new
-                        {
-                            FeeTypeId = 3,
-                            Description = "Phí vượt số trang in ấn / Additional page fee",
-                            Name = "Additional Page"
-                        },
-                        new
-                        {
-                            FeeTypeId = 4,
-                            Description = "Phí mua tài liệu/kỷ yếu / Proceedings access fee",
-                            Name = "Proceedings Access"
-                        });
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.Forum", b =>
@@ -1156,26 +1045,6 @@ namespace BussinessObject.Migrations
                         .HasName("PK__Topic__022E0F5D531B8A1C");
 
                     b.ToTable("Topic", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            TopicId = 1,
-                            Status = true,
-                            TopicName = "Machine Learning"
-                        },
-                        new
-                        {
-                            TopicId = 2,
-                            Status = true,
-                            TopicName = "Deep Learning"
-                        },
-                        new
-                        {
-                            TopicId = 3,
-                            Status = true,
-                            TopicName = "Natural Language Processing"
-                        });
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.User", b =>
@@ -1230,32 +1099,6 @@ namespace BussinessObject.Migrations
                         .IsUnique();
 
                     b.ToTable("User", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            UserId = 1,
-                            AvatarUrl = "https://conferencefmc.blob.core.windows.net/avatars/83869135-4125-4b69-9956-7a20b7b5dddd.webp",
-                            CreatedAt = new DateTime(2025, 7, 24, 3, 8, 59, 710, DateTimeKind.Unspecified),
-                            Email = "kienkoi48@gmail.com",
-                            Name = "Tín Trương Văn",
-                            RefreshToken = "fd82b31874b148c9aeed3f495864272f",
-                            RoleId = 1,
-                            Status = true,
-                            TokenExpiry = new DateTime(2025, 8, 30, 4, 3, 12, 323, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            UserId = 4,
-                            AvatarUrl = "https://lh3.googleusercontent.com/a/ACg8ocIPgmy1R26U8Ralo0ZWyW6OtYZNrjeRl_x-SEf2L-05A9sbSVu2=s96-c",
-                            CreatedAt = new DateTime(2025, 8, 2, 2, 38, 15, 200, DateTimeKind.Unspecified),
-                            Email = "ffffffjj7@gmail.com",
-                            Name = "Anh Nguyễn",
-                            RefreshToken = "e4a467b7aff94bdf8cd3cf7ae798adc2",
-                            RoleId = 1,
-                            Status = true,
-                            TokenExpiry = new DateTime(2025, 8, 30, 8, 34, 4, 903, DateTimeKind.Unspecified)
-                        });
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.UserConferenceRole", b =>
@@ -1444,25 +1287,6 @@ namespace BussinessObject.Migrations
                         .HasConstraintName("FK__Conferenc__Creat__5441852A");
 
                     b.Navigation("CreatedByNavigation");
-                });
-
-            modelBuilder.Entity("BussinessObject.Entity.FeeDetail", b =>
-                {
-                    b.HasOne("BussinessObject.Entity.Conference", "Conference")
-                        .WithMany("FeeDetails")
-                        .HasForeignKey("ConferenceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BussinessObject.Entity.FeeType", "FeeType")
-                        .WithMany("FeeDetails")
-                        .HasForeignKey("FeeTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Conference");
-
-                    b.Navigation("FeeType");
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.Forum", b =>
@@ -1893,8 +1717,6 @@ namespace BussinessObject.Migrations
                 {
                     b.Navigation("CallForPapers");
 
-                    b.Navigation("FeeDetails");
-
                     b.Navigation("Forum");
 
                     b.Navigation("Papers");
@@ -1915,11 +1737,6 @@ namespace BussinessObject.Migrations
             modelBuilder.Entity("BussinessObject.Entity.ConferenceRole", b =>
                 {
                     b.Navigation("UserConferenceRoles");
-                });
-
-            modelBuilder.Entity("BussinessObject.Entity.FeeType", b =>
-                {
-                    b.Navigation("FeeDetails");
                 });
 
             modelBuilder.Entity("BussinessObject.Entity.Forum", b =>

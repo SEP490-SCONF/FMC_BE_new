@@ -47,5 +47,5 @@ public partial class Conference
 
     public virtual ICollection<Topic> Topics { get; set; } = new List<Topic>();
     public virtual ICollection<TimeLine> TimeLines { get; set; } = new List<TimeLine>();
-
+    public virtual ICollection<FeeDetail> FeeDetails { get; set; } = new List<FeeDetail>();
 }

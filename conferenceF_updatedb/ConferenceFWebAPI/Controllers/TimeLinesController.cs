@@ -102,9 +102,9 @@ namespace ConferenceFWebAPI.Controllers
                 return CreatedAtAction(nameof(GetTimeLinesByConference), new { conferenceId = responseDto.ConferenceId }, responseDto);
             }
             catch (Exception ex)
-            {
-                return StatusCode(500, "Internal server error while creating timeline. Check logs for details.");
-            }
+{
+    return StatusCode(500, "Internal server error while creating timeline. Check logs for details.");
+}
 
         }
 

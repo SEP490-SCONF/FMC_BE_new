@@ -203,7 +203,6 @@ namespace ConferenceFWebAPI.Controllers.Proccedings
             return Ok(responseDto);
         }
 
-        // GET: api/Proceeding/papers/10
         [HttpGet("papers/{conferenceId}")]
         public async Task<IActionResult> GetPublishedPapers(int conferenceId)
         {
@@ -214,9 +213,8 @@ namespace ConferenceFWebAPI.Controllers.Proccedings
                 return NotFound("No proceeding found for this conference.");
 
             // Lọc các bài báo đã published và accepted
-            var publishedPapers = proceeding.Papers?
-                .Where(p => p.Status == "Accepted" && p.IsPublished == true)
-                .ToList();
+            var publishedPapers = await _proceedingRepository.GetPublishedPapersByConferenceAsync(conferenceId);
+
 
             if (publishedPapers == null || !publishedPapers.Any())
                 return NotFound("No published papers found for this conference.");
@@ -242,7 +240,8 @@ namespace ConferenceFWebAPI.Controllers.Proccedings
                 Papers = publishedPapers.Select(p => new PaperInfoDto
                 {
                     PaperId = p.PaperId,
-                    Title = p.Title
+                    Title = p.Title,
+                    FilePath = p.FilePath
                 }).ToList()
             };
 

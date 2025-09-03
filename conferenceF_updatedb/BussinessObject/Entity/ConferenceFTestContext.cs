@@ -15,7 +15,8 @@ public partial class ConferenceFTestContext : DbContext
         : base(options)
     {
     }
-
+    public virtual DbSet<FeeType> FeeTypes { get; set; }
+    public virtual DbSet<FeeDetail> FeeDetails { get; set; }
     public virtual DbSet<AnswerLike> AnswerLikes { get; set; }
 
     public virtual DbSet<AnswerQuestion> AnswerQuestions { get; set; }
@@ -759,7 +760,76 @@ modelBuilder.Entity<TimeLine>(entity =>
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK__UserConfe__UserI__66603565");
         });
+        modelBuilder.Entity<FeeType>(entity =>
+{
+    entity.HasKey(e => e.FeeTypeId);
+    entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+    entity.Property(e => e.Description).HasMaxLength(255);
+});
 
+modelBuilder.Entity<FeeDetail>(entity =>
+{
+    entity.HasKey(e => e.FeeDetailId);
+    entity.Property(e => e.Amount).HasColumnType("money");
+    entity.Property(e => e.Currency).HasMaxLength(10).HasDefaultValue("VND");
+    entity.Property(e => e.Mode).HasMaxLength(50);
+    entity.Property(e => e.Note).HasMaxLength(255);
+
+    entity.HasOne(d => d.Conference)
+        .WithMany(p => p.FeeDetails)
+        .HasForeignKey(d => d.ConferenceId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    entity.HasOne(d => d.FeeType)
+        .WithMany(p => p.FeeDetails)
+        .HasForeignKey(d => d.FeeTypeId)
+        .OnDelete(DeleteBehavior.Cascade);
+});
+modelBuilder.Entity<FeeType>().HasData(
+    new FeeType { FeeTypeId = 1, Name = "Registration", Description = "Phí đăng ký tác giả / Author registration fee" },
+    new FeeType { FeeTypeId = 2, Name = "Participation", Description = "Phí tham dự hội thảo (listener) / Conference participation fee (listener)" },
+    new FeeType { FeeTypeId = 3, Name = "Additional Page", Description = "Phí vượt số trang in ấn / Additional page fee" },
+    new FeeType { FeeTypeId = 4, Name = "Proceedings Access", Description = "Phí mua tài liệu/kỷ yếu / Proceedings access fee" }
+);
+        modelBuilder.Entity<User>().HasData(
+    new User
+    {
+        UserId = 1,
+        Email = "kienkoi48@gmail.com",
+        Name = "Tín Trương Văn",
+        AvatarUrl = "https://conferencefmc.blob.core.windows.net/avatars/83869135-4125-4b69-9956-7a20b7b5dddd.webp",
+        RoleId = 1,
+        RefreshToken = "fd82b31874b148c9aeed3f495864272f",
+        TokenExpiry = DateTime.Parse("2025-08-30T04:03:12.323"),
+        CreatedAt = DateTime.Parse("2025-07-24T03:08:59.710"),
+        Status = true
+    },
+    new User
+    {
+        UserId = 4,
+        Email = "ffffffjj7@gmail.com",
+        Name = "Anh Nguyễn",
+        AvatarUrl = "https://lh3.googleusercontent.com/a/ACg8ocIPgmy1R26U8Ralo0ZWyW6OtYZNrjeRl_x-SEf2L-05A9sbSVu2=s96-c",
+        RoleId = 1,
+        RefreshToken = "e4a467b7aff94bdf8cd3cf7ae798adc2",
+        TokenExpiry = DateTime.Parse("2025-08-30T08:34:04.903"),
+        CreatedAt = DateTime.Parse("2025-08-02T02:38:15.200"),
+        Status = true
+    }
+);
+        modelBuilder.Entity<ConferenceRole>().HasData(
+        new ConferenceRole { ConferenceRoleId = 1, RoleName = "Participate" },
+        new ConferenceRole { ConferenceRoleId = 2, RoleName = "Author" },
+        new ConferenceRole { ConferenceRoleId = 3, RoleName = "Reviewer" },
+        new ConferenceRole { ConferenceRoleId = 4, RoleName = "Organizer" }
+    );
+
+        // Seed Topics
+        modelBuilder.Entity<Topic>().HasData(
+            new Topic { TopicId = 1, TopicName = "Machine Learning", Status = true },
+            new Topic { TopicId = 2, TopicName = "Deep Learning", Status = true },
+            new Topic { TopicId = 3, TopicName = "Natural Language Processing", Status = true }
+        );
         OnModelCreatingPartial(modelBuilder);
     }
 
