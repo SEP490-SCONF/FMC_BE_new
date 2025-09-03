@@ -184,7 +184,7 @@ namespace DataAccess
                 .FirstOrDefaultAsync(u =>
                     u.UserId == userId &&
                     u.ConferenceId == conferenceId &&
-                    u.ConferenceRoleId == 3); // 3 là Reviewer
+                    u.ConferenceRoleId == 3); 
         }
 
         public async Task<bool> HasUserAnyRoleInConference(int userId, int conferenceId, List<string> roles)
