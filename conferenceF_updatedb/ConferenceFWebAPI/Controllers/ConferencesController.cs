@@ -190,7 +190,9 @@ namespace FMC_BE.Controllers
     new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 1, Amount = 0, Mode = "Regular", IsVisible = false },
     new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 2, Amount = 0, Mode = "Regular", IsVisible = false },
     new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 3, Amount = 0, Mode = "PerPage", IsVisible = false },
-    new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 4, Amount = 0, Mode = "Regular", IsVisible = false }
+    new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 4, Amount = 0, Mode = "Regular", IsVisible = false },
+    new FeeDetail { ConferenceId = conference.ConferenceId, FeeTypeId = 5, Amount = 0, Mode = "Regular", IsVisible = false }
+
 };
 
                 foreach (var fee in defaultFees)

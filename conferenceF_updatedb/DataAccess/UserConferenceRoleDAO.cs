@@ -136,7 +136,10 @@ namespace DataAccess
 
         public async Task<IEnumerable<UserConferenceRole>> GetByCondition(Expression<Func<UserConferenceRole, bool>> predicate)
         {
-            return await _context.UserConferenceRoles.Where(predicate).ToListAsync();
+            return await _context.UserConferenceRoles
+                .Include(x => x.ConferenceRole)
+                .Where(predicate)
+                .ToListAsync();
         }
         public async Task<UserConferenceRole?> UpdateConferenceRoleForUser(int userId, int conferenceId, int newConferenceRoleId)
         {
@@ -212,6 +215,7 @@ namespace DataAccess
                 throw new Exception($"Error retrieving roles for user ID {userId}.", ex);
             }
         }
+
 
 
     }
