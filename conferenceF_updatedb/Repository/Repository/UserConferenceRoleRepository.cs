@@ -66,10 +66,7 @@ namespace Repository.Repository
         {
             return _dao.GetByUserId(userId);
         }
-        public async Task<IEnumerable<User>> GetUsersWithoutAnyConferenceRole()
-        {
-            return await _dao.GetUsersWithoutAnyConferenceRole();
-        }
+        
 
 
 

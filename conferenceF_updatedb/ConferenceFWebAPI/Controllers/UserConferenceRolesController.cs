@@ -340,9 +340,26 @@ namespace ConferenceFWebAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            var entity = await _repo.GetById(id);
+            if (entity == null)
+                return NotFound($"UserConferenceRole with ID {id} not found.");
+
+            // Nếu là Reviewer thì check assignment
+            if (entity.ConferenceRoleId == 3) // giả sử 3 = Reviewer
+            {
+                var count = await _reviewerAssignmentRepository
+                    .GetAssignedPaperCountByReviewerIdAndConferenceId(entity.UserId, entity.ConferenceId);
+
+                if (count > 0)
+                {
+                    return BadRequest($"Reviewer {entity.UserId} đã được assign {count} bài báo, không thể xóa.");
+                }
+            }
+
             await _repo.Delete(id);
             return NoContent();
         }
+
         [HttpGet("user/{userId}/conferences/{roleName}")]
         [ProducesResponseType(typeof(List<ConferenceDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -614,20 +631,6 @@ namespace ConferenceFWebAPI.Controllers
             return Ok(result);
         }
 
-        [HttpGet("available-users")]
-        public async Task<IActionResult> GetAvailableUsers()
-        {
-            var users = await _repo.GetUsersWithoutAnyConferenceRole();
-
-            var result = users.Select(u => new
-            {
-                u.UserId,
-                u.Name,
-                u.Email,
-                u.AvatarUrl
-            });
-
-            return Ok(result);
-        }
+       
     }
 }
