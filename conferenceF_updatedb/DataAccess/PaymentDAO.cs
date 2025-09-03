@@ -214,8 +214,9 @@ namespace DataAccess
         {
             return await _context.FeeDetails
                 .Include(f => f.FeeType)
-                .FirstOrDefaultAsync(f => f.FeeDetailId == feeDetailId);
+                .FirstOrDefaultAsync(f => f.FeeDetailId == feeDetailId && f.IsVisible);
         }
+
 
         public async Task<List<FeeDetail>> GetFeeDetailsByIdsAsync(List<int> feeDetailIds)
         {
