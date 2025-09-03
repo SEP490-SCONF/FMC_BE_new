@@ -124,7 +124,6 @@ namespace ConferenceFWebAPI.Controllers
                 return BadRequest("At least one author must be provided.");
 
             int uploaderUserId;
-
             if (_env.IsDevelopment())
             {
                 uploaderUserId = paperDto.AuthorIds.First();
@@ -137,8 +136,18 @@ namespace ConferenceFWebAPI.Controllers
                     return Unauthorized("User is not authenticated or user ID is not available.");
             }
 
+            // --- Logic kiểm tra vai trò được gộp lại và đặt đúng vị trí ---
+            var userRole = await _userConferenceRoleRepository.GetByUserAndConference(uploaderUserId, paperDto.ConferenceId);
+
+            if (userRole != null && (userRole.ConferenceRoleId == 3 || userRole.ConferenceRoleId == 4))
+            {
+                return Forbid("Users with Reviewer or Organizer roles cannot submit papers to this conference.");
+            }
+
             if (!paperDto.AuthorIds.Contains(uploaderUserId))
                 return BadRequest($"User ID {uploaderUserId} must be one of the provided Author IDs.");
+
+
 
             try
             {
