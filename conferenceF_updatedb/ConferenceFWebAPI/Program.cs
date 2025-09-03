@@ -23,6 +23,13 @@ using Microsoft.AspNetCore.Localization;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables(); // Đảm bảo đọc biến môi trường từ Azure
+
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 // 1. Lấy chuỗi kết nối SignalR từ appsettings.json
 var modelBuilder = new ODataConventionModelBuilder();
 modelBuilder.EntitySet<Paper>("Papers"); // Register your Paper entity as an OData EntitySet
