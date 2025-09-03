@@ -75,6 +75,7 @@ namespace ConferenceFWebAPI.Controllers
                 UserId = ucr.UserId,
                 UserName = ucr.User.Name,
                 UserEmail = ucr.User.Email,
+                AvatarUrl = ucr.User.AvatarUrl,
                 ConferenceRoleId = ucr.ConferenceRoleId,
                 RoleName = ucr.ConferenceRole.RoleName,
                 ConferenceId = ucr.ConferenceId,
@@ -352,8 +353,19 @@ namespace ConferenceFWebAPI.Controllers
             if (conferences == null || !conferences.Any())
                 return NotFound($"No conferences found for user {userId} with role {roleName}.");
 
-            var conferenceDtos = _mapper.Map<List<ConferenceDTO>>(conferences);
-            return Ok(conferenceDtos);
+            var result = conferences.Select(c => new OrganizerConferenceDTO
+            {
+                ConferenceId = c.ConferenceId,
+                Title = c.Title,
+                Description = c.Description,
+                StartDate = c.StartDate,
+                EndDate = c.EndDate,
+                Location = c.Location,
+                Status = c.Status,
+                BannerImage = c.BannerUrl  
+            }).ToList();
+
+            return Ok(result);
         }
         [HttpPost("create-or-assign")]
         public async Task<IActionResult> CreateOrAssign([FromBody] AddOrganizerDto dto)
