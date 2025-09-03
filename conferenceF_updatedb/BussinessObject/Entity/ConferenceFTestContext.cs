@@ -789,7 +789,9 @@ modelBuilder.Entity<FeeType>().HasData(
     new FeeType { FeeTypeId = 1, Name = "Registration", Description = "Phí đăng ký tác giả / Author registration fee" },
     new FeeType { FeeTypeId = 2, Name = "Participation", Description = "Phí tham dự hội thảo (listener) / Conference participation fee (listener)" },
     new FeeType { FeeTypeId = 3, Name = "Additional Page", Description = "Phí vượt số trang in ấn / Additional page fee" },
-    new FeeType { FeeTypeId = 4, Name = "Proceedings Access", Description = "Phí mua tài liệu/kỷ yếu / Proceedings access fee" }
+    new FeeType { FeeTypeId = 4, Name = "Proceedings Access", Description = "Phí mua tài liệu/kỷ yếu / Proceedings access fee" },
+    new FeeType { FeeTypeId = 5, Name = "Presentation", Description = "Phí trình bày bài báo/ Presentation fee" }
+
 );
         modelBuilder.Entity<User>().HasData(
     new User

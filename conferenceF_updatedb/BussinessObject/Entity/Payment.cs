@@ -30,6 +30,8 @@ public partial class Payment
     public int? PaperId { get; set; }
 
     public string? Purpose { get; set; }
+    public int? FeeDetailId { get; set; }
+
 
     public virtual Conference Conference { get; set; } = null!;
 
@@ -40,4 +42,6 @@ public partial class Payment
     public virtual Registration? Reg { get; set; }
 
     public virtual User User { get; set; } = null!;
+    public virtual FeeDetail? FeeDetail { get; set; }
+
 }

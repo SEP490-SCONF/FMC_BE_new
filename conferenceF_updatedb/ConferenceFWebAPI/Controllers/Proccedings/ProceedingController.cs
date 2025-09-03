@@ -433,6 +433,7 @@ namespace ConferenceFWebAPI.Controllers.Proccedings
                 var responseDtos = proceedings.Select(p => new ProceedingResponseDto
                 {
                     ProceedingId = p.ProceedingId,
+                    ConferenceId = p.ConferenceId, 
                     Title = p.Conference != null ? p.Conference.Title : p.Title,
                     Description = p.Conference != null ? p.Conference.Description : p.Description,
                     FilePath = p.FilePath,

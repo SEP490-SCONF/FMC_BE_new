@@ -66,7 +66,7 @@ namespace ConferenceFWebAPI.Controllers.Authen
                 {
                     // Update 3 trường nếu có giá trị mới
                     user.Email = payload.Email;
-                    if(user.Name == null) user.Name = payload.Name;
+                    if (user.Name == null) user.Name = payload.Name;
                     if (user.AvatarUrl == null) user.AvatarUrl = payload.Picture;
                 }
                 // 3. Cập nhật refresh token
@@ -91,7 +91,7 @@ namespace ConferenceFWebAPI.Controllers.Authen
                 {
                     AccessToken = accessToken,
                     ExpiresAt = DateTime.UtcNow.AddHours(1)
-                    
+
                 };
 
                 return Ok(response);
@@ -109,24 +109,24 @@ namespace ConferenceFWebAPI.Controllers.Authen
         [Route("RefreshToken")]
         public async Task<IActionResult> RefreshToken()
         {
-            
+
             if (!Request.Cookies.TryGetValue("refreshToken", out var incomingRefreshToken))
                 return Unauthorized("No refresh token");
 
-           
+
             var user = await _userRepository.GetByRefreshToken(incomingRefreshToken);
             if (user == null || user.TokenExpiry < DateTime.UtcNow)
                 return Unauthorized("Invalid or expired refresh token");
 
-            
+
             user.RefreshToken = GenerateRefreshToken();
             user.TokenExpiry = DateTime.UtcNow.AddDays(7);
             await _userRepository.Update(user);
 
-           
+
             var newAccessToken = GenerateToken(user);
 
-            
+
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
@@ -136,7 +136,7 @@ namespace ConferenceFWebAPI.Controllers.Authen
             };
             Response.Cookies.Append("refreshToken", user.RefreshToken, cookieOptions);
 
-           
+
             return Ok(new
             {
                 AccessToken = newAccessToken,
@@ -173,7 +173,7 @@ namespace ConferenceFWebAPI.Controllers.Authen
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-        
+
         [HttpPost("Logout")]
         public async Task<IActionResult> Logout()
         {

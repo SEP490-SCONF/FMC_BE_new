@@ -4,6 +4,7 @@ using BussinessObject.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BussinessObject.Migrations
 {
     [DbContext(typeof(ConferenceFTestContext))]
-    partial class ConferenceFTestContextModelSnapshot : ModelSnapshot
+    [Migration("20250831204439_AddFeeDetailIdToPayment")]
+    partial class AddFeeDetailIdToPayment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -366,12 +369,6 @@ namespace BussinessObject.Migrations
                             FeeTypeId = 4,
                             Description = "Phí mua tài liệu/kỷ yếu / Proceedings access fee",
                             Name = "Proceedings Access"
-                        },
-                        new
-                        {
-                            FeeTypeId = 5,
-                            Description = "Phí trình bày bài báo/ Presentation fee",
-                            Name = "Presentation"
                         });
                 });
 

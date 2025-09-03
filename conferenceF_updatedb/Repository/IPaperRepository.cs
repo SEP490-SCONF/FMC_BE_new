@@ -26,6 +26,8 @@ namespace Repository
 
         Task<List<Paper>> GetPapersByIdsAsync(List<int> paperIds);
         List<Paper> GetAcceptedPapersByUserIdAndConferenceId(int userId, int conferenceId);
+        Task<int> GetPdfPageCountByPaperIdAsync(int paperId);
+
 
 
 
