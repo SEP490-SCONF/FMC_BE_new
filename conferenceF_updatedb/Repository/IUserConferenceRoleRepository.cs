@@ -20,6 +20,8 @@ namespace Repository
         Task<UserConferenceRole?> GetByUserAndConference(int userId, int conferenceId);
         Task<bool> HasUserAnyRoleInConference(int userId, int conferenceId, List<string> roles);
         Task<IEnumerable<UserConferenceRole>> GetByUserId(int userId);
+        Task<IEnumerable<User>> GetUsersWithoutAnyConferenceRole();
+
 
     }
 }

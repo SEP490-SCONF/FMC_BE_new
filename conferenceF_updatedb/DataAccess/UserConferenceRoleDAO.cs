@@ -187,7 +187,7 @@ namespace DataAccess
                 .FirstOrDefaultAsync(u =>
                     u.UserId == userId &&
                     u.ConferenceId == conferenceId &&
-                    u.ConferenceRoleId == 3); // 3 là Reviewer
+                    u.ConferenceRoleId == 3); 
         }
 
         public async Task<bool> HasUserAnyRoleInConference(int userId, int conferenceId, List<string> roles)
@@ -215,6 +215,28 @@ namespace DataAccess
                 throw new Exception($"Error retrieving roles for user ID {userId}.", ex);
             }
         }
+        public async Task<IEnumerable<User>> GetUsersWithoutAnyConferenceRole()
+        {
+            try
+            {
+                var userIdsWithRoles = await _context.UserConferenceRoles
+                    .Select(ucr => ucr.UserId)
+                    .Distinct()
+                    .ToListAsync();
+
+                var usersWithoutRoles = await _context.Users
+                    .Where(u => !userIdsWithRoles.Contains(u.UserId))
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                return usersWithoutRoles;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error retrieving users without any conference role.", ex);
+            }
+        }
+
 
 
 

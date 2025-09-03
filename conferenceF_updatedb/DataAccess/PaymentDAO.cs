@@ -53,7 +53,10 @@ namespace DataAccess
                 return await _context.Payments
                     .Include(p => p.User)
                     .Include(p => p.Conference)
-                    .Where(p => p.UserId == userId)
+                    .Include(p => p.Paper)
+                    .Include(p => p.FeeDetail)
+                        .ThenInclude(fd => fd.FeeType) // include FeeType
+                    .Where(p => p.UserId == userId && p.PayStatus == "Completed")
                     .AsNoTracking()
                     .ToListAsync();
             }
@@ -62,6 +65,8 @@ namespace DataAccess
                 throw new Exception($"Error retrieving payments for user ID {userId}.", ex);
             }
         }
+
+
 
         public async Task Add(Payment payment)
         {
@@ -187,6 +192,48 @@ namespace DataAccess
                 throw new Exception($"Error retrieving latest pending payment for user ID {userId}.", ex);
             }
         }
+
+        public async Task<bool> HasUserPaidFee(int userId, int conferenceId, int feeDetailId)
+        {
+            try
+            {
+                return await _context.Payments
+                    .AnyAsync(p => p.UserId == userId
+                                && p.ConferenceId == conferenceId
+                                && p.FeeDetailId == feeDetailId
+                                && p.PayStatus == "Completed");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error checking payment for user {userId} in conference {conferenceId}, feeDetailId {feeDetailId}.", ex);
+            }
+        }
+
+
+        public async Task<FeeDetail?> GetFeeDetailByIdAsync(int feeDetailId)
+        {
+            return await _context.FeeDetails
+                .Include(f => f.FeeType)
+                .FirstOrDefaultAsync(f => f.FeeDetailId == feeDetailId && f.IsVisible);
+        }
+
+
+        public async Task<List<FeeDetail>> GetFeeDetailsByIdsAsync(List<int> feeDetailIds)
+        {
+            try
+            {
+                return await _context.FeeDetails
+                    .Include(f => f.FeeType)
+                    .Where(f => feeDetailIds.Contains(f.FeeDetailId))
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error retrieving fee details by IDs.", ex);
+            }
+        }
+
+
 
     }
 }

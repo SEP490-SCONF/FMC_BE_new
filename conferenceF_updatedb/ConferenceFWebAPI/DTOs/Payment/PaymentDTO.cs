@@ -16,6 +16,12 @@
         public DateTime? PaidAt { get; set; }
         public DateTime? CreatedAt { get; set; }
         public int? PaperId { get; set; }
+        public string? PaperTitle { get; set; }
         public string? Purpose { get; set; }
+
+        // Thêm trường fee info
+        public string? FeeType { get; set; }
+        public string? Mode { get; set; }
     }
+
 }

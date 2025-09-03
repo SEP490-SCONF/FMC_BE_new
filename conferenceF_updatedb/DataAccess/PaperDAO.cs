@@ -3,7 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Threading.Tasks;
+using iText.Kernel.Pdf;
+using System.Net.Http;
 
 namespace DataAccess
 {
@@ -34,7 +37,7 @@ namespace DataAccess
                         .ThenInclude(r => r.UserConferenceRoles) // Tải đến đây là đủ
                 .FirstOrDefaultAsync(p => p.PaperId == paperId);
         }
-          public List<Paper> GetPapersByConferenceId(int conferenceId)
+        public List<Paper> GetPapersByConferenceId(int conferenceId)
         {
             return _context.Papers
                            .Where(p => p.ConferenceId == conferenceId)
@@ -60,7 +63,7 @@ namespace DataAccess
             return await _context.Papers
                 .Include(p => p.Topic)
                 .Include(p => p.PaperAuthors)
-                    .ThenInclude(pa => pa.Author) 
+                    .ThenInclude(pa => pa.Author)
                 .FirstOrDefaultAsync(p => p.PaperId == id);
         }
         public async Task<Paper> GetPaperWithAuthorsAsync(int paperId)
@@ -129,7 +132,7 @@ namespace DataAccess
         public List<Paper> GetPapersByConferenceIdAndStatus(int conferenceId, string status)
         {
             return _context.Papers
-                .Where(p => p.ConferenceId == conferenceId )
+                .Where(p => p.ConferenceId == conferenceId)
                 .Include(p => p.Topic)
                 .Include(p => p.PaperAuthors)
                     .ThenInclude(pa => pa.Author)
@@ -140,7 +143,7 @@ namespace DataAccess
                 .ToList();
         }
 
-         public List<Paper> GetPublishedPapersByConferenceId(int conferenceId)
+        public List<Paper> GetPublishedPapersByConferenceId(int conferenceId)
         {
             return _context.Papers
                 .Where(p => p.ConferenceId == conferenceId
@@ -189,8 +192,42 @@ namespace DataAccess
                     .ThenInclude(pa => pa.Author)
                 .Include(p => p.PaperRevisions
                     .Where(pr => pr.Status == "Accepted"))
-                    .ThenInclude(pr => pr.Reviews) 
+                    .ThenInclude(pr => pr.Reviews)
                 .ToList();
+        }
+
+        public async Task<int> GetPdfPageCountByPaperIdAsync(int paperId)
+        {
+            var paper = await _context.Papers.FirstOrDefaultAsync(p => p.PaperId == paperId);
+            if (paper == null || string.IsNullOrEmpty(paper.FilePath))
+                return 0;
+
+            // Nếu là URL (http hoặc https)
+            if (paper.FilePath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            {
+                using (var http = new HttpClient())
+                {
+                    var data = await http.GetByteArrayAsync(paper.FilePath);
+                    using (var ms = new MemoryStream(data))
+                    using (var pdfReader = new PdfReader(ms))
+                    using (var pdfDoc = new PdfDocument(pdfReader))
+                    {
+                        return pdfDoc.GetNumberOfPages();
+                    }
+                }
+            }
+
+            // Nếu là file local
+            if (File.Exists(paper.FilePath))
+            {
+                using (var pdfReader = new PdfReader(paper.FilePath))
+                using (var pdfDoc = new PdfDocument(pdfReader))
+                {
+                    return pdfDoc.GetNumberOfPages();
+                }
+            }
+
+            return 0;
         }
 
 

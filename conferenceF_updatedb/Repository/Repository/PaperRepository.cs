@@ -102,6 +102,10 @@ namespace Repository
             return _paperDAO.GetAcceptedPapersByUserIdAndConferenceId(userId, conferenceId);
         }
 
+        public async Task<int> GetPdfPageCountByPaperIdAsync(int paperId)
+        {
+            return await _paperDAO.GetPdfPageCountByPaperIdAsync(paperId);
+        }
 
 
 

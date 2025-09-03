@@ -4,6 +4,7 @@ using BussinessObject.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BussinessObject.Migrations
 {
     [DbContext(typeof(ConferenceFTestContext))]
-    partial class ConferenceFTestContextModelSnapshot : ModelSnapshot
+    [Migration("20250830165047_local")]
+    partial class local
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -366,12 +369,6 @@ namespace BussinessObject.Migrations
                             FeeTypeId = 4,
                             Description = "Phí mua tài liệu/kỷ yếu / Proceedings access fee",
                             Name = "Proceedings Access"
-                        },
-                        new
-                        {
-                            FeeTypeId = 5,
-                            Description = "Phí trình bày bài báo/ Presentation fee",
-                            Name = "Presentation"
                         });
                 });
 
@@ -702,9 +699,6 @@ namespace BussinessObject.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(10)");
 
-                    b.Property<int?>("FeeDetailId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime");
 
@@ -741,8 +735,6 @@ namespace BussinessObject.Migrations
                         .HasName("PK__Payment__EE8FCECFAA2919C2");
 
                     b.HasIndex("ConferenceId");
-
-                    b.HasIndex("FeeDetailId");
 
                     b.HasIndex("PaperId");
 
@@ -1616,10 +1608,6 @@ namespace BussinessObject.Migrations
                         .IsRequired()
                         .HasConstraintName("FK__Payment__Confere__0E6E26BF");
 
-                    b.HasOne("BussinessObject.Entity.FeeDetail", "FeeDetail")
-                        .WithMany()
-                        .HasForeignKey("FeeDetailId");
-
                     b.HasOne("BussinessObject.Entity.Paper", "Paper")
                         .WithMany("Payments")
                         .HasForeignKey("PaperId")
@@ -1637,8 +1625,6 @@ namespace BussinessObject.Migrations
                         .HasConstraintName("FK__Payment__UserId__0D7A0286");
 
                     b.Navigation("Conference");
-
-                    b.Navigation("FeeDetail");
 
                     b.Navigation("Paper");
 
