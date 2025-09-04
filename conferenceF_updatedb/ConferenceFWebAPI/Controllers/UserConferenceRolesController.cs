@@ -379,7 +379,7 @@ namespace ConferenceFWebAPI.Controllers
                 EndDate = c.EndDate,
                 Location = c.Location,
                 Status = c.Status,
-                BannerImage = c.BannerUrl  
+                BannerImage = c.BannerUrl
             }).ToList();
 
             return Ok(result);
@@ -635,6 +635,16 @@ namespace ConferenceFWebAPI.Controllers
         {
             var roles = await _repo.GetByCondition(x => x.UserId == userId && x.ConferenceId == conferenceId);
 
-       
+            if (roles == null || !roles.Any())
+                return Ok(new List<string>());
+
+            var roleNames = roles
+                .Where(x => x.ConferenceRole != null)
+                .Select(x => x.ConferenceRole.RoleName)
+                .Distinct()
+                .ToList();
+
+            return Ok(roleNames);
+        }
     }
-}
+    }
