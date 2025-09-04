@@ -379,7 +379,7 @@ namespace ConferenceFWebAPI.Controllers
                 EndDate = c.EndDate,
                 Location = c.Location,
                 Status = c.Status,
-                BannerImage = c.BannerUrl  
+                BannerImage = c.BannerUrl
             }).ToList();
 
             return Ok(result);
@@ -648,4 +648,4 @@ namespace ConferenceFWebAPI.Controllers
         }
 
     }
-}
+    }
