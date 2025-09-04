@@ -131,8 +131,8 @@ namespace ConferenceFWebAPI.Controllers
                 (int)totalAmount,
                 description,   // gửi sang PayOS: max 25 ký tự
                 items,
-                "http://localhost:5173/payment-cancel",
-                $"http://localhost:5173/payment-success?orderCode={orderCode}"
+                "https://fmc-fe.vercel.app/payment-cancel",
+                $"https://fmc-fe.vercel.app/payment-success?orderCode={orderCode}"
             );
 
             var linkResponse = await _payOS.createPaymentLink(paymentData);
